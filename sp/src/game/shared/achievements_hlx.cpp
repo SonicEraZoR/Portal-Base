@@ -10,7 +10,7 @@
 #ifdef GAME_DLL
 
 // this gets compiled in for HL2 + Ep(X) only
-#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined ( PORTAL ) )
+#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ))
 
 #include "baseachievement.h"
 #include "prop_combine_ball.h"
