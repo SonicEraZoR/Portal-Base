@@ -1,0 +1,679 @@
+
+
+//////////////////////////////////////////////////////////////
+// Death sound (applies to all types)
+//////////////////////////////////////////////////////////////
+"Portal.Glados_core.Death"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_Death_Scream.wav"
+}
+
+
+//////////////////////////////////////////////////////////////
+// CURIOSITY VOs
+//////////////////////////////////////////////////////////////
+"Portal.Glados_core.Curiosity_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-01.wav"
+}
+
+"Portal.Glados_core.Curiosity_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-02.wav"
+}
+
+"Portal.Glados_core.Curiosity_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-03.wav"
+}
+
+"Portal.Glados_core.Curiosity_4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-04.wav"
+}
+
+"Portal.Glados_core.Curiosity_5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-05.wav"
+}
+
+"Portal.Glados_core.Curiosity_6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-06.wav"
+}
+
+"Portal.Glados_core.Curiosity_7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-07.wav"
+}
+
+"Portal.Glados_core.Curiosity_8"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-08.wav"
+}
+
+"Portal.Glados_core.Curiosity_9"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-09.wav"
+}
+
+"Portal.Glados_core.Curiosity_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-10.wav"
+}
+
+"Portal.Glados_core.Curiosity_11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-11.wav"
+}
+
+"Portal.Glados_core.Curiosity_12"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-12.wav"
+}
+
+"Portal.Glados_core.Curiosity_13"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-13.wav"
+}
+
+"Portal.Glados_core.Curiosity_15"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-15.wav"
+}
+
+"Portal.Glados_core.Curiosity_16"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-16.wav"
+}
+
+"Portal.Glados_core.Curiosity_17"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-17.wav"
+}
+
+"Portal.Glados_core.Curiosity_18"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_curiosity-18.wav"
+}
+
+////////////////////////////////////////////////////////////////////
+// AGGRESSIVE CORE VOs
+////////////////////////////////////////////////////////////////////
+
+"Portal.Glados_core.Aggressive_00"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-00.wav"
+}
+
+"Portal.Glados_core.Aggressive_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-01.wav"
+}
+
+"Portal.Glados_core.Aggressive_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-02.wav"
+}
+
+"Portal.Glados_core.Aggressive_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-03.wav"
+}
+
+"Portal.Glados_core.Aggressive_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-04.wav"
+}
+
+"Portal.Glados_core.Aggressive_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-05.wav"
+}
+
+"Portal.Glados_core.Aggressive_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-06.wav"
+}
+
+"Portal.Glados_core.Aggressive_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-07.wav"
+}
+
+"Portal.Glados_core.Aggressive_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-08.wav"
+}
+
+"Portal.Glados_core.Aggressive_09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-09.wav"
+}
+
+"Portal.Glados_core.Aggressive_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-10.wav"
+}
+
+"Portal.Glados_core.Aggressive_11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-11.wav"
+}
+
+"Portal.Glados_core.Aggressive_12"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-12.wav"
+}
+
+"Portal.Glados_core.Aggressive_13"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-13.wav"
+}
+
+"Portal.Glados_core.Aggressive_14"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-14.wav"
+}
+
+"Portal.Glados_core.Aggressive_15"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-15.wav"
+}
+
+"Portal.Glados_core.Aggressive_16"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-16.wav"
+}
+
+"Portal.Glados_core.Aggressive_17"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-17.wav"
+}
+
+"Portal.Glados_core.Aggressive_18"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-18.wav"
+}
+
+"Portal.Glados_core.Aggressive_19"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-19.wav"
+}
+
+"Portal.Glados_core.Aggressive_20"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-20.wav"
+}
+
+"Portal.Glados_core.Aggressive_21"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-21.wav"
+}
+
+"Portal.Glados_core.Aggressive_panic_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-near_fire01.wav"
+}
+
+"Portal.Glados_core.Aggressive_panic_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_anger-near_fire02.wav"
+}
+
+////////////////////////////////////////////////////////////////////
+// CRAZY CORE VOs
+////////////////////////////////////////////////////////////////////
+"Portal.Glados_core.Crazy_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-01.wav"
+}
+
+"Portal.Glados_core.Crazy_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-02.wav"
+}
+
+"Portal.Glados_core.Crazy_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-03.wav"
+}
+
+"Portal.Glados_core.Crazy_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-04.wav"
+}
+
+"Portal.Glados_core.Crazy_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-05.wav"
+}
+
+"Portal.Glados_core.Crazy_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-06.wav"
+}
+
+"Portal.Glados_core.Crazy_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-07.wav"
+}
+
+"Portal.Glados_core.Crazy_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-08.wav"
+}
+
+"Portal.Glados_core.Crazy_09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-09.wav"
+}
+
+"Portal.Glados_core.Crazy_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-10.wav"
+}
+
+"Portal.Glados_core.Crazy_11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-11.wav"
+}
+
+"Portal.Glados_core.Crazy_12"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-12.wav"
+}
+
+"Portal.Glados_core.Crazy_13"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-13.wav"
+}
+
+"Portal.Glados_core.Crazy_14"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-14.wav"
+}
+
+"Portal.Glados_core.Crazy_15"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-15.wav"
+}
+
+"Portal.Glados_core.Crazy_16"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-16.wav"
+}
+
+"Portal.Glados_core.Crazy_17"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-17.wav"
+}
+
+"Portal.Glados_core.Crazy_18"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-18.wav"
+}
+
+"Portal.Glados_core.Crazy_19"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-19.wav"
+}
+
+"Portal.Glados_core.Crazy_20"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-20.wav"
+}
+
+"Portal.Glados_core.Crazy_21"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-21.wav"
+}
+
+"Portal.Glados_core.Crazy_22"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-22.wav"
+}
+
+"Portal.Glados_core.Crazy_23"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-23.wav"
+}
+
+"Portal.Glados_core.Crazy_24"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-24.wav"
+}
+
+"Portal.Glados_core.Crazy_25"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-25.wav"
+}
+
+"Portal.Glados_core.Crazy_26"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-26.wav"
+}
+
+"Portal.Glados_core.Crazy_27"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-27.wav"
+}
+
+"Portal.Glados_core.Crazy_28"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-28.wav"
+}
+
+"Portal.Glados_core.Crazy_29"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-29.wav"
+}
+
+"Portal.Glados_core.Crazy_30"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-30.wav"
+}
+
+"Portal.Glados_core.Crazy_31"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-31.wav"
+}
+
+"Portal.Glados_core.Crazy_32"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-32.wav"
+}
+
+"Portal.Glados_core.Crazy_33"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-33.wav"
+}
+
+"Portal.Glados_core.Crazy_34"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-34.wav"
+}
+
+"Portal.Glados_core.Crazy_35"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-35.wav"
+}
+
+"Portal.Glados_core.Crazy_36"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-36.wav"
+}
+
+"Portal.Glados_core.Crazy_37"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-37.wav"
+}
+
+"Portal.Glados_core.Crazy_38"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-38.wav"
+}
+
+"Portal.Glados_core.Crazy_39"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-39.wav"
+}
+
+"Portal.Glados_core.Crazy_40"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-40.wav"
+}
+
+"Portal.Glados_core.Crazy_41"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_70DB"
+	"wave"		"vo/aperture_ai/escape_02_sphere_cakemix-41.wav"
+}

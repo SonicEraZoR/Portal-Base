@@ -1,0 +1,141 @@
+
+//***************
+// Music
+//***************
+
+"Portal.song1"			// 1m44sec, you got the second portalgun
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.50000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_subject_name_here.mp3"
+}
+
+
+
+"Portal.song2"			// 3m06sec, you found the first portalgun
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.45000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_taste_of_blood.mp3"
+}
+
+"Portal.song3"			// 3m45sec, hard puzzle
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.45000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_android_hell.mp3"
+}
+
+
+"Portal.song4"			// 3m30sec, conservation of momentum
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.55000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_self_esteem_fund.mp3"
+}
+
+
+"Portal.song5"			// 4m34sec, more ominous, before/during fire puzzle
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.40000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_procedural_jiggle_bone.mp3"
+}
+
+
+"Portal.room9_OFortuna"  	// 52sec, fire pit
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.70000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_4000_degrees_kelvin.mp3"
+}
+
+"Portal.song7"			// 4m00sec, behind the scenes
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.45000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_stop_what_you_are_doing.mp3"
+}
+
+"Portal.song8"			// 4m10sec, behind the scenes 2
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.45000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_party_escort.mp3"
+}
+
+"Portal.song9"			// 2m36sec, turret ambush
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.00000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_youre_not_a_good_person.mp3"
+}
+
+"Portal.song10"			// 4m05sec, story elements
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.400000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_no_cake_for_you.mp3"
+}
+
+"Portal.song11"			// 3m28sec, boss battle
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.45000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_you_cant_escape_you_know.mp3"
+}
+
+"Portal.song_credits"			// credits
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.50000"
+	"pitch"			"100"
+
+	"soundlevel"		"SNDLVL_NONE"
+
+	"wave"			"*#music/portal_still_alive.mp3"
+}

@@ -1,0 +1,43 @@
+"NPC_RocketTurret.LockingBeep"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"		"SNDLVL_80dB"
+
+	"wave"			"weapons\rocket\rocket_locking_beep1.wav"
+}
+
+"NPC_FloorTurret.LockedBeep"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+		
+	"soundlevel"		"SNDLVL_85dB"
+
+	"wave"			"weapons\rocket\rocket_locked_beep1.wav"
+}
+
+"NPC_FloorTurret.RocketFire"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+		
+	"soundlevel"		"SNDLVL_85dB"
+
+	"wave"			"weapons\rocket\rocket_fire1.wav"
+}
+
+"NPC_FloorTurret.RocketFlyLoop"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+		
+	"soundlevel"		"SNDLVL_70dB"
+
+	"wave"			"weapons\rocket\rocket_fly_loop1.wav"
+}

@@ -1,0 +1,221 @@
+// TALKING TURRET
+
+"NPC_FloorTurret.TalkActive"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_active_1.wav"
+		"wave"			"npc/turret_floor/turret_active_2.wav"
+		//"wave"			"npc/turret_floor/turret_active_3.wav"
+		"wave"			"npc/turret_floor/turret_active_4.wav"
+		"wave"			"npc/turret_floor/turret_active_5.wav"
+		"wave"			"npc/turret_floor/turret_active_6.wav"
+		"wave"			"npc/turret_floor/turret_active_7.wav"
+		"wave"			"npc/turret_floor/turret_active_8.wav"
+	}
+
+	
+}
+
+"NPC_FloorTurret.TalkAutosearch"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_autosearch_1.wav"
+		"wave"			"npc/turret_floor/turret_autosearch_2.wav"
+		//"wave"			"npc/turret_floor/turret_autosearch_3.wav"
+		"wave"			"npc/turret_floor/turret_autosearch_4.wav"
+		"wave"			"npc/turret_floor/turret_autosearch_5.wav"
+		"wave"			"npc/turret_floor/turret_autosearch_6.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkCollide"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_collide_1.wav"
+		"wave"			"npc/turret_floor/turret_collide_2.wav"
+		"wave"			"npc/turret_floor/turret_collide_3.wav"
+		"wave"			"npc/turret_floor/turret_collide_4.wav"
+		"wave"			"npc/turret_floor/turret_collide_5.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkDeploy"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_75dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_deploy_1.wav"
+		"wave"			"npc/turret_floor/turret_deploy_2.wav"
+		//"wave"			"npc/turret_floor/turret_deploy_3.wav"
+		"wave"			"npc/turret_floor/turret_deploy_4.wav"
+		"wave"			"npc/turret_floor/turret_deploy_5.wav"
+		"wave"			"npc/turret_floor/turret_deploy_6.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkDisabled"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		//"wave"			"npc/turret_floor/turret_disabled_1.wav"
+		"wave"			"npc/turret_floor/turret_disabled_2.wav"
+		//"wave"			"npc/turret_floor/turret_disabled_3.wav"
+		"wave"			"npc/turret_floor/turret_disabled_4.wav"
+		"wave"			"npc/turret_floor/turret_disabled_5.wav"
+		"wave"			"npc/turret_floor/turret_disabled_6.wav"
+		"wave"			"npc/turret_floor/turret_disabled_7.wav"
+		"wave"			"npc/turret_floor/turret_disabled_8.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkPickup"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_pickup_1.wav"
+		//"wave"			"npc/turret_floor/turret_pickup_2.wav"
+		"wave"			"npc/turret_floor/turret_pickup_3.wav"
+		//"wave"			"npc/turret_floor/turret_pickup_4.wav"
+		//"wave"			"npc/turret_floor/turret_pickup_5.wav"
+		"wave"			"npc/turret_floor/turret_pickup_6.wav"
+		"wave"			"npc/turret_floor/turret_pickup_7.wav"
+		"wave"			"npc/turret_floor/turret_pickup_8.wav"
+		"wave"			"npc/turret_floor/turret_pickup_9.wav"
+		"wave"			"npc/turret_floor/turret_pickup_10.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkRetire"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_retire_1.wav"
+		"wave"			"npc/turret_floor/turret_retire_2.wav"
+		//"wave"			"npc/turret_floor/turret_retire_3.wav"
+		"wave"			"npc/turret_floor/turret_retire_4.wav"
+		"wave"			"npc/turret_floor/turret_retire_5.wav"
+		"wave"			"npc/turret_floor/turret_retire_6.wav"
+		"wave"			"npc/turret_floor/turret_retire_7.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkSearch"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_70dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_search_1.wav"
+		"wave"			"npc/turret_floor/turret_search_2.wav"
+		//"wave"			"npc/turret_floor/turret_search_3.wav"
+		"wave"			"npc/turret_floor/turret_search_4.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkShotAt"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_shotat_1.wav"
+		"wave"			"npc/turret_floor/turret_shotat_2.wav"
+		"wave"			"npc/turret_floor/turret_shotat_3.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkTipped"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_75dB"
+
+	"rndwave"
+	{
+		//"wave"			"npc/turret_floor/turret_tipped_1.wav"
+		"wave"			"npc/turret_floor/turret_tipped_2.wav"
+		//"wave"			"npc/turret_floor/turret_tipped_3.wav"
+		"wave"			"npc/turret_floor/turret_tipped_4.wav"
+		"wave"			"npc/turret_floor/turret_tipped_5.wav"
+		"wave"			"npc/turret_floor/turret_tipped_6.wav"
+	}
+}
+
+"NPC_FloorTurret.TalkDissolved"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_75dB"
+
+	"rndwave"
+	{
+		"wave"			"npc/turret_floor/turret_fizzler_1.wav"
+	}
+}
+
+"NPC_FloorTurret.DeployingKlaxon"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"wave"			"ambient/alarms/klaxon1.wav"
+}

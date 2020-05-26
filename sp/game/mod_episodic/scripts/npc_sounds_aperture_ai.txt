@@ -1,0 +1,2264 @@
+//GENERAL APERTURE AI ALERTS
+
+//**( Played when the box is lost by the player. )**
+"Portal.AI_Box_Lost"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_lost.wav"
+}
+
+//**( Played when the box is fried by the box killa. )**
+"Portal.AI_Box_Fried"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_vaporized_in_emancipation_grid.wav"
+}
+
+
+//**( Played when security camera destroyed)
+"Portal.generic_security_camera_destroyed-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_security_camera_destroyed-1.wav"
+}
+
+"Portal.generic_security_camera_destroyed-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_security_camera_destroyed-2.wav"
+}
+
+"Portal.generic_security_camera_destroyed-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_security_camera_destroyed-3.wav"
+}
+
+"Portal.generic_security_camera_destroyed-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_security_camera_destroyed-4.wav"
+}
+
+"Portal.generic_security_camera_destroyed-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_security_camera_destroyed-5.wav"
+}
+
+
+// BONUS REWARD SOUNDS
+
+"Portal.bonus01_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus01_part1.wav"
+}
+
+"Portal.bonus01_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus01_part2.wav"
+}
+
+"Portal.bonus01_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus01_part3.wav"
+}
+
+"Portal.bonus02_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus02_part1.wav"
+}
+
+"Portal.bonus02_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus02_part2.wav"
+}
+
+"Portal.bonus03_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus03_part1.wav"
+}
+
+"Portal.bonus03_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus03_part2.wav"
+}
+
+"Portal.bonus04_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus04_part1.wav"
+}
+
+"Portal.bonus04_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus04_part2.wav"
+}
+
+"Portal.bonus05_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus05_part1.wav"
+}
+
+"Portal.bonus05_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus05_part2.wav"
+}
+
+"Portal.bonus05_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus05_part3.wav"
+}
+
+"Portal.bonus05_4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus05_part4.wav"
+}
+
+"Portal.bonus06_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus06_part1.wav"
+}
+
+"Portal.bonus06_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus06_part2.wav"
+}
+
+"Portal.bonus06_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/bonus06_part3.wav"
+}
+
+
+// TESTCHAMBERS
+
+"Portal.00_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-1.wav"
+}
+
+"Portal.00_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-2.wav"
+}
+
+"Portal.00_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-3.wav"
+}
+
+"Portal.00_part1_entry-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-4.wav"
+}
+
+"Portal.00_part1_entry-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-5.wav"
+}
+
+"Portal.00_part1_entry-6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-6.wav"
+}
+
+"Portal.00_part1_entry-7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_entry-7.wav"
+}
+
+"Portal.00_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_success-1.wav"
+}
+
+"Portal.00_part1_success-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_success-2.wav"
+}
+
+"Portal.00_part1_success-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part1_success-3.wav"
+}
+
+"Portal.00_part2_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part2_entry-1.wav"
+}
+
+"Portal.00_part2_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/00_part2_success-1.wav"
+}
+
+"Portal.01_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_entry-1.wav"
+}
+
+"Portal.01_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_entry-2.wav"
+}
+
+"Portal.01_part1_get_portal_gun-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-1.wav"
+}
+
+"Portal.01_part1_get_portal_gun-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-2.wav"
+}
+
+"Portal.01_part1_get_portal_gun-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-3.wav"
+}
+
+"Portal.01_part1_get_portal_gun-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-4.wav"
+}
+
+"Portal.01_part1_get_portal_gun-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-5.wav"
+}
+
+"Portal.01_part1_get_portal_gun-6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-6.wav"
+}
+
+"Portal.01_part1_get_portal_gun-7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-7.wav"
+}
+
+"Portal.01_part1_get_portal_gun-8"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part1_get_portal_gun-8.wav"
+}
+
+"Portal.01_part2_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part2_entry-1.wav"
+}
+
+"Portal.01_part2_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/01_part2_success-1.wav"
+}
+
+"Portal.02_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part1_entry-1.wav"
+}
+
+"Portal.02_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part1_entry-2.wav"
+}
+
+"Portal.02_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part1_success-1.wav"
+}
+
+"Portal.02_part1_success-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part1_success-2.wav"
+}
+
+"Portal.02_part2_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part2_success-1.wav"
+}
+
+"Portal.02_part2_success-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/02_part2_success-2.wav"
+}
+
+"Portal.03_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/03_part1_entry-1.wav"
+}
+
+"Portal.03_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/03_part1_entry-2.wav"
+}
+
+"Portal.03_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/03_part1_success-1.wav"
+}
+
+"Portal.03_part2_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/03_part2_entry-1.wav"
+}
+
+"Portal.03_part2_platform_activated-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/03_part2_platform_activated-1.wav"
+}
+
+"Portal.04_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/04_part1_entry-1.wav"
+}
+
+"Portal.04_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/04_part1_success-1.wav"
+}
+
+"Portal.05_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_entry-1.wav"
+}
+
+"Portal.05_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_entry-2.wav"
+}
+
+"Portal.05_part1_nag1-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_nag1-1.wav"
+}
+
+"Portal.05_part1_nag2-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_nag2-1.wav"
+}
+
+"Portal.05_part1_nag3-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_nag3-1.wav"
+}
+
+"Portal.05_part1_nag4-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_nag4-1.wav"
+}
+
+"Portal.05_part1_nag5-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_nag5-1.wav"
+}
+
+"Portal.05_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/05_part1_success-1.wav"
+}
+
+"Portal.06_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/06_part1_entry-1.wav"
+}
+
+"Portal.06_part1_success_1-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/06_part1_success_1-1.wav"
+}
+
+"Portal.06_part1_success_2-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/06_part1_success_2-1.wav"
+}
+
+"Portal.07_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_entry-1.wav"
+}
+
+"Portal.07_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_entry-2.wav"
+}
+
+"Portal.07_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_entry-3.wav"
+}
+
+"Portal.07_part1_get_device_component-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_get_device_component-1.wav"
+}
+
+"Portal.07_part1_get_device_component-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_get_device_component-2.wav"
+}
+
+"Portal.07_part1_get_device_component-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_get_device_component-3.wav"
+}
+
+"Portal.07_part1_trapped-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_trapped-1.wav"
+}
+
+"Portal.07_part1_trapped-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part1_trapped-2.wav"
+}
+
+"Portal.07_part2_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part2_entry-1.wav"
+}
+
+"Portal.07_part2_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/07_part2_success-1.wav"
+}
+
+"Portal.08_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_entry-1.wav"
+}
+
+"Portal.08_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_entry-2.wav"
+}
+
+"Portal.08_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_entry-3.wav"
+}
+
+"Portal.08_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_success-1.wav"
+}
+
+"Portal.08_part1_success-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_success-2.wav"
+}
+
+"Portal.08_part1_trapped-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_trapped-1.wav"
+}
+
+"Portal.08_part1_trapped-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/08_part1_trapped-2.wav"
+}
+
+"Portal.09_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/09_part1_entry-1.wav"
+}
+
+"Portal.09_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/09_part1_entry-2.wav"
+}
+
+"Portal.09_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/09_part1_success-1.wav"
+}
+
+"Portal.10_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/10_part1_entry-1.wav"
+}
+
+"Portal.10_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/10_part1_entry-2.wav"
+}
+
+"Portal.10_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/10_part1_entry-3.wav"
+}
+
+"Portal.10_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/10_part1_success-1.wav"
+}
+
+
+
+"Portal.11_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/11_part1_entry-1.wav"
+}
+
+"Portal.11_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/11_part1_entry-2.wav"
+}
+
+"Portal.11_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/11_part1_entry-3.wav"
+}
+
+"Portal.11_part1_success-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/11_part1_success-1.wav"
+}
+
+
+
+"Portal.13_part1_end-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_end-1.wav"
+}
+
+"Portal.13_part1_end-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_end-2.wav"
+}
+
+"Portal.13_part1_end-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_end-3.wav"
+}
+
+"Portal.13_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_entry-1.wav"
+}
+
+"Portal.13_part1_endnag-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-1.wav"
+}
+
+"Portal.13_part1_endnag-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-2.wav"
+}
+
+"Portal.13_part1_endnag-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-3.wav"
+}
+
+"Portal.13_part1_endnag-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-4.wav"
+}
+
+"Portal.13_part1_endnag-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-5.wav"
+}
+
+"Portal.13_part1_endnag-6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-6.wav"
+}
+
+"Portal.13_part1_endnag-7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-7.wav"
+}
+
+"Portal.13_part1_endnag-8"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_endnag-8.wav"
+}
+
+"Portal.13_part1_euthanized-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_euthanized-1.wav"
+}
+
+"Portal.13_part1_middle-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_middle-1.wav"
+}
+
+"Portal.13_part1_middle-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_middle-2.wav"
+}
+
+"Portal.13_part1_middle-2b-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_middle-2b-1.wav"
+}
+
+"Portal.13_part1_middle-2b-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_middle-2b-2.wav"
+}
+
+"Portal.13_part1_pickup-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/13_part1_pickup-1.wav"
+}
+
+"Portal.14_part1_end-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/14_part1_end-1.wav"
+}
+
+"Portal.14_part1_end-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/14_part1_end-2.wav"
+}
+
+"Portal.14_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/14_part1_entry-1.wav"
+}
+
+"Portal.14_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/14_part1_entry-2.wav"
+}
+
+"Portal.15_part1_entry-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_entry-1.wav"
+}
+
+"Portal.15_part1_entry-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_entry-2.wav"
+}
+
+"Portal.15_part1_entry-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_entry-3.wav"
+}
+
+"Portal.15_part1_into_the_fire-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_into_the_fire-1.wav"
+}
+
+"Portal.15_part1_into_the_fire-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_into_the_fire-2.wav"
+}
+
+"Portal.15_part1_into_the_fire-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_into_the_fire-3.wav"
+}
+
+"Portal.15_part1_into_the_fire-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_into_the_fire-4.wav"
+}
+
+"Portal.15_part1_into_the_fire-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_into_the_fire-5.wav"
+}
+
+"Portal.15_part1_partyfinalstop-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyfinalstop-1.wav"
+}
+
+"Portal.15_part1_partyreminder-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyreminder-1.wav"
+}
+
+"Portal.15_part1_partyspeech-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-1.wav"
+}
+
+"Portal.15_part1_partyspeech-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-2.wav"
+}
+
+"Portal.15_part1_partyspeech-3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-3.wav"
+}
+
+"Portal.15_part1_partyspeech-4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-4.wav"
+}
+
+"Portal.15_part1_partyspeech-5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-5.wav"
+}
+
+"Portal.15_part1_partyspeech-6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-6.wav"
+}
+
+"Portal.15_part1_partyspeech-7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/15_part1_partyspeech-7.wav"
+}
+
+"Portal.ding_off"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/ding_off.wav"
+}
+
+"Portal.ding_on"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/ding_on.wav"
+}
+
+"Portal.escape_00_part1_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag01-1.wav"
+}
+
+"Portal.escape_00_part1_nag02-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag02-1.wav"
+}
+
+"Portal.escape_00_part1_nag03-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag03-1.wav"
+}
+
+"Portal.escape_00_part1_nag04-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag04-1.wav"
+}
+
+"Portal.escape_00_part1_nag05-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag05-1.wav"
+}
+
+"Portal.escape_00_part1_nag06-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag06-1.wav"
+}
+
+"Portal.escape_00_part1_nag07-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag07-1.wav"
+}
+
+"Portal.escape_00_part1_nag08-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag08-1.wav"
+}
+
+"Portal.escape_00_part1_nag09-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag09-1.wav"
+}
+
+"Portal.escape_00_part1_nag10-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag10-1.wav"
+}
+
+"Portal.escape_00_part1_nag11-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag11-1.wav"
+}
+
+"Portal.escape_00_part1_nag12-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag12-1.wav"
+}
+
+"Portal.escape_00_part1_nag13-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag13-1.wav"
+}
+
+"Portal.escape_00_part1_nag14-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag14-1.wav"
+}
+
+"Portal.escape_00_part1_nag15-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag15-1.wav"
+}
+
+"Portal.escape_00_part1_nag16-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag16-1.wav"
+}
+
+"Portal.escape_00_part1_nag17-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_00_part1_nag17-1.wav"
+}
+
+"Portal.escape_00_part2_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part2_nag01-1.wav"
+}
+
+"Portal.escape_00_part2_nag02-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part2_nag02-1.wav"
+}
+
+"Portal.escape_00_part2_nag03-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part2_nag03-1.wav"
+}
+
+"Portal.escape_00_part3_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_00_part3_nag01-1.wav"
+}
+
+"Portal.escape_01_first_hit_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_first_hit_nag01-1.wav"
+}
+
+"Portal.escape_01_first_hit_nag03-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_first_hit_nag03-1.wav"
+}
+
+"Portal.escape_01_part1_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag01-1.wav"
+}
+
+"Portal.escape_01_part1_nag02-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag02-1.wav"
+}
+
+"Portal.escape_01_part1_nag03-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag03-1.wav"
+}
+
+"Portal.escape_01_part1_nag04-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag04-1.wav"
+}
+
+"Portal.escape_01_part1_nag05-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag05-1.wav"
+}
+
+"Portal.escape_01_part1_nag06-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag06-1.wav"
+}
+
+"Portal.escape_01_part1_nag07-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag07-1.wav"
+}
+
+"Portal.escape_01_part1_nag08-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag08-1.wav"
+}
+
+"Portal.escape_01_part1_nag09-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag09-1.wav"
+}
+
+"Portal.escape_01_part1_nag10-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag10-1.wav"
+}
+
+"Portal.escape_01_part1_nag11-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag11-1.wav"
+}
+
+"Portal.escape_01_part1_nag12-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_part1_nag12-1.wav"
+}
+
+"Portal.escape_01_second_hit_nag01-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_second_hit_nag01-1.wav"
+}
+
+"Portal.escape_01_second_hit_nag02-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_01_second_hit_nag02-1.wav"
+}
+
+"Portal.generic_crate_lost-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_lost-1.wav"
+}
+
+"Portal.generic_crate_lost-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_lost-2.wav"
+}
+
+"Portal.generic_crate_vaporized_in_emancipation_grid-1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_vaporized_in_emancipation_grid-1.wav"
+}
+
+"Portal.generic_crate_vaporized_in_emancipation_grid-2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/generic_crate_vaporized_in_emancipation_grid-2.wav"
+}
+
+"Portal.GlaDOS.found_me"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_entry-00.wav"
+}
+
+"Portal.GlaDOS.broke_my_heart"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_entry-01.wav"
+}
+
+"Portal.GlaDOS.call_it_a_day"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_entry-02.wav"
+}
+
+"Portal.GlaDOS.not_gonna_happen"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_entry-03.wav"
+}
+
+"Portal.GlaDOS.supprise_3_2_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_entry-04.wav"
+}
+
+"Portal.GlaDOS.core_drop_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredrop1-01.wav"
+}
+
+
+"Portal.GlaDOS.core_drop_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredrop1-02.wav"
+}
+
+"Portal.GlaDOS.core_drop_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredrop1-03.wav"
+}
+
+"Portal.GlaDOS.core_nag_1"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-01.wav"
+}
+
+"Portal.GlaDOS.core_nag_2"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-02.wav"
+}
+
+"Portal.GlaDOS.core_nag_3"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-03.wav"
+}
+
+"Portal.GlaDOS.core_nag_4"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-04.wav"
+}
+
+"Portal.GlaDOS.core_nag_5"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-05.wav"
+}
+
+"Portal.GlaDOS.core_nag_6"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-06.wav"
+}
+
+"Portal.GlaDOS.core_nag_7"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-07.wav"
+}
+
+"Portal.GlaDOS.core_nag_8"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-08.wav"
+}
+
+"Portal.GlaDOS.core_nag_9"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-09.wav"
+}
+
+"Portal.GlaDOS.core_nag_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-10.wav"
+}
+
+"Portal.GlaDOS.core_nag_11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-11.wav"
+}
+
+"Portal.GlaDOS.core_nag_12"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-12.wav"
+}
+
+"Portal.GlaDOS.core_nag_13"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-13.wav"
+}
+
+"Portal.GlaDOS.core_nag_14"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-14.wav"
+}
+
+"Portal.GlaDOS.core_nag_15"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-15.wav"
+}
+
+"Portal.GlaDOS.core_nag_16"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-16.wav"
+}
+
+"Portal.GlaDOS.core_nag_17"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spherenag1-17.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-01.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-02.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-03.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-04.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-05.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-06.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-07.wav"
+}
+
+"Portal.GlaDOS.core_destroy1_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-08.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy1_09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-09.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy1_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy1-10.wav"
+}
+
+"Portal.GlaDOS.core_destroy2_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy2-01.wav"
+}
+
+"Portal.GlaDOS.core_destroy2_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy2-02.wav"
+}
+
+"Portal.GlaDOS.core_destroy2_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy2-03.wav"
+}
+
+"Portal.GlaDOS.core_destroy2_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy2-04.wav"
+}
+
+"Portal.GlaDOS.core_destroy2_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy2-05.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy3_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-01.wav"
+}
+
+"Portal.GlaDOS.core_destroy3_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-02.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy3_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-03.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy3_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-04.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy3_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-05.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy3_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-06.wav"
+}
+
+"Portal.GlaDOS.core_destroy3_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy3-07.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-01.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-02.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-03.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-04.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-05.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-06.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-07.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-08.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-09.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-10.wav"
+}
+
+
+"Portal.GlaDOS.core_destroy4_11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_spheredestroy4-11.wav"
+}
+
+"Portal.GlaDOS.escape_02_ballhitpain-02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_ballhitpain-02.wav"
+}
+
+
+"Portal.GlaDOS.escape_02_miscbabble-01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-01.wav"
+}
+
+
+"Portal.GlaDOS.escape_02_miscbabble-02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-02.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-03.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-04"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-04.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-05.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-06.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-07.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-08.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-09.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-10"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-10.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-11"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-11.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-12"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-12.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-13"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-13.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-14"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-14.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-15"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-15.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-16"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-16.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-17"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-17.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-18"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-18.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-19"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-19.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-20"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-20.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-21"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-21.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-22"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-22.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-23"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-23.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-24"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-24.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-25"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-25.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-26"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-26.wav"
+}
+
+"Portal.GlaDOS.escape_02_miscbabble-27"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/escape_02_miscbabble-27.wav"
+}
+
+
+
+
+
+"Portal.post_escape_bridge_01"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_01.wav"
+}
+
+"Portal.post_escape_bridge_02"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_02.wav"
+}
+
+"Portal.post_escape_bridge_03"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_03.wav"
+}
+
+"Portal.post_escape_bridge_05"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_05.wav"
+}
+
+"Portal.post_escape_bridge_06"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"vo/aperture_ai/post_escape_bridge_06.wav"
+}
+
+"Portal.post_escape_bridge_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_07.wav"
+}
+
+"Portal.post_escape_bridge_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_08.wav"
+}
+
+"Portal.post_escape_bridge_09"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/post_escape_bridge_09.wav"
+}
+
+"Portal.escape_nags_07"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_nags_07.wav"
+}
+
+"Portal.escape_nags_08"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_80DB"
+	"wave"		"vo/aperture_ai/escape_nags_08.wav"
+}
+
+"Portal.PartyEscortAssociate"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NONE"
+	"wave"		"npc/PartyEscort.wav"
+}

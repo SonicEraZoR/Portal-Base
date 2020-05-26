@@ -1,0 +1,127 @@
+// Portalgun sounds
+
+"Weapon_Portalgun.fire_blue"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.7"
+	"soundlevel"		"SNDLVL_GUNFIRE"
+	"pitch"			"95,105"
+	"wave"			"weapons/portalgun/portalgun_shoot_blue1.wav"
+}
+
+"Weapon_Portalgun.fire_blue_npc"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.7"
+	"soundlevel"		"SNDLVL_GUNFIRE"
+	"pitch"			"95,105"
+	"wave"			"^weapons/portalgun/portalgun_shoot_blue1.wav"
+}
+
+"Weapon_Portalgun.fire_red"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.7"
+	"soundlevel"		"SNDLVL_GUNFIRE"
+	"pitch"			"95,105"
+	"wave"			"weapons/portalgun/portalgun_shoot_red1.wav"
+}
+
+"Weapon_Portalgun.fire_red_npc"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.7"
+	"soundlevel"		"SNDLVL_GUNFIRE"
+	"pitch"			"95,105"
+	"wave"			"^weapons/portalgun/portalgun_shoot_red1.wav"
+}
+
+"Weapon_Portalgun.powerup"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.7"
+	"soundlevel"		"SNDLVL_90db"
+	"wave"			"weapons/portalgun/portalgun_powerup1.wav"
+}
+
+"Weapon_Portalgun.HoldSound"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.0"
+	"soundlevel"		"SNDLVL_50db"
+	"pitch"			"50"
+	"wave"			"weapons/physcannon/hold_loop.wav"
+}
+
+
+// Portal sounds
+
+"Portal.open_red"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.6"
+	"soundlevel"		"SNDLVL_80db"
+	"pitch"			"95,105"
+	"rndwave"
+	{
+		"wave"			"weapons/portalgun/portal_open2.wav"
+		"wave"			"weapons/portalgun/portal_open3.wav"
+	}
+}
+
+"Portal.open_blue"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.6"
+	"soundlevel"		"SNDLVL_80db"
+	"pitch"			"95,105"
+
+	"wave"			"weapons/portalgun/portal_open1.wav"
+}
+
+"Portal.close_red"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.6"
+	"soundlevel"		"SNDLVL_80db"
+	"pitch"			"95,105"
+	"wave"			"weapons/portalgun/portal_close2.wav"
+
+}
+
+"Portal.close_blue"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.6"
+	"soundlevel"		"SNDLVL_80db"
+	"pitch"			"95,105"
+
+	"wave"			"weapons/portalgun/portal_close1.wav"
+}
+
+"Portal.ambient_loop"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.0"
+	"soundlevel"		"SNDLVL_70db"
+	"pitch"			"110"
+	"wave"			"weapons/portalgun/portal_ambient_loop1.wav"
+}
+
+"Portal.fizzle_moved"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.5"
+	"soundlevel"		"SNDLVL_105db"
+	"pitch"			"95,105"
+	"wave"			"weapons/portalgun/portal_fizzle2.wav"
+}
+
+"Portal.fizzle_invalid_surface"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.5"
+	"soundlevel"		"SNDLVL_90db"
+	"pitch"			"95,105"
+	"wave"			"weapons/portalgun/portal_invalid_surface3.wav"
+}

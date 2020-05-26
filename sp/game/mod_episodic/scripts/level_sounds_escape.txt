@@ -1,0 +1,145 @@
+//*******************************************************
+// Escape level sounds
+// *****************
+
+"escape.KLANG"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"  "SNDLVL_150dB"
+	"pitch"		"100"
+	"rndwave"
+	{
+		"wave" "physics/metal/metal_box_impact_hard1.wav"
+		"wave" "physics/metal/metal_box_impact_hard2.wav"
+		"wave" "physics/metal/metal_box_impact_hard3.wav"
+	}
+}
+
+"escape.glados_destruction-1"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-1.wav"
+}
+
+"escape.glados_destruction-2"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-2.wav"
+}
+
+"escape.glados_destruction-3"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-3.wav"
+}
+
+"escape.glados_destruction-4"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-4.wav"
+}
+
+"escape.glados_destruction-5"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-5.wav"
+}
+
+"escape.glados_destruction-6"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg01-6.wav"
+}
+
+"escape.the_surface-1"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg02-1.wav"
+}
+
+"escape.the_surface-2"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg02-2.wav"
+}
+
+"escape.the_surface-3"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg02-3.wav"
+}
+
+"escape.the_surface-4"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg02-4.wav"
+}
+
+"escape.cake_ride-1"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-1.wav"
+}
+
+"escape.cake_ride-2"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-2.wav"
+}
+
+"escape.cake_ride-3"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-3.wav"
+}
+
+"escape.cake_ride-4"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-4.wav"
+}
+
+"escape.cake_ride-5"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-5.wav"
+}
+
+"escape.cake_ride-6"
+{
+	"channel"	"CHAN_VOICE"
+	"soundlevel"		"SNDLVL_NONE"
+	"volume"		"1.0"
+	"wave"	"vo/escape/portal_escape_seg03-6.wav"
+}

@@ -1,0 +1,87 @@
+"sprites/640_hud"
+{
+	TextureData
+	{
+		"portal_crosshair_left_invalid"
+		{
+			"file"		"sprites/hud/portal_crosshairs"
+			"x"		"2"
+			"y"		"0"
+			"width"		"44"
+			"height"	"64"
+		}
+		"portal_crosshair_right_invalid"
+		{
+			"file"		"sprites/hud/portal_crosshairs"
+			"x"		"50"
+			"y"		"0"
+			"width"		"44"
+			"height"	"64"
+		}
+		"portal_crosshair_left_valid"
+		{
+			"file"		"sprites/hud/portal_crosshairs"
+			"x"		"98"
+			"y"		"0"
+			"width"		"44"
+			"height"	"64"
+		}
+		"portal_crosshair_right_valid"
+		{
+			"file"		"sprites/hud/portal_crosshairs"
+			"x"		"146"
+			"y"		"0"
+			"width"		"44"
+			"height"	"64"
+		}
+		"portal_crosshair_last_placed"
+		{
+			"file"		"sprites/hud/portal_crosshairs"
+			"x"		"194"
+			"y"		"0"
+			"width"		"28"
+			"height"	"64"
+		}
+		
+		"portal_crosshair_left_invalid_x360"
+		{
+			"file"		"sprites/hud/portal_crosshairs_x360"
+			"x"		"2"
+			"y"		"0"
+			"width"		"31"
+			"height"	"46"
+		}
+		"portal_crosshair_right_invalid_x360"
+		{
+			"file"		"sprites/hud/portal_crosshairs_x360"
+			"x"		"50"
+			"y"		"0"
+			"width"		"31"
+			"height"	"46"
+		}
+		"portal_crosshair_left_valid_x360"
+		{
+			"file"		"sprites/hud/portal_crosshairs_x360"
+			"x"		"98"
+			"y"		"0"
+			"width"		"31"
+			"height"	"46"
+		}
+		"portal_crosshair_right_valid_x360"
+		{
+			"file"		"sprites/hud/portal_crosshairs_x360"
+			"x"		"146"
+			"y"		"0"
+			"width"		"31"
+			"height"	"46"
+		}
+		"portal_crosshair_last_placed_x360"
+		{
+			"file"		"sprites/hud/portal_crosshairs_x360"
+			"x"		"198"
+			"y"		"6"
+			"width"		"20"
+			"height"	"46"
+		}
+	}
+}

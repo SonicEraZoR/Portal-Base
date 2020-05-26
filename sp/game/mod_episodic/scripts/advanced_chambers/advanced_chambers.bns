@@ -1,0 +1,53 @@
+// 08 Advanced
+"#Bonus_Map_TC13Advanced"
+{
+	"map"		"testchmb_a_08_advanced"
+	"chapter"	"chapter5.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_08_advanced"
+	"comment"	"#Bonus_Map_TC13AdvancedComment"
+}
+
+// 09 Advanced
+"#Bonus_Map_TC14Advanced"
+{
+	"map"		"testchmb_a_09_advanced"
+	"chapter"	"chapter6.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_09_advanced"
+	"comment"	"#Bonus_Map_TC14AdvancedComment"
+}
+
+// 10 Advanced
+"#Bonus_Map_TC15Advanced"
+{
+	"map"		"testchmb_a_10_advanced"
+	"chapter"	"chapter7.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_10_advanced"
+	"comment"	"#Bonus_Map_TC15AdvancedComment"
+}
+
+// 11 Advanced
+"#Bonus_Map_TC16Advanced"
+{
+	"map"		"testchmb_a_11_advanced"
+	"chapter"	"chapter8.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_11_advanced"
+	"comment"	"#Bonus_Map_TC16AdvancedComment"
+}
+
+// 13 Advanced
+"#Bonus_Map_TC17Advanced"
+{
+	"map"		"testchmb_a_13_advanced"
+	"chapter"	"chapter9.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_13_advanced"
+	"comment"	"#Bonus_Map_TC17AdvancedComment"
+}
+
+// 14 Advanced
+"#Bonus_Map_TC18Advanced"
+{
+	"map"		"testchmb_a_14_advanced"
+	"chapter"	"chapter10.cfg"	[$X360]
+	"image"		"bonusmaps/testchmb_a_14_advanced"
+	"comment"	"#Bonus_Map_TC18AdvancedComment"
+}

@@ -1,0 +1,84 @@
+//*********************
+//Energy Ball Sounds
+//*********************
+
+
+"EnergyBall.Explosion"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.75"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_70DB"
+
+	"wave"			"weapons/physcannon/energy_sing_explosion2.wav"
+}
+
+"EnergyBall.WhizFlyby"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.00000"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_50DB"
+
+	"rndwave"
+	{
+		"wave"	"weapons/physcannon/energy_sing_flyby1.wav"
+		"wave"	"weapons/physcannon/energy_sing_flyby2.wav"
+	}
+}
+
+"EnergyBall.Launch"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.00000"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_70DB"
+
+	"rndwave"
+	{
+		"wave"	"weapons/physcannon/energy_sing_flyby1.wav"
+		"wave"	"weapons/physcannon/energy_sing_flyby2.wav"
+	}
+}
+
+"EnergyBall.KillImpact"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.50000"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"weapons/physcannon/energy_disintegrate4.wav"
+		"wave"	"weapons/physcannon/energy_disintegrate5.wav"
+	}
+}
+
+"EnergyBall.Impact"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.0"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_70DB"
+
+	"rndwave"
+	{
+		"wave"	"weapons/physcannon/energy_bounce1.wav"
+		"wave"	"weapons/physcannon/energy_bounce2.wav"
+	}
+}
+
+"EnergyBall.AmbientLoop"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.8"
+	"soundlevel"		"SNDLVL_60db"
+	"pitch"			"150"
+	"wave"			"weapons/physcannon/energy_sing_loop4.wav"
+}
