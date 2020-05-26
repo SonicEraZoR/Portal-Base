@@ -1052,6 +1052,16 @@ void CBaseAnimating::DispatchAnimEvents ( CBaseAnimating *eventHandler )
 
 	CStudioHdr *pstudiohdr = GetModelPtr( );
 
+#ifdef _DEBUG
+	bool w_pistol_model = false;
+	char pistol_name[64];
+	strcpy_s(pistol_name, pstudiohdr->pszName());
+	if (!stricmp(pistol_name, "weapons/w_pistol.mdl"))
+	{
+		w_pistol_model = true;
+	}
+#endif // _DEBUG
+
 	if ( !pstudiohdr )
 	{
 		Assert(!"CBaseAnimating::DispatchAnimEvents: model missing");
@@ -1089,7 +1099,7 @@ void CBaseAnimating::DispatchAnimEvents ( CBaseAnimating *eventHandler )
 
 	// FIXME: does not handle negative framerates!
 	int index = 0;
-	while ( (index = GetAnimationEvent( pstudiohdr, GetSequence(), &event, flStart, flEnd, index ) ) != 0 )
+	while ( (index = GetAnimationEvent( pstudiohdr, GetSequence(), &event, flStart, flEnd, index ) ) != 0 ) // GetSequence() returned 1
 	{
 		event.pSource = this;
 		// calc when this event should happen
