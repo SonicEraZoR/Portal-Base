@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+#
+# Automatically generated solution:
+# devtools\bin\vpc /hl2 /episodic +game /mksln games.sln 
+#
+#
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (HL2)", "game\client\client_hl2.vcxproj", "{09E5D61D-4897-7B98-288B-C87442D14BFF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F} = {BAB92FF0-D72A-D7E5-1988-74628D39B94F}
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC} = {EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939} = {F69B3672-C5E8-CD1A-257F-253A25B5B939}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (Episodic)", "game\client\client_episodic.vcxproj", "{353A799F-E73F-7A69-07AD-B2AD57F3B775}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F} = {BAB92FF0-D72A-D7E5-1988-74628D39B94F}
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC} = {EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939} = {F69B3672-C5E8-CD1A-257F-253A25B5B939}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mathlib", "mathlib\mathlib.vcxproj", "{BAB92FF0-D72A-D7E5-1988-74628D39B94F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Raytrace", "raytrace\raytrace.vcxproj", "{95D67225-8415-236F-9128-DCB171B7DEC6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server (HL2)", "game\server\server_hl2.vcxproj", "{C3EE918E-6836-5578-1FA2-5703048552B9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F} = {BAB92FF0-D72A-D7E5-1988-74628D39B94F}
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC} = {EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server (Episodic)", "game\server\server_episodic.vcxproj", "{7855B476-B6D4-535D-F7A9-D623245F8B07}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F} = {BAB92FF0-D72A-D7E5-1988-74628D39B94F}
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC} = {EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tier1", "tier1\tier1.vcxproj", "{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vgui_controls", "vgui2\vgui_controls\vgui_controls.vcxproj", "{F69B3672-C5E8-CD1A-257F-253A25B5B939}"
+EndProject
