@@ -26,4 +26,4 @@ You will need to copy assets from your Portal copy though
 
 Same as Source SDK 2013 mod: https://developer.valvesoftware.com/wiki/Setup_mod_on_steam
 
-P. S. This ReadMe was mostly copied from this repo github.com/NicknineTheEagle/TF2-Base
+P. S. This ReadMe was mostly copied from this repo https://github.com/NicknineTheEagle/TF2-Base
