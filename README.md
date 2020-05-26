@@ -20,7 +20,7 @@ I currently added only VS Project files, so if you want to compile for Linux or 
 
 Compiling process is the same as for Source SDK 2013. Instructions for building Source SDK 2013 can be found here: https://developer.valvesoftware.com/wiki/Source_SDK_2013
 
-You will need to copy assets from your Portal copy though
+You will need to copy assets from your copy of Portal though
 
 ## Installing:
 
