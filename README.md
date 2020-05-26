@@ -1,7 +1,7 @@
 Portal
 =====
 
-This is the old Portal source code ported to Source Engine 2013.
+This is the old Portal source code ported to Source Engine 2013. I made this because I wanted to make proper Half-Life 2 with Portal gun, but I have no idea how to fix all of the bugs that occur in Portal on Half-Life 2 maps (like Metrocops not shooting bullets, various glitches with portals etc.). So I hope someone more experienced with Source engine will fix them.
 
 ## Dependencies
 
