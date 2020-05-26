@@ -15,7 +15,7 @@ This is the old Portal source code ported to Source Engine 2013.
 * GCC 4.8
 * [Steam Client Runtime](http://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz)
 
-I currently added only VS Project files, so if you want to compile for Linux or mac, you'll need to edit VPC files. I probably add proper VPC files later
+I currently added only VS Project files, so if you want to compile for Linux or mac, you'll need to edit VPC files. I'll probably add proper VPC files later
 ## Building
 
 Compiling process is the same as for Source SDK 2013. Instructions for building Source SDK 2013 can be found here: https://developer.valvesoftware.com/wiki/Source_SDK_2013
