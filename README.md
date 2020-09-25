@@ -1,7 +1,7 @@
 Portal
 =====
 
-This is the old Portal source code ported to Source Engine 2013. I made this because I wanted to make proper Half-Life 2 with Portal gun, but I have no idea how to fix all of the bugs that occur in Portal on Half-Life 2 maps (like Metrocops not shooting bullets, various glitches with portals etc.). So I hope someone more experienced with Source engine will fix them.
+This is the old Portal source code ported to Source Engine 2013. I made this because I wanted to make proper Half-Life 2 with Portal gun, but I have no idea how to fix all of the bugs that occur in Portal on Half-Life 2 maps (like Metrocops not shooting bullets, various glitches with portals etc.). So I hope someone more experienced with Source engine will help me fix them.
 
 ## Dependencies
 
@@ -15,7 +15,6 @@ This is the old Portal source code ported to Source Engine 2013. I made this bec
 * GCC 4.8
 * [Steam Client Runtime](http://media.steampowered.com/client/runtime/steam-runtime-sdk_latest.tar.xz)
 
-I currently added only VS Project files, so if you want to compile for Linux or mac, you'll need to edit VPC files. I'll probably add proper VPC files later
 ## Building
 
 Compiling process is the same as for Source SDK 2013. Instructions for building Source SDK 2013 can be found here: https://developer.valvesoftware.com/wiki/Source_SDK_2013
