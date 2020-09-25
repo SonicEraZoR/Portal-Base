@@ -18,7 +18,7 @@
 #include "portal_gamerules.h"
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
-#include "EntityList.h"
+#include "entitylist.h"
 #include "physics.h"
 #include "game.h"
 #include "player_resource.h"
@@ -102,7 +102,7 @@ void ClientGamePrecache( void )
 {
 	CBaseEntity::PrecacheModel("models/player.mdl");
 	CBaseEntity::PrecacheModel( "models/gibs/agibs.mdl" );
-	CBaseEntity::PrecacheModel("models/weapons/v_hands.mdl");
+	CBaseEntity::PrecacheModel ("models/weapons/v_hands.mdl");
 
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowAmmo" );
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowHealth" );

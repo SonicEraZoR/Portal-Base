@@ -21,7 +21,7 @@
 #include "portal_player.h"
 #include "hl2_player.h"
 #include "beam_shared.h"
-#include "sprite.h"
+#include "Sprite.h"
 #include "util.h"
 #include "portal/weapon_physcannon.h"
 #include "physics_saverestore.h"
@@ -2009,7 +2009,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 			{
 				maxMass *= 2.5;	// 625 for vehicles
 			}
-			float mass = min(totalMass, maxMass); // max 250kg of additional force
+			float mass = MIN(totalMass, maxMass); // max 250kg of additional force
 
 			// Put some spin on the object
 			for ( i = 0; i < listCount; i++ )
@@ -2021,7 +2021,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 				if ( pList[i] == pEntity->VPhysicsGetObject() )
 				{
 					ratio += hitObjectFactor;
-					ratio = min(ratio,1.0f);
+					ratio = MIN(ratio,1.0f);
 				}
 				else
 				{
