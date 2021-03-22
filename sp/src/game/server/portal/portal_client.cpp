@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -45,7 +45,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBasePlayer for pev, and call spawn
 	CPortal_Player *pPlayer = CPortal_Player::CreatePlayer( "player", pEdict );
-	pPlayer->PlayerData()->netname = AllocPooledString( playername );
+	pPlayer->SetPlayerName( playername );
 }
 
 
@@ -53,6 +53,11 @@ void ClientActive( edict_t *pEdict, bool bLoadGame )
 {
 	CPortal_Player *pPlayer = dynamic_cast< CPortal_Player* >( CBaseEntity::Instance( pEdict ) );
 	Assert( pPlayer );
+
+	if ( !pPlayer )
+	{
+		return;
+	}
 
 	pPlayer->InitialSpawn();
 
@@ -107,6 +112,7 @@ void ClientGamePrecache( void )
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowAmmo" );
 	CBaseEntity::PrecacheScriptSound( "HUDQuickInfo.LowHealth" );
 
+	CBaseEntity::PrecacheScriptSound( "FX_AntlionImpact.ShellImpact" );
 	CBaseEntity::PrecacheScriptSound( "Missile.ShotDown" );
 	CBaseEntity::PrecacheScriptSound( "Bullets.DefaultNearmiss" );
 	CBaseEntity::PrecacheScriptSound( "Bullets.GunshipNearmiss" );
@@ -154,24 +160,7 @@ void GameStartFrame( void )
 //=========================================================
 void InstallGameRules()
 {
-	if ( !gpGlobals->deathmatch )
-	{
-		CreateGameRulesObject( "CPortalGameRules" );
-		CreateGameRulesObject("CHalfLife2");
-		return;
-	}
-	else
-	{
-		if ( teamplay.GetInt() > 0 )
-		{
-			// teamplay
-			CreateGameRulesObject( "CTeamplayRules" );
-		}
-		else
-		{
-			// vanilla deathmatch
-			CreateGameRulesObject( "CMultiplayRules" );
-		}
-	}
+	CreateGameRulesObject( "CPortalGameRules" );
+	CreateGameRulesObject( "CHalfLife2" );
 }
 
