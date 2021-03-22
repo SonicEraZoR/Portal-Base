@@ -21,6 +21,7 @@
 #include "weapon_portalgun_shared.h"
 #include "physicsshadowclone.h"
 #include "particle_parse.h"
+#include "rumble_shared.h"
 
 
 #define BLAST_SPEED_NON_PLAYER 1000.0f
@@ -731,6 +732,73 @@ static void change_portalgun_linkage_id_f( const CCommand &args )
 			break;
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fizzle active portals
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+bool CWeaponPortalgun::Reload(void)
+{
+	bool bFizzledPortal = false;
+
+	if (CanFirePortal1())
+	{
+		CProp_Portal *pPortal = CProp_Portal::FindPortal(m_iPortalLinkageGroupID, false);
+
+		if (pPortal && pPortal->m_bActivated)
+		{
+			pPortal->DoFizzleEffect(PORTAL_FIZZLE_KILLED, false);
+			pPortal->Fizzle();
+			// HACK HACK! Used to make the gun visually change when going through a cleanser!
+			m_fEffectsMaxSize1 = 50.0f;
+
+			bFizzledPortal = true;
+		}
+
+		// Cancel portals that are still mid flight
+		if (pPortal && pPortal->GetNextThink(s_pDelayedPlacementContext) > gpGlobals->curtime)
+		{
+			pPortal->SetContextThink(NULL, gpGlobals->curtime, s_pDelayedPlacementContext);
+			m_fEffectsMaxSize2 = 50.0f;
+			bFizzledPortal = true;
+		}
+	}
+
+	if (CanFirePortal2())
+	{
+		CProp_Portal *pPortal = CProp_Portal::FindPortal(m_iPortalLinkageGroupID, true);
+
+		if (pPortal && pPortal->m_bActivated)
+		{
+			pPortal->DoFizzleEffect(PORTAL_FIZZLE_KILLED, false);
+			pPortal->Fizzle();
+			// HACK HACK! Used to make the gun visually change when going through a cleanser!
+			m_fEffectsMaxSize2 = 50.0f;
+
+			bFizzledPortal = true;
+		}
+
+		// Cancel portals that are still mid flight
+		if (pPortal && pPortal->GetNextThink(s_pDelayedPlacementContext) > gpGlobals->curtime)
+		{
+			pPortal->SetContextThink(NULL, gpGlobals->curtime, s_pDelayedPlacementContext);
+			m_fEffectsMaxSize2 = 50.0f;
+			bFizzledPortal = true;
+		}
+	}
+
+	if (bFizzledPortal)
+	{
+		CBasePlayer* pPlayer = AI_GetSinglePlayer();
+		SendWeaponAnim(ACT_VM_FIZZLE);
+		SetLastFiredPortal(0);
+		pPlayer->RumbleEffect(RUMBLE_RPG_MISSILE, 0, RUMBLE_FLAG_RESTART);
+		return bFizzledPortal;
+	}
+
+	return bFizzledPortal;
 }
 
 ConCommand change_portalgun_linkage_id( "change_portalgun_linkage_id", change_portalgun_linkage_id_f, "Changes the portal linkage ID for the portal gun held by the commanding player.", FCVAR_CHEAT );

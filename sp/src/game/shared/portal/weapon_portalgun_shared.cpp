@@ -94,16 +94,6 @@ bool CWeaponPortalgun::ShouldDrawCrosshair( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Override so only reload one shell at a time
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-bool CWeaponPortalgun::Reload( void )
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Play finish reload anim and fill clip
 // Input  :
 // Output :
