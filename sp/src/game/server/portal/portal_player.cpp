@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for Portal.
 //
@@ -622,6 +622,7 @@ void CPortal_Player::PostThink( void )
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
 
+	/*
 	// Regenerate heath after 3 seconds
 	if ( IsAlive() && GetHealth() < GetMaxHealth() )
 	{
@@ -644,6 +645,7 @@ void CPortal_Player::PostThink( void )
 			UTIL_ScreenFade( this, hurtScreenOverlay, 1.0f, 0.1f, FFADE_IN|FFADE_PURGE );
 		}
 	}
+	*/
 
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();

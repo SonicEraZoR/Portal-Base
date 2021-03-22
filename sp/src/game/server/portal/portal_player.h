@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -225,13 +225,6 @@ public:
 	CNetworkHandle( CFunc_LiquidPortal, m_hSurroundingLiquidPortal ); //if the player is standing in a liquid portal, this will point to it
 
 	friend class CProp_Portal;
-
-
-#ifdef PORTAL_MP
-public:
-	virtual CBaseEntity* EntSelectSpawnPoint( void );
-	void PickTeam( void );
-#endif
 };
 
 inline CPortal_Player *ToPortalPlayer( CBaseEntity *pEntity )
