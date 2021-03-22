@@ -1,5 +1,3 @@
-
-
 // This is the base rule script file for the AI response system for Expressive AI's who speak based on certain "Concepts"
 // You can think of a concept as a high level state that the code is trying to convey, such as say hello, or say you're mad, etc.
 //
@@ -50,15 +48,15 @@
 // RESPONSES:
 //
 // Single line: 
-// response <responsegroupname> [nodelay | defaultdelay | delay interval ] [speakonce] [noscene] [odds nnn] [respeakdelay interval] [soundlevel "SNDLVL_xxx"] [stop_on_nonidle] responsetype parameters
+// response <responsegroupname> [nodelay | defaultdelay | delay interval ] [speakonce] [noscene] [odds nnn] [respeakdelay interval] [soundelvel "SNDLVL_xxx"] responsetype parameters
 // Multiple lines
 // response <responsegroupname>
 // {
 //		[permitrepeats]   ; optional parameter, by default we visit all responses in group before repeating any
 //		[sequential]	  ; optional parameter, by default we randomly choose responses, but with this we walk through the list starting at the first and going to the last
 //		[norepeat]		  ; Once we've run through all of the entries, disable the response group
-//		responsetype1 parameters1 [nodelay | defaultdelay | delay interval ] [speakonce] [odds nnn] [respeakdelay interval] [soundelvel "SNDLVL_xxx"] [displayfirst] [ displaylast ] [ stop_on_nonidle ] weight nnn
-//		responsetype2 parameters2 [nodelay | defaultdelay | delay interval ] [speakonce] [odds nnn] [respeakdelay interval] [soundelvel "SNDLVL_xxx"] [displayfirst] [ displaylast ] [ stop_on_nonidle ] weight nnn
+//		responsetype1 parameters1 [nodelay | defaultdelay | delay interval ] [speakonce] [odds nnn] [respeakdelay interval] [soundelvel "SNDLVL_xxx"] [displayfirst] [ displaylast ] weight nnn
+//		responsetype2 parameters2 [nodelay | defaultdelay | delay interval ] [speakonce] [odds nnn] [respeakdelay interval] [soundelvel "SNDLVL_xxx"] [displayfirst] [ displaylast ] weight nnn
 //		etc.
 // }
 // Where: 
@@ -79,7 +77,6 @@
 //   soundlevel = use this soundlevel for the speak/sentence (default SNDLVL_TALKING)
 //   weight = if there are multiple responses, this is a selection weighting so that certain responses are favored over others in the group (default 1)
 //   displayfirst/displaylast : this should be the first/last item selected (ignores weight)
-//   stop_on_nonidle = If this response starts a .vcd, and during that scene the NPC changes out of idle state (e.g. sees an enemy), stop the .vcd
 //
 // CRITERIA:
 //
@@ -137,7 +134,119 @@
 //  responding entity.
 
 // Base script
-#include "talker/response_criteria.txt"
+enumeration "NPCState"
+{
+	"None"		"0"
+	"Idle"		"1"
+	"Alert"		"2"
+	"Combat"	"3"
+	"Scripted"	"4"
+	"PlayDead"	"5"
+	"Dead"		"6"
+}
+
+response "NullResponse"
+
+// Question / Answer concepts
+criterion "ConceptTalkAnswer" "Concept" "TLK_ANSWER" required weight 1
+criterion "ConceptTalkQuestion" "Concept" "TLK_QUESTION" required // weight 1 implied
+criterion "ConceptTalkAnswerCitizen" "Concept" "TLK_ANSWER_CIT" required weight 1
+criterion "ConceptTalkQuestionCitizen" "Concept" "TLK_QUESTION_CIT" required 
+criterion "ConceptTalkAnswerVort" "Concept" "TLK_ANSWER_VORT" required weight 1
+criterion "ConceptTalkQuestionVort" "Concept" "TLK_QUESTION_VORT" required 
+
+// General concepts
+criterion "ConceptTalkIdle" "Concept" "TLK_IDLE" required
+criterion "ConceptTalkStare" "Concept" "TLK_STARE" required
+criterion "ConceptTalkUse" "Concept" "TLK_USE" required
+criterion "ConceptTalkStartFollow" "Concept" "TLK_STARTFOLLOW" required
+criterion "ConceptTalkStopFollow" "Concept" "TLK_STOPFOLLOW" required
+criterion "ConceptTalkStop" "Concept" "TLK_STOP" required
+criterion "ConceptTalkNoShoot" "Concept" "TLK_NOSHOOT" required
+criterion "ConceptTalkHello" "Concept" "TLK_HELLO" required
+criterion "ConceptTalkPHello" "Concept" "TLK_PHELLO" required
+criterion "ConceptTalkPIdle" "Concept" "TLK_PIDLE" required
+criterion "ConceptTalkPQuestion" "Concept" "TLK_PQUESTION" required
+criterion "ConceptTalkPlayerHurt1" "Concept" "TLK_PLHURT1" required
+criterion "ConceptTalkPlayerHurt2" "Concept" "TLK_PLHURT2" required
+criterion "ConceptTalkPlayerHurt3" "Concept" "TLK_PLHURT3" required
+criterion "ConceptTalkPlayerPushed" "Concept" "TLK_PLPUSH" required
+criterion "ConceptTalkSmell" "Concept" "TLK_SMELL" required
+criterion "ConceptTalkWound" "Concept" "TLK_WOUND" required
+criterion "ConceptTalkMortal" "Concept" "TLK_MORTAL" required
+criterion "ConceptTalkDanger" "Concept" "TLK_DANGER" required
+criterion "ConceptTalkResume" "Concept" "TLK_RESUME" required
+criterion "ConceptTalkHeal" "Concept" "TLK_HEAL" required
+criterion "ConceptTalkTourGuideStayPut" "Concept" "TLK_TGSTAYPUT" required
+criterion "ConceptTalkTourGuideFind" "Concept" "TLK_TGFIND" required
+criterion "ConceptTalkTourGuideSeek" "Concept" "TLK_TGSEEK" required
+criterion "ConceptTalkTourGuideLostYou" "Concept" "TLK_TGLOSTYOU" required
+criterion "ConceptTalkTourGuideCatchUp" "Concept" "TLK_TGCATCHUP" required
+criterion "ConceptTalkTourGuideEndTour" "Concept" "TLK_TGENDTOUR" required
+criterion "ConceptTalkSelected" "Concept" "TLK_SELECTED" required
+criterion "ConceptTalkCommanded" "Concept" "TLK_COMMANDED" required
+criterion "ConceptTalkCommandFailed" "Concept" "TLK_COMMAND_FAILED" required
+criterion "ConceptTalkBetrayed" "Concept" "TLK_BETRAYED" required
+criterion "ConceptTalkGiveAmmo" "Concept" "TLK_GIVEAMMO" required
+criterion "ConceptTalkAllyKilled" "Concept" "TLK_ALLY_KILLED" required
+criterion "ConceptSeeCombine" "Concept" "TLK_SEE_COMBINE" required
+criterion "ConceptEnemyDead" "Concept" "TLK_ENEMY_DEAD" required
+criterion "ConceptTalkWatchOut" "Concept" "TLK_WATCHOUT" required
+criterion "ConceptTalkAttacking" "Concept" "TLK_ATTACKING" required
+criterion "ConceptTalkDeath" "Concept" "TLK_DEATH" required
+criterion "ConceptTalkHelpMe" "Concept" "TLK_HELP_ME" required
+criterion "ConceptTalkPlayerPhysAttack" "Concept" "TLK_PLYR_PHYSATK" required
+criterion "ConceptDissolveScream" "Concept" "TLK_DISSOLVESCREAM" required
+criterion "ConceptElectrocuteScream" "Concept" "TLK_ELECTROCUTESCREAM" required
+criterion "ConceptNewWeapon" "Concept" "TLK_NEWWEAPON" required
+criterion "ConceptShot" "Concept" "TLK_SHOT" required
+criterion "ConceptPlayerReload" "Concept" "TLK_PLRELOAD" required
+criterion "ConceptPlayerDead" "Concept" "TLK_PLDEAD" required
+criterion "ConceptHideAndReload" "Concept" "TLK_HIDEANDRELOAD" required
+criterion "ConceptStartCombat" "Concept" "TLK_STARTCOMBAT" required
+criterion "ConceptJoinPlayer" "Concept" "TLK_JOINPLAYER" required
+
+// Lead behavior
+criterion "ConceptLeadStart" "Concept" "TLK_LEAD_START" required			// Spoken once when the NPC first starts to lead the player
+criterion "ConceptLeadWaitOver" "Concept" "TLK_LEAD_WAITOVER" required			// Spoken when the player arrives at an NPC waiting to lead the player
+criterion "ConceptLeadAttractPlayer" "Concept" "TLK_LEAD_ATTRACTPLAYER" required	// Nag spoken by a NPC waiting to lead the player, trying to attract the player
+criterion "ConceptLeadCatchup" "Concept" "TLK_LEAD_CATCHUP" required			// Spoken by the NPC when the player's lagging behind
+criterion "ConceptLeadComingBack" "Concept" "TLK_LEAD_COMINGBACK" required		// Spoken when the NPC comes back to find a lost player
+criterion "ConceptLeadRetrieve" "Concept" "TLK_LEAD_RETRIEVE" required			// Spoken when the NPC has come back to the player, and is now resuming the lead
+criterion "ConceptLeadArrival" "Concept" "TLK_LEAD_ARRIVAL" required			// Spoken when the leading NPC reaches the target point
+criterion "ConceptLeadSuccess" "Concept" "TLK_LEAD_SUCCESS" required			// Spoken when the player and the leading NPC have both reached the target point
+criterion "ConceptLeadMissingWeapon" "Concept" "TLK_LEAD_MISSING_WEAPON" required	// Spoken when the NPC refuses to lead the player because he's missing a weapon
+
+// Citizen responses
+criterion "ConceptCRPlayerShotGunship" "Concept" "TLK_CITIZEN_RESPONSE_SHOT_GUNSHIP" required
+criterion "ConceptCRPlayerKilledGunship" "Concept" "TLK_CITIZEN_RESPONSE_KILLEd_GUNSHIP" required
+criterion "ConceptCRVitalNPCDied" "Concept" "TLK_VITALNPC_DIED" required
+
+criterion "PlayerAlive" "PlayerHealth" ">0" required
+criterion "PlayerDead" "PlayerHealth" "<=0" required
+criterion "PlayerWounded" "PlayerHealthFrac"	">0,<=.5"
+criterion "NPCAlive" "Health" ">0" required
+criterion "NPCAlert" "NPCState" ">=[NPCState::Idle],<[NPCState::Alert]"
+criterion "NPCIdle" "NPCState" "[NPCState::Idle]" required
+criterion "PlayerNear" "distancetoplayer" "<500" required
+criterion "SeePlayer" "seeplayer" "1" required
+criterion "SeenByPlayer" "seenbyplayer" "1" required
+criterion "NoRecentCombat" "timesincecombat" ">25" required
+
+criterion "ShotInLeg" "shotloc" "leg" required weight 0
+criterion "ShotInArm" "shotloc" "arm" required weight 0
+criterion "ShotInGut" "shotloc" "gut" required weight 0
+
+criterion "EnemyIsMortar" "enemy" "func_tankmortar" required
+
+criterion "NotUsedVortResponse" "UsedVortResponse" "!=1" "required" weight 0
+criterion "IsVortLabUseDisable" "VortLab_Enable" "0" weight 2 required
+
+// Global states
+criterion "IsGordonCriminal" "gordon_precriminal" "0" required
+criterion "IsGordonPreCriminal" "gordon_precriminal" "1" required
+
+criterion "IsMap_d3_c17_09" "map" "d3_c17_09" "required"
 
 // Test rules
 #include "talker/interjections.txt" 
@@ -147,12 +256,7 @@
 #include "talker/response_eli_lab.txt"
 #include "talker/npc_vortigaunt.txt"
 #include "talker/npc_citizen.txt"
-#include "talker/npc_citizen_scenes.txt"
-//#include "talker/npc_grigori.txt"
-//#include "talker/npc_barney.txt"
+#include "talker/npc_grigori.txt"
+#include "talker/npc_barney.txt"
 #include "talker/npc_alyx.txt"
-#include "talker/npc_alyx_episodic.txt"
-#include "talker/npc_alyx_episodic_scenes.txt"
-//#include "talker/npc_barney_episodic.txt"
-#include "talker/nags_Alyx.txt"
-#include "talker/npc_alyx_vehicle.txt"
+

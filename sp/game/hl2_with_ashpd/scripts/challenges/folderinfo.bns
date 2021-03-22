@@ -1,8 +1,0 @@
-// Info describing the folder must be in folderinfo.txt!
-// The image shown for the folder is assumed to be foldericon.tga if none is specified!
-
-"#Bonus_Map_Challenges"
-{
-	"image"		"bonusmaps/challenges"
-	"comment"	"#Bonus_Map_ChallengesComment"
-}
