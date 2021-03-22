@@ -1,18 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Game rules for Portal.
 //
 //=============================================================================//
-
-#ifdef PORTAL_MP
-
-
-
-#include "portal_mp_gamerules.h" //redirect to multiplayer gamerules in multiplayer builds
-
-
-
-#else
 
 #ifndef PORTAL_GAMERULES_H
 #define PORTAL_GAMERULES_H
@@ -109,4 +99,3 @@ inline CPortalGameRules* PortalGameRules()
 
 
 #endif // PORTAL_GAMERULES_H
-#endif
