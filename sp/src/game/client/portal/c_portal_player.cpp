@@ -279,6 +279,7 @@ RecvPropEHandle( RECVINFO( m_pHeldObjectPortal ) ),
 RecvPropBool( RECVINFO( m_bPitchReorientation ) ),
 RecvPropEHandle( RECVINFO( m_hPortalEnvironment ) ),
 RecvPropEHandle( RECVINFO( m_hSurroundingLiquidPortal ) ),
+RecvPropBool(RECVINFO(m_bCrosshairSuppressed)),
 END_RECV_TABLE()
 
 
@@ -301,6 +302,8 @@ void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flD
 C_Portal_Player::C_Portal_Player()
 : m_iv_angEyeAngles( "C_Portal_Player::m_iv_angEyeAngles" )
 {
+	m_bCrosshairSuppressed = false;
+
 	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
 
 	m_iIDEntIndex = 0;
@@ -1634,6 +1637,11 @@ void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& 
 
 		vm->CalcViewModelView( this, vInterpEyeOrigin, eyeAngles );
 	}
+}
+
+bool C_Portal_Player::IsSuppressingCrosshair()
+{
+	return m_bCrosshairSuppressed;
 }
 
 bool LocalPlayerIsCloseToPortal( void )

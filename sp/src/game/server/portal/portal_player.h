@@ -166,6 +166,7 @@ public:
 
 	void IncNumCamerasDetatched( void ) { ++m_iNumCamerasDetatched; }
 	int GetNumCamerasDetatched( void ) const { return m_iNumCamerasDetatched; }
+	void SuppressCrosshair( bool a );
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
@@ -175,6 +176,8 @@ public:
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
 		
 private:
+
+	CNetworkVar(bool, m_bCrosshairSuppressed);
 
 	virtual CAI_Expresser* CreateExpresser( void );
 

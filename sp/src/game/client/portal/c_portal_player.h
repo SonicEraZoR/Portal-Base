@@ -33,6 +33,8 @@ public:
 	C_Portal_Player();
 	~C_Portal_Player( void );
 
+	bool IsSuppressingCrosshair();
+
 	void ClientThink( void );
 	void FixTeleportationRoll( void );
 
@@ -118,6 +120,8 @@ public:
 	CWeaponPortalBase* GetActivePortalWeapon() const;
 
 private:
+
+	bool m_bCrosshairSuppressed;
 
 	C_Portal_Player( const C_Portal_Player & );
 

@@ -170,6 +170,8 @@ SendPropEHandle( SENDINFO( m_hSurroundingLiquidPortal ) ),
 
 SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 
+SendPropBool(SENDINFO(m_bCrosshairSuppressed)),
+
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CPortal_Player )
@@ -2168,6 +2170,10 @@ void CPortal_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *p
 	PortalSetupVisibility( this, area, pvs, pvssize );
 }
 
+void CPortal_Player::SuppressCrosshair(bool a)
+{
+	m_bCrosshairSuppressed = a;
+}
 
 #ifdef PORTAL_MP
 
