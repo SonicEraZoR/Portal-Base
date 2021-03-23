@@ -19,7 +19,7 @@ $Configuration
 	}
 }
 
-$Project "Client (Portal)"
+$Project "Client (Portal) (Episodic)"
 {
 	$Folder	"Source Files"
 	{
