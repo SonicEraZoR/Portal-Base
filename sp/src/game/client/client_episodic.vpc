@@ -6,7 +6,7 @@
 
 $Macro SRCDIR		"..\.."
 $Macro GAMENAME 	"episodic" [!$SOURCESDK]
-$Macro GAMENAME 	"hl2_with_ashpd" [$SOURCESDK]
+$Macro GAMENAME 	"hl2ep2_with_ashpd" [$SOURCESDK]
 
 $Include "$SRCDIR\game\client\client_base.vpc"
 
