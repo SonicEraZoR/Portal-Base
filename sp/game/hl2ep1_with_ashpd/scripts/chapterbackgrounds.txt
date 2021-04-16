@@ -1,0 +1,11 @@
+"chapters"
+{
+	1	"ep1_background01"
+	2	"ep1_background01"
+	3	"ep1_background01a"
+	4	"ep1_background02"
+	5	"ep1_background02"
+	6	"ep1_background02"
+	7	"ep1_background02"
+	8	"ep1_background02"
+}
