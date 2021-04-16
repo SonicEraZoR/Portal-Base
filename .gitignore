@@ -93,5 +93,6 @@ sp/game/hl2ep2_with_ashpd/stats.txt
 sp/src/utils/sapi51/*
 *.lib
 sp/src/utils/qc_eyes/Debug/QC_Eyes.res
+sp/src/utils/qc_eyes/Release/QC_Eyes.res
 sp/game/hl2ep1_with_ashpd/ep1_gamestats.dat
 sp/game/hl2ep2_with_ashpd/ep1_gamestats.dat
