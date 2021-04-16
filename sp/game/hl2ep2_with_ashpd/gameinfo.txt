@@ -1,15 +1,15 @@
 "GameInfo"
 {
-	game 		"Half-Life 2 with ASHPD"
+	game 		"Half-Life 2: Episode Two with ASHPD"
 	title 		"HALF-LIFE'"
-	title2		""
-	supportsvr	1
+	title2		"== episode two =="
 
 	type		singleplayer_only
+	supportsvr	1
 
 	FileSystem
 	{
-		SteamAppId				220		// This sets the app ID in Steam
+		SteamAppId				420		// This sets the app ID in Steam
 		
 		//
 		// The code that loads this file automatically does a few things here:
@@ -37,7 +37,10 @@
 			// folder.
 			//
 			// Note that this folder is scanned only when the game is booted.
+			game+mod			ep2/custom/*
+			game+mod			episodic/custom/*
 			game+mod			hl2/custom/*
+			game+mod			|all_source_engine_paths|../Portal/portal/custom/*
 
 			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
 			// as the first "mod" search path (after any user customizations).  This is also the one
@@ -50,42 +53,30 @@
 			// in folders where they don't exist.  (Searching a VPK is much faster than making an operating
 			// system call.)
 			game_lv				hl2/hl2_lv.vpk
-			game				|all_source_engine_paths|hl2/hl2_english.vpk
+			game+mod			ep2/ep2_sound_vo_english.vpk
+			game+mod			ep2/ep2_pak.vpk
+			game				|all_source_engine_paths|episodic/ep1_sound_vo_english.vpk
+			game				|all_source_engine_paths|episodic/ep1_pak.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
 			game				|all_source_engine_paths|hl2/hl2_pak.vpk
 			game				|all_source_engine_paths|hl2/hl2_textures.vpk
-			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
 			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
 			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			game				|all_source_engine_paths|../Portal/portal/portal_sound_vo_english.vpk
+			game				|all_source_engine_paths|../Portal/portal/portal_pak.vpk
 			platform			|all_source_engine_paths|platform/platform_misc.vpk
 
 			// Add the HL2 directory as a game search path.  This is also where where writes
 			// to the "game" path go.
-			game+game_write		hl2
-			
-						// First, mount all user customizations.  This will search for VPKs and subfolders
-			// and mount them in alphabetical order.  The easiest way to distribute a mod is to
-			// pack up the custom content into a VPK.  To "install" a mod, just drop it in this
-			// folder.
-			//
-			// Note that this folder is scanned only when the game is booted.
-			game			|All_Source_Engine_Paths|../Portal/portal/custom/*
-
-			// We search VPK files before ordinary folders, because most files will be found in
-			// VPK and we can avoid making thousands of file system calls to attempt to open files
-			// in folders where they don't exist.  (Searching a VPK is much faster than making an operating
-			// system call.)
-			game			|All_Source_Engine_Paths|../Portal/portal/portal_pak.vpk
-
-			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
-			// as the first "mod" search path (after any user customizations).  This is also the one
-			// that's used when writing to the "mod" path.
-			game		|All_Source_Engine_Paths|../Portal/portal/.
+			game+game_write		ep2
 
 			// Where the game's binaries are
-			gamebin				hl2_with_ashpd/bin
+			gamebin				episodic/bin
 
 			// Last, mount in shared HL2 loose files
+			game				|all_source_engine_paths|episodic
 			game				|all_source_engine_paths|hl2
+			game				|all_source_engine_paths|../Portal/portal
 			platform			|all_source_engine_paths|platform
 		}
 	}

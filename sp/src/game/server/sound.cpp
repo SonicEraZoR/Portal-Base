@@ -28,9 +28,9 @@
 #include "KeyValues.h"
 #include "filesystem.h"
 
-#ifdef PORTAL
-#include "portal_gamerules.h"
-#endif // PORTAL
+//#ifdef PORTAL
+//#include "portal_gamerules.h"
+//#endif // PORTAL
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

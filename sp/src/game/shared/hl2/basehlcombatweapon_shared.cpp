@@ -229,7 +229,8 @@ void CBaseHLCombatWeapon::WeaponIdle( void )
 float	g_lateralBob;
 float	g_verticalBob;
 
-#if defined( CLIENT_DLL ) && ( !defined( HL2MP ) && !defined( PORTAL ) )
+//#if defined( CLIENT_DLL ) && ( !defined( HL2MP ) && !defined( PORTAL ) )
+#if defined( CLIENT_DLL ) && ( !defined( HL2MP ) )
 
 #define	HL2_BOB_CYCLE_MIN	1.0f
 #define	HL2_BOB_CYCLE_MAX	0.45f

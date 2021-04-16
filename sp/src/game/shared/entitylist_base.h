@@ -132,19 +132,43 @@ inline CBaseHandle CBaseEntityList::GetNetworkableHandle( int iEntity ) const
 		return CBaseHandle();
 }
 
+//int a;
 
-inline IHandleEntity* CBaseEntityList::LookupEntity( const CBaseHandle &handle ) const
+inline IHandleEntity* CBaseEntityList::LookupEntity(const CBaseHandle &handle) const
 {
-	if ( handle.m_Index == INVALID_EHANDLE_INDEX )
+	if (handle.m_Index == INVALID_EHANDLE_INDEX)
 		return NULL;
 
-	const CEntInfo *pInfo = &m_EntPtrArray[ handle.GetEntryIndex() ];
-	if ( pInfo->m_SerialNumber == handle.GetSerialNumber() )
+	const CEntInfo *pInfo = &m_EntPtrArray[handle.GetEntryIndex()];
+//#ifdef _DEBUG //used for debuging animation errors for all of the non portal gun weapons
+//	bool w_model = false;
+//	bool v_model = false;
+//#ifdef CLIENT_DLL
+//	if (dynamic_cast<C_WeaponCrowbar*>(pInfo->m_pEntity))
+//	{
+//		CStudioHdr* pstudiohdr = dynamic_cast<C_WeaponCrowbar*>(pInfo->m_pEntity)->GetModelPtr();
+//		if (pstudiohdr)
+//		{
+//			char weapon_name[64];
+//			strcpy_s(weapon_name, pstudiohdr->pszName());
+//			if (!stricmp(weapon_name, "weapons/w_crowbar.mdl"))
+//			{
+//				w_model = true;
+//			}
+//			if (!stricmp(weapon_name, "weapons/v_crowbar.mdl"))
+//			{
+//				v_model = true;
+//			}
+//		}
+//		a++;
+//	}
+//#endif
+//#endif
+	if (pInfo->m_SerialNumber == handle.GetSerialNumber())
 		return (IHandleEntity*)pInfo->m_pEntity;
 	else
 		return NULL;
 }
-
 
 inline IHandleEntity* CBaseEntityList::LookupEntityByNetworkIndex( int edictIndex ) const
 {

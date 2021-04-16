@@ -9,7 +9,7 @@
 #define PORTAL_PLAYER_H
 #pragma once
 
-#include "portal_playeranimstate.h"
+//#include "portal_playeranimstate.h"
 #include "c_basehlplayer.h"
 #include "portal_player_shared.h"
 #include "c_prop_portal.h"
@@ -48,10 +48,10 @@ public:
 		return (C_Portal_Player*)C_BasePlayer::GetLocalPlayer();
 	}
 
-	virtual const QAngle& GetRenderAngles();
+//	virtual const QAngle& GetRenderAngles();
 
-	virtual void UpdateClientSideAnimation();
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
+//	virtual void UpdateClientSideAnimation();
+//	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
 
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
@@ -127,7 +127,7 @@ private:
 
 	void UpdatePortalEyeInterpolation( void );
 	
-	CPortalPlayerAnimState *m_PlayerAnimState;
+//	CPortalPlayerAnimState *m_PlayerAnimState;
 
 	QAngle	m_angEyeAngles;
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;

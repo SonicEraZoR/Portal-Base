@@ -7,6 +7,11 @@
 #include "cbase.h"
 #include "entitylist_base.h"
 #include "ihandleentity.h"
+//#ifdef CLIENT_DLL
+//#ifdef _DEBUG
+//#include "c_weapon_crowbar.h"
+//#endif
+//#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -271,3 +276,4 @@ void CBaseEntityList::OnAddEntity( IHandleEntity *pEnt, CBaseHandle handle )
 void CBaseEntityList::OnRemoveEntity( IHandleEntity *pEnt, CBaseHandle handle )
 {
 }
+
