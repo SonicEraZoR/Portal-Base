@@ -24,7 +24,7 @@
 
 bool g_bAllowForcePortalTrace = false;
 bool g_bForcePortalTrace = false;
-bool g_bBulletPortalTrace = false;
+bool g_bBulletPortalTrace = true;
 
 ConVar sv_portal_trace_vs_world ("sv_portal_trace_vs_world", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment world geometry" );
 ConVar sv_portal_trace_vs_displacements ("sv_portal_trace_vs_displacements", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment displacement geometry" );
