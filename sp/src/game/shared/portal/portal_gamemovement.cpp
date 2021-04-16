@@ -169,7 +169,7 @@ bool CPortalGameMovement::CheckJumpButton()
 {
 	if ( BaseClass::CheckJumpButton() && GetPortalPlayer() )
 	{
-//		GetPortalPlayer()->DoAnimationEvent( PLAYERANIMEVENT_JUMP, 0 );
+		GetPortalPlayer()->DoAnimationEvent( PLAYERANIMEVENT_JUMP, 0 );
 		return true;
 	}
 

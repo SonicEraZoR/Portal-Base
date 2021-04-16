@@ -6,6 +6,9 @@
 //		"busy_sequence"		"Sequence Name". If specified, this is used over the activity name. Specify it in the hint node.
 //		"entry_sequence" 	"Sequence Name". If specified, this is used over the entry anim.
 //		"exit_sequence" 	"Sequence Name". If specified, this is used over the exit anim.
+//		"busy_sound"		"Sound Name". If specified, the NPC will play this sound when it plays the busy anim/seq. Can be a GameSound name or a response rules concept.
+//		"entry_sound"		"Sound Name". If specified, the NPC will play this sound when it plays the entry anim/seq. Can be a GameSound name or a response rules concept.
+//		"exit_sound"		"Sound Name". If specified, the NPC will play this sound when it plays the exit anim/seq. Can be a GameSound name or a response rules concept.
 //		"min_time"			"Minimum time to spend in this busy anim"
 //		"max_time"			"Maximum time to spend in this busy anim"	0 = only stop when interrupted by external event
 //		"interrupts"		One of:
@@ -14,9 +17,6 @@
 //							"BA_INT_PLAYER"		break out of this anim if I can see the player, or I'm threatened
 //							"BA_INT_AMBUSH"		someone please define this - I have no idea what it does
 //							"BA_INT_COMBAT"		break out of this anim if combat occurs in my line of sight (bullet hits, grenades, etc), -OR- the max time is reached
-//
-//		"use_automovement"	Set to 1, the NPC navigation system will be used as the actor animates, preventing them moving into solids. Should be used in 
-//					all cases except those where the actor will be interpenetrating another object (such as sitting on a chair).
 // }
 //
 // 
@@ -588,17 +588,6 @@
 		"interrupts"	"BA_INT_AMBUSH"
 	}
 
-	"core_control_console_type"
-	{
-		"busy_sequence"		"console_type_loop"
-		"entry_sequence"	"console_type_entry"
-		"exit_sequence"		"console_type_exit"
-		"min_time"		"0.0"
-		"max_time"		"120.0"
-		"interrupts"	"BA_INT_NONE"
-	}
-
-
 //*****************************************************************************
 //************  Metrocop actbusy section   ************************************
 //*****************************************************************************
@@ -629,217 +618,7 @@
 		"interrupts"	"BA_INT_COMBAT"
 	}
 
-//*****************************************************************************
-//************  Zombie actbusy section  *nuugggh* *****************************
-//*****************************************************************************
-
-	"Zombie_Slump_A"
-	{
-		"busy_sequence"		"slump_a"
-		"exit_sequence"		"slumprise_a"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_ZOMBIESLUMP"
-		"use_automovement"	"1"
-	}
-	
-	"Zombie_Slump_A2"
-	{
-		"busy_sequence"		"slump_a"
-		"exit_sequence"		"slumprise_a2"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_ZOMBIESLUMP"
-		"use_automovement"	"1"
-	}
-
-	"Zombie_Slump_B"
-	{
-		"busy_sequence"		"slump_b"
-		"exit_sequence"		"slumprise_b"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_ZOMBIESLUMP"
-		"use_automovement"	"1"
-	}
-
-	"Fastzombie_Slump_a"
-	{
-		"busy_sequence"  "slump_a"
-		"exit_sequence"  "slumprise_a"
-		"min_time"  "0.0"
-		"max_time"  "0.0"
-		"interrupts"  "BA_INT_ZOMBIESLUMP"
-		"use_automovement" "1"
-	}
-
-	"Fastzombie_Slump_b"
-	{
-		"busy_sequence"		"slump_b"
-		"exit_sequence"		"slumprise_b"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_ZOMBIESLUMP"
-		"use_automovement"	"1"
-	}
-
-	"Zombie_Slump_Unbreakable"
-	{
-		"busy_sequence"		"slump_b"
-		"exit_sequence"		"slumprise_b"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_NONE"
-		"use_automovement"	"1"
-	}
 
 
-
-//*****************************************************************************
-//************  Alyx				  *****************************
-//*****************************************************************************
-
-
-
-	"Alyx_fusebox_hack"
-	{
-		"busy_sequence"		"alyx_actBusyPowerbox"
-		"entry_sequence"	"alyx_startPowerBox"
-		"exit_sequence"		"alyx_exitPowerBox"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_DANGER"
-		"use_automovement"	"1"
-	}
-
-	"Alyx_CrouchHide_01"
-	{
-		"busy_sequence"		"CrouchHide_01"
-		"entry_sequence"	"CrouchHide_01_enter"
-		"exit_sequence"		"CrouchHide_01_exit"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_NONE"
-	}
-
-	"Alyx_HideWall_AB"
-	{
-		"busy_sequence"		"alyx_LeanWall"
-		"entry_sequence"	"alyx_HideWall"
-		//"exit_sequence"	"alyx_hackPowerBox"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_NONE"
-	}
-
-	"Alyx_Injured_WallLean"
-	{
-		"busy_sequence"		"injured_rest1_idle"
-		"entry_sequence"	"injured_rest1_in"
-		"exit_sequence"		"injured_rest1_out"
-		"interrupts"		"BA_INT_DANGER"
-	}
-	"Alyx_Blindfire_Left"
-	{
-		"busy_sequence"		"blindfire_left_action"
-		"entry_sequence"	"blindfire_left_entry"
-		"exit_sequence"		"blindfire_left_exit"
-		"min_time"		"12.0"
-		"max_time"		"12.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Blindfire_Left_High"
-	{
-		"busy_sequence"		"blindfire_left_high_action"
-		"entry_sequence"	"blindfire_left_entry"
-		"exit_sequence"		"blindfire_left_exit"
-		"min_time"		"12.0"
-		"max_time"		"12.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Blindfire_Left_Low"
-	{
-		"busy_sequence"		"blindfire_left_low_action"
-		"entry_sequence"	"blindfire_left_entry"
-		"exit_sequence"		"blindfire_left_exit"
-		"min_time"		"12.0"
-		"max_time"		"12.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-
-	"Alyx_Blindfire_Low"
-	{
-		"busy_sequence"		"blindfire_low_action"
-		"entry_sequence"	"blindfire_low_entry"
-		"exit_sequence"		"blindfire_low_exit"
-		"min_time"		"10.0"
-		"max_time"		"10.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Blindfire_Low_High"
-	{
-		"busy_sequence"		"blindfire_low_high_action"
-		"entry_sequence"	"blindfire_low_entry"
-		"exit_sequence"		"blindfire_low_exit"
-		"min_time"		"10.0"
-		"max_time"		"10.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-
-	"Alyx_WallCover_Right"
-	{
-		"busy_sequence"		"cover_right_action"
-		"entry_sequence"	"cover_right_entry"
-		"exit_sequence"		"cover_right_exit"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_WallCover_Low"
-	{
-		"busy_sequence"		"CrouchHide_01"
-		"entry_sequence"	"CrouchHide_01_enter"
-		"exit_sequence"		"CrouchHide_01_exit"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_WallCover_Low_Timed"
-	{
-		"busy_sequence"		"CrouchHide_01"
-		"entry_sequence"	"CrouchHide_01_enter"
-		"exit_sequence"		"CrouchHide_01_exit"
-		"min_time"		"0.0"
-		"max_time"		"6.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Guard_Low"
-	{
-		"busy_sequence"		"crouch_aim_pistol"
-		"entry_sequence"	"stand_to_crouchshoot"
-		"exit_sequence"		"crouchshoot_to_stand"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Guard_Low_Timed"
-	{
-		"busy_sequence"		"crouch_aim_pistol"
-		"entry_sequence"	"stand_to_crouchshoot"
-		"exit_sequence"		"crouchshoot_to_stand"
-		"min_time"		"6.0"
-		"max_time"		"10.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
-	"Alyx_Guard"
-	{
-		"busy_sequence"		"pistol_idle_aim"
-		"entry_sequence"	"pistol_idle_aim"
-		"exit_sequence"		"pistol_idle_aim"
-		"min_time"		"0.0"
-		"max_time"		"0.0"
-		"interrupts"		"BA_INT_SIEGE_DEFENSE"
-	}
 }
-
 

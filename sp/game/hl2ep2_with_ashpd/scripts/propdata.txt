@@ -182,16 +182,6 @@
 		"breakable_count"	"10"
 	}
 
-	// Unbreakable Huge wooden objects.
-	//	i.e Big Wardrobes, bookcases
-	"Wooden_Unbreakable.Huge"
-	{
-		"base"			"Wooden.Base"
-		"health"		"0"
-
-		"breakable_count"	"10"
-	}
-
 
 
 

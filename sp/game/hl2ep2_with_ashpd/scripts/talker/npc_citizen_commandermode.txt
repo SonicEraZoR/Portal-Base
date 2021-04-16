@@ -465,20 +465,3 @@ rule CitizenUnFollow
 	response		CitizenUnFollow
 }
 
-
-//------------------------------------------------------------------------------------------------------------
-// For ep1_c17_05
-//------------------------------------------------------------------------------------------------------------
-response "CitizenDenyCommand"
-{
-
-	scene "scenes/npc/$gender01/illstayhere01.vcd"
-	scene "scenes/npc/$gender01/imstickinghere01.vcd"
-}
-
-rule CitizenDenyCommand
-{
-	criteria		IsCitizen ConceptTalkDenyCommand
-	response		CitizenDenyCommand
-}
-

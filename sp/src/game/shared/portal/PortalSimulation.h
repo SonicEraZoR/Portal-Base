@@ -40,9 +40,7 @@ enum PS_PhysicsObjectSourceType_t
 	PSPOST_REMOTE_BRUSHES,
 	PSPOST_LOCAL_STATICPROPS,
 	PSPOST_REMOTE_STATICPROPS,
-	PSPOST_HOLYWALL_TUBE,
-	PSPOST_LOCAL_DISPLACEMENTS,
-	PSPOST_REMOTE_DISPLACEMENTS,
+	PSPOST_HOLYWALL_TUBE
 };
 
 struct PortalTransformAsAngledPosition_t //a matrix transformation from this portal to the linked portal, stored as vector and angle transforms
@@ -117,13 +115,11 @@ struct PS_SD_Static_World_Brushes_t
 {
 	CUtlVector<CPolyhedron *> Polyhedrons; //the building blocks of more complex collision
 	CPhysCollide *pCollideable;
-	CPhysCollide *pDisCollideable;
 #ifndef CLIENT_DLL
 	IPhysicsObject *pPhysicsObject;
-	IPhysicsObject *pDisPhysicsObject;
-	PS_SD_Static_World_Brushes_t() : pCollideable(NULL), pDisCollideable(NULL), pPhysicsObject(NULL), pDisPhysicsObject(NULL) {};
+	PS_SD_Static_World_Brushes_t() : pCollideable(NULL), pPhysicsObject(NULL) {};
 #else
-	PS_SD_Static_World_Brushes_t() : pCollideable(NULL), pDisCollideable(NULL) {};
+	PS_SD_Static_World_Brushes_t() : pCollideable(NULL) {};
 #endif
 	
 };
@@ -177,14 +173,12 @@ struct PS_SD_Static_Wall_Local_Brushes_t
 {
 	CUtlVector<CPolyhedron *> Polyhedrons; //the building blocks of more complex collision
 	CPhysCollide *pCollideable;
-	CPhysCollide *pDisCollideable;
 
 #ifndef CLIENT_DLL
 	IPhysicsObject *pPhysicsObject;
-	IPhysicsObject *pDisPhysicsObject;
-	PS_SD_Static_Wall_Local_Brushes_t() : pCollideable(NULL), pDisCollideable(NULL), pPhysicsObject(NULL), pDisPhysicsObject(NULL) {};
+	PS_SD_Static_Wall_Local_Brushes_t() : pCollideable(NULL), pPhysicsObject(NULL) {};
 #else
-	PS_SD_Static_Wall_Local_Brushes_t() : pCollideable(NULL), pDisCollideable(NULL) {};
+	PS_SD_Static_Wall_Local_Brushes_t() : pCollideable(NULL) {};
 #endif
 };
 
@@ -197,8 +191,7 @@ struct PS_SD_Static_Wall_Local_t //things in the wall that are completely indepe
 struct PS_SD_Static_Wall_RemoteTransformedToLocal_Brushes_t
 {
 	IPhysicsObject *pPhysicsObject;
-	IPhysicsObject *pDisPhysicsObject;
-	PS_SD_Static_Wall_RemoteTransformedToLocal_Brushes_t() : pPhysicsObject(NULL), pDisPhysicsObject(NULL) {};
+	PS_SD_Static_Wall_RemoteTransformedToLocal_Brushes_t() : pPhysicsObject(NULL) {};
 };
 
 struct PS_SD_Static_Wall_RemoteTransformedToLocal_StaticProps_t
@@ -269,9 +262,8 @@ struct PS_SimulationData_t //compartmentalized data for coherent management
 
 	IPhysicsEnvironment *pPhysicsEnvironment;
 	CPSCollisionEntity *pCollisionEntity; //the entity we'll be tying physics objects to for collision
-	CPSCollisionEntity *pDisCollisionEntity;
 
-	PS_SimulationData_t() : pPhysicsEnvironment(NULL), pCollisionEntity(NULL), pDisCollisionEntity(NULL) {};
+	PS_SimulationData_t() : pPhysicsEnvironment(NULL), pCollisionEntity(NULL) {};
 #endif
 };
 

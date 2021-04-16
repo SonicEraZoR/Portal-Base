@@ -97,16 +97,6 @@ GAMEOVER_STUCK
 #HL2_GameOver_Stuck
 }
 
-GAMEOVER_ALYXDEAD
-{
-#Episodic_GameOver_AlyxDead
-}
-
-GAMEOVER_ALYXLEFT
-{
-#EP2_GameOver_AlyxLeft
-}
-
 
 $fadein 0.03
 $holdtime 9
@@ -118,49 +108,75 @@ $fadein 0.01
 $holdtime 3.5
 $position -1 0.58
 
-EP2_CHAPTER1_TITLE
+CHAPTER1_TITLE
 {
-#ep2_Chapter1_Title
+#HL2_Chapter1_Title
 }
 
-EP2_CHAPTER2_TITLE
+CHAPTER2_TITLE
 {
-#ep2_Chapter2_Title
+#HL2_Chapter2_Title
 }
 
-EP2_CHAPTER3_TITLE
+CHAPTER3_TITLE
 {
-#ep2_Chapter3_Title
+#HL2_Chapter3_Title
 }
 
-EP2_CHAPTER4_TITLE
+CHAPTER4_TITLE
 {
-#ep2_Chapter4_Title
+#HL2_Chapter4_Title
 }
 
-EP2_CHAPTER5_TITLE
+CHAPTER5_TITLE
 {
-#ep2_Chapter5_Title
+#HL2_Chapter5_Title
 }
 
-EP2_CHAPTER6_TITLE
+CHAPTER6_TITLE
 {
-#ep2_Chapter6_Title
+#HL2_Chapter6_Title
 }
 
-EP2_CHAPTER7_TITLE
+CHAPTER7_TITLE
 {
-#ep2_Chapter7_Title
+#HL2_Chapter7_Title
 }
 
-EP2_CHAPTER8_TITLE
+CHAPTER8_TITLE
 {
-#ep2_Chapter8_Title
+#HL2_Chapter8_Title
 }
 
-EP2_CHAPTER9_TITLE
+CHAPTER9_TITLE
 {
-#ep2_Chapter9_Title
+#HL2_Chapter9_Title
+}
+
+CHAPTER9A_TITLE
+{
+#HL2_Chapter9a_Title
+}
+
+
+CHAPTER10_TITLE
+{
+#HL2_Chapter10_Title
+}
+
+CHAPTER11_TITLE
+{
+#HL2_Chapter11_Title
+}
+
+CHAPTER12_TITLE
+{
+#HL2_Chapter12_Title
+}
+
+CHAPTER13_TITLE
+{
+#HL2_Chapter13_Title
 }
 
 
@@ -174,25 +190,25 @@ $color2 240 110 0
 // This is the time it takes to fade each character
 $fadein 0.00
 // This is the amount of time the highlight lags behind the leading edge of the text
-$fxtime 0.0
+$fxtime 0.15
 // How long to hold the message on the screen (after it scans out)
-$holdtime 0.01
+$holdtime 1.0
 // How long it takes to fade out the message after holding
-$fadeout 0.01
+$fadeout 0.25
 
 $boxsize 0.4
 $boxcolor 31 31 31 127
 
 GAMESAVING_360
 {
-#HL2_Saving
+#HL2_Saved
 }
 
 $position -1 0.65
 
 GAMESAVING
 {
-#HL2_Saving
+#HL2_Saved
 }
 
 // In-Game messages

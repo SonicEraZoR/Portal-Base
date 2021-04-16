@@ -1,11 +1,11 @@
 //============================================================================================================
 // Citizen criteria
 //============================================================================================================
+criterion "IsCitizen" "classname" "npc_citizen" "required"
 criterion "IsRPGUser" "attacking_with_weapon" "weapon_rpg" required
 criterion "EnemyIsSniper" "enemy" "npc_sniper" required
+criterion "EnemyIsStrider" "enemy" "npc_strider" required
 criterion "HurtByFire" "hurt_by_fire" "1" required
-criterion "AlyxCitizenHelloOkay" "AlyxCitizenHelloOkay" "1" required
-
 
 
 //============================================================================================================
@@ -30,7 +30,7 @@ response "CitizenHello"
 
 rule CitizenHello
 {
-	criteria		IsCitizen ConceptTalkHello PlayerNear SeePlayer NotInPanic
+	criteria		IsCitizen ConceptTalkHello IsGordonCriminal NPCIdle PlayerNear SeePlayer
 	response		CitizenHello
 }
 
@@ -46,7 +46,7 @@ response "CitizenTalkStare"
  
 rule CitizenTalkStare
 {
- criteria      IsCitizen ConceptTalkStare IsGordonCriminal NPCIdle NotInPanic
+ criteria      IsCitizen ConceptTalkStare IsGordonCriminal NPCIdle
  response  	CitizenTalkStare
 }
  
@@ -80,102 +80,98 @@ rule CitizenTalkPlayerPushed
 //============================================================================================================
 // Citizen Questions & Responses speech
 //============================================================================================================
+response "CitizenQuestion"
+{
+	scene "scenes/npc/$gender01/question01.vcd" delay 1
+	scene "scenes/npc/$gender01/question02.vcd" delay 1
+	scene "scenes/npc/$gender01/question03.vcd" delay 1
+	scene "scenes/npc/$gender01/question04.vcd" delay 1
+	scene "scenes/npc/$gender01/question05.vcd" delay 1
+	scene "scenes/npc/$gender01/question06.vcd" delay 1
+	scene "scenes/npc/$gender01/question07.vcd" delay 1
+	scene "scenes/npc/$gender01/question08.vcd" delay 1
+	scene "scenes/npc/$gender01/question09.vcd" delay 1
+	scene "scenes/npc/$gender01/question10.vcd" delay 1
+	scene "scenes/npc/$gender01/question11.vcd" delay 1
+	scene "scenes/npc/$gender01/question12.vcd" delay 1
+	scene "scenes/npc/$gender01/question13.vcd" delay 1
+	scene "scenes/npc/$gender01/question14.vcd" delay 1
+	scene "scenes/npc/$gender01/question15.vcd" delay 1
+	scene "scenes/npc/$gender01/question16.vcd" delay 1
+	scene "scenes/npc/$gender01/question17.vcd" delay 1
+	scene "scenes/npc/$gender01/question18.vcd" delay 1
+	scene "scenes/npc/$gender01/question19.vcd" delay 1
+	scene "scenes/npc/$gender01/question20.vcd" delay 1
+	scene "scenes/npc/$gender01/question21.vcd" delay 1
+	scene "scenes/npc/$gender01/question22.vcd" delay 1
+	scene "scenes/npc/$gender01/question23.vcd" delay 1
+	scene "scenes/npc/$gender01/question25.vcd" delay 1
+	scene "scenes/npc/$gender01/question26.vcd" delay 1
+	scene "scenes/npc/$gender01/question27.vcd" delay 1
+	scene "scenes/npc/$gender01/question28.vcd" delay 1
+	scene "scenes/npc/$gender01/question29.vcd" delay 1
+	scene "scenes/npc/$gender01/question30.vcd" delay 1
+	scene "scenes/npc/$gender01/question31.vcd" delay 1
+}
 
-//Q&A has been commented out for episodic content, since it pertains to world before Citadel destruction.  Added a couple heydocs so that citizens will still acknowledge player if triggered.
-//commented out for ep2 fornow.
-//response "CitizenQuestion"
-//{
-//	sequential
-//	scene "scenes/npc/$gender01/question01.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question02.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question03.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question04.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question05.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question06.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question07.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question08.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question09.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question10.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question11.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question12.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question13.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question14.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question15.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question16.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question17.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question18.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question19.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question20.vcd" respeakdelay 240 
-//	scene "scenes/npc/$gender01/question21.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question22.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question23.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question25.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question26.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question27.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question28.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question29.vcd" respeakdelay 240
-//	scene "scenes/npc/$gender01/question30.vcd" respeakdelay 240
-
-//}
-
-//rule CitizenQuestion
-//{
-//	criteria		IsCitizen ConceptTalkQuestion PlayerAlive NotInPanic 
-//	response 		CitizenQuestion
-//}
+rule CitizenQuestion
+{
+	criteria		IsCitizen ConceptTalkQuestion IsGordonCriminal PlayerAlive
+	response 		CitizenQuestion
+}
 
 //------------------------------------------------------------------------------------------------------------
 response "CitizenAnswer"
 {
-//	scene "scenes/npc/$gender01/answer01.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer02.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer03.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer04.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer05.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer07.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer08.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer09.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer10.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer11.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer12.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer13.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer14.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer15.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer16.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer17.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer18.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer19.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer20.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer21.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer22.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer23.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer24.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer25.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer26.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer27.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer28.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer29.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer30.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer31.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer32.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer33.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer34.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer35.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer36.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer37.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer38.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer39.vcd" delay 2
-//	scene "scenes/npc/$gender01/answer40.vcd" delay 2
+	scene "scenes/npc/$gender01/answer01.vcd" delay 2
+	scene "scenes/npc/$gender01/answer02.vcd" delay 2
+	scene "scenes/npc/$gender01/answer03.vcd" delay 2
+	scene "scenes/npc/$gender01/answer04.vcd" delay 2
+	scene "scenes/npc/$gender01/answer05.vcd" delay 2
+	scene "scenes/npc/$gender01/answer07.vcd" delay 2
+	scene "scenes/npc/$gender01/answer08.vcd" delay 2
+	scene "scenes/npc/$gender01/answer09.vcd" delay 2
+	scene "scenes/npc/$gender01/answer10.vcd" delay 2
+	scene "scenes/npc/$gender01/answer11.vcd" delay 2
+	scene "scenes/npc/$gender01/answer12.vcd" delay 2
+	scene "scenes/npc/$gender01/answer13.vcd" delay 2
+	scene "scenes/npc/$gender01/answer14.vcd" delay 2
+	scene "scenes/npc/$gender01/answer15.vcd" delay 2
+	scene "scenes/npc/$gender01/answer16.vcd" delay 2
+	scene "scenes/npc/$gender01/answer17.vcd" delay 2
+	scene "scenes/npc/$gender01/answer18.vcd" delay 2
+	scene "scenes/npc/$gender01/answer19.vcd" delay 2
+	scene "scenes/npc/$gender01/answer20.vcd" delay 2
+	scene "scenes/npc/$gender01/answer21.vcd" delay 2
+	scene "scenes/npc/$gender01/answer22.vcd" delay 2
+	scene "scenes/npc/$gender01/answer23.vcd" delay 2
+	scene "scenes/npc/$gender01/answer24.vcd" delay 2
+	scene "scenes/npc/$gender01/answer25.vcd" delay 2
+	scene "scenes/npc/$gender01/answer26.vcd" delay 2
+	scene "scenes/npc/$gender01/answer27.vcd" delay 2
+	scene "scenes/npc/$gender01/answer28.vcd" delay 2
+	scene "scenes/npc/$gender01/answer29.vcd" delay 2
+	scene "scenes/npc/$gender01/answer30.vcd" delay 2
+	scene "scenes/npc/$gender01/answer31.vcd" delay 2
+	scene "scenes/npc/$gender01/answer32.vcd" delay 2
+	scene "scenes/npc/$gender01/answer33.vcd" delay 2
+	scene "scenes/npc/$gender01/answer34.vcd" delay 2
+	scene "scenes/npc/$gender01/answer35.vcd" delay 2
+	scene "scenes/npc/$gender01/answer36.vcd" delay 2
+	scene "scenes/npc/$gender01/answer37.vcd" delay 2
+	scene "scenes/npc/$gender01/answer38.vcd" delay 2
+	scene "scenes/npc/$gender01/answer39.vcd" delay 2
+	scene "scenes/npc/$gender01/answer40.vcd" delay 2
 }
-
+//---------------------
 rule CitizenAnswer
 {
-	criteria		IsCitizen ConceptTalkAnswer PlayerAlive NotInPanic
+	criteria		IsCitizen ConceptTalkAnswer IsGordonCriminal PlayerAlive 
 	response		CitizenAnswer
 }
 
 //============================================================================================================
-// Citizen Questions & Responses with Vortigaunts
+// Citizen Questions & Responses with Vortigaunts in Scene
 //============================================================================================================
 response "CitizenQuestionVort"
 {
@@ -186,11 +182,12 @@ response "CitizenQuestionVort"
 	scene "scenes/npc/$gender01/vquestion05.vcd" delay 1
 	scene "scenes/npc/$gender01/vquestion06.vcd" delay 1
 	scene "scenes/npc/$gender01/vquestion07.vcd" delay 1
+
 }
 
 rule CitizenQuestionVort
 {
-	criteria		IsCitizen ConceptTalkQuestion  PlayerAlive IsSpeechTargetAVort NotInPanic
+	criteria		IsCitizen ConceptTalkQuestionVort IsGordonCriminal NPCIdle PlayerAlive
 	response 		CitizenQuestionVort
 }
 
@@ -211,249 +208,14 @@ response "CitizenAnswerVort"
 	scene "scenes/npc/$gender01/vanswer12.vcd" delay 2
 	scene "scenes/npc/$gender01/vanswer13.vcd" delay 2
 	scene "scenes/npc/$gender01/vanswer14.vcd" delay 2
+
 }
 
 rule CitizenAnswerVort
 {
-	criteria		IsCitizen ConceptTalkAnswer PlayerAlive IsSpeechTargetAVort NotInPanic
+	criteria		IsCitizen ConceptTalkAnswerVort IsGordonCriminal NPCIdle PlayerAlive 
 	response		CitizenAnswerVort
 }
-
-////============================================================================================================
-//// Citizen Questions & Responses with Alyx
-////============================================================================================================
-//response "CitizenQuestionAlyx"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks01.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks02.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks03.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks04.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks05.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks06.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks07.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks08.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks09.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks10.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks11.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks12.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks13.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks14.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks15.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks16.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks17.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks18.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks19.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks20.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks21.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks22.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks23.vcd" delay 1
-//}
-//
-//rule CitizenQuestionAlyx
-//{
-//	criteria		IsCitizen ConceptTalkQuestion PlayerAlive IsSpeechTargetAlyx NotInPanic AlyxCitizenHelloOkay
-//	response 		CitizenQuestionAlyx
-//}
-//
-////------------------------------------------------------------------------------------------------------------
-//response "CitizenAnswerAlyx"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks01.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks02.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks03.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks04.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks05.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks06.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks07.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks08.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks09.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks10.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks11.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks12.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks13.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks14.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks15.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks16.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks17.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks18.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks19.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks20.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks21.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks22.vcd" delay 1
-//	scene "scenes/episode_1/npc/$gender01/cit_remarks23.vcd" delay 1
-//}
-//
-//rule CitizenAnswerAlyx
-//{
-//	criteria		IsCitizen ConceptTalkAnswer PlayerAlive IsSpeechTargetAlyx NotInPanic
-//	response		CitizenAnswerAlyx
-//}
-//
-////============================================================================================================
-//// Citizen Hello Responses with Alyx
-////============================================================================================================
-//
-//response "CitizenQuestionHelloAlyx1"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx01.vcd" delay 1 // Hey!  You’re Alyx Vance!
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx1
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore00 RGroupLess10 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx1
-//}
-//
-//response "CitizenQuestionHelloAlyx2"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx02.vcd" delay 1 // I know you!
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx2
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore10 RGroupLess20 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx2
-//}
-//
-//
-//response "CitizenQuestionHelloAlyx3"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx03.vcd" delay 1 // Alyx Vance and Gordon Freeman!  You stayed behind to look after us, didn’t you?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx05.vcd" delay 1 // I hope you two are here to help.
-//}
-//
-//rule CitizenQuestionHelloAlyx3
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore20 RGroupLess30 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx3
-//}
-//
-//
-//response "CitizenQuestionHelloAlyx4"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx04.vcd" delay 1 // Who are you again?
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx4
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore30 RGroupLess40 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx4
-//}
-//
-//
-//response "CitizenQuestionHelloAlyx5"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx06.vcd" delay 1 // your kleiner's daughter right?
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx5
-//{ 
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore40 RGroupLess50 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx5
-//}
-//
-//response "CitizenQuestionHelloAlyx6"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx07.vcd" delay 1 // Yeah, yeah, good to see you.  Now, where's Dog?
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx6
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore50 RGroupLess60 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx6
-//}
-//
-//response "CitizenQuestionHelloAlyx7"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx08.vcd" delay 1  //Alyx, oh my god, where's Freeman!?! Oh, there he is...
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx09.vcd" delay 1  //Oh, hey Freeman. And this is the Mrs., I presume? 
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx10.vcd" delay 1  //Oh, hey Freeman.  And this must be the little lady.(Male) -  Dr. and Mrs. Freeman, I presume? (Female)
-//}
-//
-//rule CitizenQuestionHelloAlyx7
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore60 RGroupLess70 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx7
-//}
-//
-//response "CitizenQuestionHelloAlyx8"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx11.vcd" delay 1   //honestly, do you think we have any chance?
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx8
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore70 RGroupLess80 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx8
-//}
-//
-//response "CitizenQuestionHelloAlyx9"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx12.vcd" delay 1  // Yap, yap, yap, why don't you let Freeman get a word in for once?`
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx9
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore80 RGroupLess90 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx9
-//}
-//
-//response "CitizenQuestionHelloAlyx10"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx13.vcd" delay 1 
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx10
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic RGroupMore90 RGroupLess100 AlyxCitizenHelloOkay
-//	response 		CitizenQuestionHelloAlyx10
-//}
-
-//response "CitizenQuestionHelloAlyx"
-//{
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx01.vcd" delay 1 // Hey!  You’re Alyx Vance!
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx02.vcd" delay 1 // I know you!
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx03.vcd" delay 1 // Alyx Vance and Gordon Freeman!  You stayed behind to look after us, didn’t you?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx04.vcd" delay 1 // Who are you again?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx05.vcd" delay 1 // I hope you two are here to help.
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx06.vcd" delay 1 // You're Kleiner's daughter, right?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx07.vcd" delay 1 // Yeah, yeah, good to see you.  Now, where's Dog?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx08.vcd" delay 1 // Alyx, oh my god, where's Freeman!?! Oh, there he is...
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx09.vcd" delay 1 // Oh, hey Freeman. And this is the Mrs., I presume?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx10.vcd" delay 1 // Alyx, Gordon - thank God you made it
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx11.vcd" delay 1 // Alyx - honestly, do you think we have any chance?
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx12.vcd" delay 1 // Yap, yap, yap, why don't you let Freeman get a word in for once?`
-//	scene "scenes/episode_1/npc/$gender01/cit_greet_alyx13.vcd" delay 1 // Oh, hey Freeman.  And this must be the little lady.  [male only]
-//
-//}
-//
-//rule CitizenQuestionHelloAlyx
-//{
-//	criteria		IsCitizen ConceptTalkQuestionHello PlayerAlive IsSpeechTargetAlyx NotInPanic
-//	response 		CitizenQuestionHelloAlyx
-//}
-
-//------------------------------------------------------------------------------------------------------------
-response "CitizenAnswerHelloAlyx"
-{
-	//scene "scenes/episode_1/npc/$gender01/cit_remarks01.vcd" delay 1
-}
-
-rule CitizenAnswerHelloAlyx
-{
-	criteria		IsCitizen ConceptTalkAnswerHello PlayerAlive IsSpeechTargetAlyx NotInPanic
-	response		CitizenAnswerHelloAlyx
-}
-
-
 
 
 //============================================================================================================
@@ -599,27 +361,6 @@ rule CitizenDangerBig
 	response		CitizenDangerBig
 }
 
-
-response "CitizenAntLionDanger" 
-{
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions05.vcd" respeakdelay 30
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions06.vcd" respeakdelay 30
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions07.vcd" respeakdelay 30
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions08.vcd" respeakdelay 30
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions09.vcd" respeakdelay 30
-	scene "scenes/episode_1/npc/$gender01/cit_alert_antlions18.vcd" respeakdelay 30
-}
-
-rule CitizenAntLionDanger
-{
-	criteria		IsCitizen ConceptTalkAttacking EnemyIsAntLion
-	response		CitizenAntLionDanger  
-}
-
-
-
-
-
 response "CitizenMortarDanger" 
 {
 	scene "scenes/npc/$gender01/watchout.vcd"
@@ -669,22 +410,21 @@ rule CitizenHideAndReload
 
 //============================================================================================================
 // Citizen Reminds Player to Reload
-// Removed because it began to be too much, can just be deleted unless someone really misses it.
 //============================================================================================================
-//response "CitizenPlayerReload" 
-//{
-//	scene "scenes/npc/$gender01/dontforgetreload01.vcd"
-//	scene "scenes/npc/$gender01/reloadfm01.vcd"
-//	scene "scenes/npc/$gender01/reloadfm02.vcd"
-//	scene "scenes/npc/$gender01/youdbetterreload01.vcd"
-////   print "You better reload, Doc."
-//}
-//
-//rule CitizenPlayerReload
-//{
-//	criteria		ConceptPlayerReload IsCitizen PlayerNear SeePlayer
-//	response		CitizenPlayerReload
-//}
+response "CitizenPlayerReload" 
+{
+	scene "scenes/npc/$gender01/dontforgetreload01.vcd"
+	scene "scenes/npc/$gender01/reloadfm01.vcd"
+	scene "scenes/npc/$gender01/reloadfm02.vcd"
+	scene "scenes/npc/$gender01/youdbetterreload01.vcd"
+//   print "You better reload, Doc."
+}
+
+rule CitizenPlayerReload
+{
+	criteria		ConceptPlayerReload IsCitizen PlayerNear SeePlayer
+	response		CitizenPlayerReload
+}
 
 //------------------------------------------------------------------------------------------------------------
 response "CitizenNewWeapon"
@@ -713,7 +453,7 @@ response CitizenOuch
    permitrepeats
 	scene "scenes/npc/$gender01/ow01.vcd"
 	scene "scenes/npc/$gender01/ow02.vcd"
-//	speak npc_citizen.die weight 9   // there are nine waves in there
+	speak npc_citizen.die weight 9   // there are nine waves in there
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -855,25 +595,9 @@ rule CitizenWatchOutFar
 //------------------------------------------------------------------------------------------------------------
 response "CitizenEnemyDead"
 {
-	scene "scenes/episode_1/npc/$gender01/cit_kill01.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill02.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill03.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill04.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill06.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill07.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill08.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill09.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill10.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill11.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill12.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill13.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill14.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill17.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill18.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill19.vcd"
-	scene "scenes/episode_1/npc/$gender01/cit_kill20.vcd"
 	scene "scenes/npc/$gender01/gotone01.vcd"
 	scene "scenes/npc/$gender01/gotone02.vcd"
+//	scene "scenes/npc/$gender01/likethemapples.vcd"
 	scene "scenes/npc/$gender01/likethat.vcd"
 }
 
@@ -881,6 +605,7 @@ rule CitizenEnemyDead
 {
 	criteria		IsCitizen ConceptEnemyDead 
 	response		CitizenEnemyDead
+	rescenedelay 		3
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -918,22 +643,6 @@ rule CitizenBetrayed
 //------------------------------------------------------------------------------------------------------------
 response "CitizenAllyKilled"
 {
-
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled01.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled02.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled03.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled04.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled05.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled06.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled07.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled08.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled09.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled10.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled11.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled12.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled13.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled14.vcd"   
-	scene "scenes/episode_1/npc/$gender01/cit_buddykilled15.vcd"   
 	scene "scenes/npc/$gender01/ohno.vcd"
 	scene "scenes/npc/$gender01/goodgod.vcd"
 	scene "scenes/npc/$gender01/startle01.vcd"
@@ -1148,18 +857,29 @@ rule CitizenFiringRPG
 //============================================================================================================
 // Citizen Leader speech (a citizen that's leading the player somewhere)
 //============================================================================================================
-//response "CitizenLeadWaitOver"
-//{
-//	scene "scenes/npc/$gender01/gotone02.vcd"
-//}
+response "CitizenLeadWaitOver"
+{
+	scene "scenes/npc/$gender01/gotone02.vcd"
+}
 
-//rule CitizenLeadWaitOver
-//{
-//	criteria		ConceptLeadWaitOver
-//	response		CitizenLeadWaitOver
-//}
+rule CitizenLeadWaitOver
+{
+	criteria		ConceptLeadWaitOver
+	response		CitizenLeadWaitOver
+}
 
 //------------------------------------------------------------------------------------------------------------
+response "CitizenLeadAttractPlayer"
+{
+	scene "scenes/npc/$gender01/overhere01.vcd"
+}
+
+rule CitizenLeadAttractPlayer
+{
+	criteria		IsCitizen ConceptLeadAttractPlayer
+	response		CitizenLeadAttractPlayer
+}
+
 response "CitizenSeeCombine"
 {
 	scene "scenes/npc/$gender01/combine01.vcd"
@@ -1186,16 +906,10 @@ rule CitizenPlayerPhysAttack
 	response		CitizenPlayerPhysAttack
 }
 
-
-
-
-
-
 //============================================================================================================
-//#include "talker/npc_citizen_commandermode.txt"
-//#include "talker/npc_citizen_terminal.txt"
-//#include "talker/npc_citizen_tenement.txt"
-//#include "talker/npc_citizen_coast.txt"
-//#include "talker/npc_citizen_canals.txt"
-//#include "talker/npc_citizen_c17.txt"
-//#include "talker/npc_citizen_ep1.txt"
+#include "talker/npc_citizen_commandermode.txt"
+#include "talker/npc_citizen_terminal.txt"
+#include "talker/npc_citizen_tenement.txt"
+#include "talker/npc_citizen_coast.txt"
+#include "talker/npc_citizen_canals.txt"
+#include "talker/npc_citizen_c17.txt"

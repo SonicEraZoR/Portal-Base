@@ -8,25 +8,13 @@ criterion "IsAlyx" "classname" "npc_alyx" "required"
 //============================================================================================================
 //----------------------------------------------------------------------------
 
-criterion "ConceptTalkFoundPlayer" "Concept" "TLK_FOUNDPLAYER" required
-
-response "AlyxIsBack"
-{
-	// speak "*vo/episode_1/npc/alyx/al_greet_cit15.wav"  // I'm the person who's telling you to get moving.
-}
-
-rule AlyxIsBack
-{
-	criteria IsAlyx IsEpisodic ConceptTalkFoundPlayer
-	response AlyxIsBack
-}
-
 response "AlyxDanger"
 {
-	scene "scenes/npc/Alyx/getback01.vcd" respeakdelay 60
-	scene "scenes/npc/Alyx/getback02.vcd" respeakdelay 60 
-//	scene "scenes/npc/Alyx/watchout01.vcd"  WATCH OUT!!! 
-//	scene "scenes/npc/Alyx/watchout02.vcd" WATCH OUT!!! 
+   scene "scenes/npc/Alyx/getback01.vcd"
+   scene "scenes/npc/Alyx/getback02.vcd" 
+   scene "scenes/npc/Alyx/getdown01.vcd"
+	scene "scenes/npc/Alyx/watchout01.vcd"
+	scene "scenes/npc/Alyx/watchout02.vcd"
 }
 rule AlyxDanger
 {
@@ -54,7 +42,7 @@ rule AlyxShot
 
 response AlyxEnemyDead
 {
-//   scene "scenes/npc/Alyx/brutal02.vcd" respeakdelay 300
+   scene "scenes/npc/Alyx/brutal02.vcd" respeakdelay 300
 }
 
 rule AlyxEnemyDead
@@ -65,9 +53,9 @@ rule AlyxEnemyDead
 
 response AlyxHideAndReload
 {
-//	scene "scenes/npc/Alyx/coverme01.vcd"
-//	scene "scenes/npc/Alyx/coverme02.vcd"
-//   scene "scenes/npc/Alyx/coverme03.vcd" 
+	scene "scenes/npc/Alyx/coverme01.vcd"
+	scene "scenes/npc/Alyx/coverme02.vcd"
+   scene "scenes/npc/Alyx/coverme03.vcd" 
 }
 
 rule AlyxHideAndReload
@@ -78,9 +66,9 @@ rule AlyxHideAndReload
 
 response AlyxTalkPlayerPushed
 {
-//	scene "scenes/npc/Alyx/excuseme01.vcd"
-//	scene "scenes/npc/Alyx/excuseme02.vcd"
-//   scene "scenes/npc/Alyx/excuseme03.vcd" 
+	scene "scenes/npc/Alyx/excuseme01.vcd"
+	scene "scenes/npc/Alyx/excuseme02.vcd"
+   scene "scenes/npc/Alyx/excuseme03.vcd" 
 }
 
 rule AlyxTalkPlayerPushed
@@ -89,18 +77,17 @@ rule AlyxTalkPlayerPushed
 	response		AlyxTalkPlayerPushed
 }
 
-// Removed - if okay, can just be deleted
-//response AlyxPlayerReload
-//{
-//   scene "scenes/npc/Alyx/youreload01.vcd"
-//   scene "scenes/npc/Alyx/youreload02.vcd"
-//}
-//
-//rule AlyxPlayerReload
-//{
-//	criteria		ConceptPlayerReload IsAlyx PlayerNear SeePlayer
-//	response		AlyxPlayerReload
-//}
+response AlyxPlayerReload
+{
+   scene "scenes/npc/Alyx/youreload01.vcd"
+   scene "scenes/npc/Alyx/youreload02.vcd"
+}
+
+rule AlyxPlayerReload
+{
+	criteria		ConceptPlayerReload IsAlyx PlayerNear SeePlayer
+	response		AlyxPlayerReload
+}
 
 response AlyxWatchOut
 {

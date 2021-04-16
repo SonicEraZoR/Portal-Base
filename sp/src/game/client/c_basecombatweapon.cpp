@@ -80,11 +80,11 @@ void C_BaseCombatWeapon::NotifyShouldTransmit( ShouldTransmitState_t state )
 //-----------------------------------------------------------------------------
 static inline bool ShouldDrawLocalPlayerViewModel( void )
 {
-//#if defined( PORTAL )
-//	return false;
-//#else
+#if defined( PORTAL )
+	return false;
+#else
 	return !C_BasePlayer::ShouldDrawLocalPlayer();
-//#endif
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 					pHudSelection->OnWeaponPickup( this );
 				}
 
-				pPlayer->EmitSound("Player.PickupWeapon");
+				pPlayer->EmitSound( "Player.PickupWeapon" );
 			}
 		}
 	}

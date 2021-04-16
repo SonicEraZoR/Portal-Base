@@ -143,34 +143,7 @@
 		"digit_xpos" "36"
 		"digit_ypos" "-1"
 	}
-
-	HudPosture	[$WIN32]
-	{
-		"fieldName" 		"HudPosture"
-		"visible" 		"1"
-		"PaintBackgroundType"	"2"
-		"xpos"	"16"
-		"ypos"	"316"
-		"tall"  "36"
-		"wide"	"36"
-		"font"	"WeaponIconsSmall"
-		"icon_xpos"	"10"
-		"icon_ypos" 	"0"
-	}
-	HudPosture	[$X360]
-	{
-		"fieldName" 		"HudPosture"
-		"visible" 		"1"
-		"PaintBackgroundType"	"2"
-		"xpos"	"48"
-		"ypos"	"316"
-		"tall"  "36"
-		"wide"	"36"
-		"font"	"WeaponIconsSmall"
-		"icon_xpos"	"10"
-		"icon_ypos" 	"2"
-	}
-
+	
 	HudSuitPower	[$WIN32]
 	{
 		"fieldName" "HudSuitPower"
@@ -229,6 +202,33 @@
 
 		"PaintBackgroundType"	"2"
 	}
+
+	HudPosture	[$WIN32]
+	{
+		"fieldName" 		"HudPosture"
+		"visible" 		"1"
+		"PaintBackgroundType"	"2"
+		"xpos"	"16"
+		"ypos"	"316"
+		"tall"  "36"
+		"wide"	"36"
+		"font"	"WeaponIconsSmall"
+		"icon_xpos"	"10"
+		"icon_ypos" 	"0"
+	}
+	HudPosture	[$X360]
+	{
+		"fieldName" 		"HudPosture"
+		"visible" 		"1"
+		"PaintBackgroundType"	"2"
+		"xpos"	"48"
+		"ypos"	"316"
+		"tall"  "36"
+		"wide"	"36"
+		"font"	"WeaponIconsSmall"
+		"icon_xpos"	"10"
+		"icon_ypos" 	"2"
+	}
 	
 	HudFlashlight
 	{
@@ -237,7 +237,7 @@
 		"PaintBackgroundType"	"2"
 		"xpos"	"270"		[$WIN32]
 		"ypos"	"444"		[$WIN32]
-		"xpos_hidef"	"306"		[$X360]		// aligned to left
+		"xpos_hidef"	"293"		[$X360]		// aligned to left
 		"xpos_lodef"	"c-18"		[$X360]		// centered in screen
 		"ypos"	"428"		[$X360]				
 		"tall"  "24"
@@ -254,21 +254,6 @@
 		"BarChunkWidth" "2"
 		"BarChunkGap" "1"
 	}
-
-	HudLocator
-	{
-		"fieldName" "HudLocator"
-		"visible" "1"
-		"PaintBackgroundType"	"2"
-		"xpos"	"c8"	[$WIN32]
-		"ypos"	"r36"	[$WIN32]
-		"xpos"	"c-32"	[$X360]
-		"ypos_hidef"	"r52"	[$X360]
-		"ypos_lodef"	"r95"	[$X360]		// 52 is aligned to bottom of HudSuit
-		"wide"	"64"
-		"tall"  "24"
-	}
-
 	HudDamageIndicator
 	{
 		"fieldName" "HudDamageIndicator"
@@ -296,7 +281,6 @@
 		"DashHeight" "6"	[$X360]		
 		"BorderThickness" "88"
 	}
-
 	HudWeaponSelection
 	{
 		"fieldName" "HudWeaponSelection"
@@ -379,7 +363,7 @@
 		"fieldName" "HudMessage"
 		"visible" "1"
 		"enabled" "1"
-		"wide"	 "640"
+		"wide"	 "f0"
 		"tall"	 "480"
 	}
 
@@ -395,12 +379,11 @@
 	HudCloseCaption
 	{
 		"fieldName" "HudCloseCaption"
-		"visible"	"0"
+		"visible"	"1"
 		"enabled"	"1"
 		"xpos"		"c-250"
 		"ypos"		"276"	[$WIN32]
-		"ypos_hidef"	"236"	[$X360]
-		"ypos_lodef"	"206"	[$X360]			//236
+		"ypos"		"236"	[$X360]
 		"wide"		"500"
 		"tall"		"136"	[$WIN32]
 		"tall"		"176"	[$X360]
@@ -412,7 +395,7 @@
 		"ItemFadeInTime"	"0.15"	// Once ItemHiddenTime is finished, takes this much longer to fade in
 		"ItemFadeOutTime"	"0.3"
 		"topoffset"		"0"		[$WIN32]
-		"topoffset"		"40"	[$X360]
+		"topoffset"		"0"	[$X360]
 	}
 
 	HudChat
@@ -436,10 +419,11 @@
 		"wide"	 "248"
 		"tall"	 "320"
 
-		"history_gap"	"56" [!$OS]
+		"history_gap"	"56" [!$OSX]
 		"history_gap"	"64" [$OSX]
 		"icon_inset"	"38"
 		"text_inset"	"36"
+		"text_inset"	"26"
 		"NumberFont"	"HudNumbersSmall"
 	}
 	HudHistoryResource	[$X360]
@@ -452,7 +436,7 @@
 		"wide"	 "248"
 		"tall"	 "240"
 
-		"history_gap"	"56"
+		"history_gap"	"50"
 		"icon_inset"	"38"
 		"text_inset"	"36"
 		"NumberFont"	"HudNumbersSmall"
@@ -504,24 +488,22 @@
 
 	HudHintDisplay
 	{
-		"fieldName"	"HudHintDisplay"
-		"visible"	"0"
-		"enabled" "1"
-		"Alpha"		"0"		// Remove this to enable hint hud element
-		"xpos"	"r120"	[$WIN32]
-		"ypos"	"r340"	[$WIN32]
+		"fieldName"				"HudHintDisplay"
+		"visible"				"0"
+		"enabled"				"1"
+		"xpos"					"c-240"
+		"ypos"					"c60"
 		"xpos"	"r148"	[$X360]
 		"ypos"	"r338"	[$X360]
-		"wide"	"100"
-		"tall"	"200"
-		"text_xpos"	"8"
-		"text_ypos"	"8"
-		"text_xgap"	"8"
-		"text_ygap"	"8"
-		"TextColor"	"255 170 0 220"
-
-		"PaintBackgroundType"	"2"
-	}
+		"wide"					"480"
+		"tall"					"100"
+		"HintSize"				"1"
+		"text_xpos"				"8"
+		"text_ypos"				"8"
+		"center_x"				"0"	// center text horizontally
+		"center_y"				"-1"	// align text on the bottom
+		"paintbackground"		"0"
+	}	
 
 	HudHintKeyDisplay
 	{
@@ -689,24 +671,6 @@
 		"LeftTitleY"	"422"
 		"RightTitleY"	"422"
 	}
-	"HudChatHistory"
-	{
-		"ControlName"		"RichText"
-		"fieldName"		"HudChatHistory"
-		"xpos"			"10"
-		"ypos"			"290"
-		"wide"	 		"300"
-		"tall"			 "75"
-		"wrap"			"1"
-		"autoResize"		"1"
-		"pinCorner"		"1"
-		"visible"		"0"
-		"enabled"		"1"
-		"labelText"		""
-		"textAlignment"		"south-west"
-		"font"			"Default"
-		"maxchars"		"-1"
-	}
 
 	AchievementNotificationPanel	
 	{
@@ -719,4 +683,17 @@
 		"wide"					"f60"	[$X360]
 		"tall"					"100"
 	}
+
+	CHudVote
+	{
+		"fieldName"		"CHudVote"
+		"xpos"			"0"			
+		"ypos"			"0"
+		"wide"			"640"
+		"tall"			"480"
+		"visible"		"1"
+		"enabled"		"1"
+		"bgcolor_override"	"0 0 0 0"
+		"PaintBackgroundType"	"0" // rounded corners
+	}	
 }
