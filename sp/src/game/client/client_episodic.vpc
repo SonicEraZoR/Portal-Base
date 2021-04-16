@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\multiplayer;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\episodic;..\..\public;$BASE"
+		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\episodic;..\..\public;$BASE"
 		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;HL2_EPISODIC;PORTAL"
 	}
 }
@@ -149,8 +149,6 @@ $Project "Client (Portal) (Episodic)"
 			$File	"portal\hud_quickinfo.cpp"
 			$File	"portal\MaterialProxy_Portal_PickAlphaMask.cpp"
 			$File	"portal\materialproxy_portalstatic.cpp"
-			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.cpp"
-			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.h"
 			$File	"$SRCDIR\game\shared\portal\portal_collideable_enumerator.cpp"
 			$File	"$SRCDIR\game\shared\portal\portal_collideable_enumerator.h"
 			$File	"portal\portal_credits.cpp"
