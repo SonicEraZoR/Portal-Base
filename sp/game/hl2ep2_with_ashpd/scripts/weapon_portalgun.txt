@@ -34,13 +34,13 @@ WeaponData
 	{
 		"weapon"
 		{
-				"font"		"WeaponIcons"
-				"character"	"C"
+				"font"		"WeaponIconsRB"
+				"character"	"l"
 		}
 		"weapon_s"
 		{	
-				"font"		"WeaponIconsSelected"
-				"character"	"C"
+				"font"		"WeaponIconsSelectedRB"
+				"character"	"l"
 		}
 		"ammo"
 		{
