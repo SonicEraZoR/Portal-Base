@@ -12,7 +12,8 @@
 
 
 #include "convar.h"
-#include "multiplayer_animstate.h"
+#include "iplayeranimstate.h"
+#include "base_playeranimstate.h"
 
 
 #if defined( CLIENT_DLL )
@@ -22,64 +23,89 @@
 	class CPortal_Player;
 #endif
 
-//enum PlayerAnimEvent_t
-//{
-//	PLAYERANIMEVENT_FIRE_GUN=0,
-//	PLAYERANIMEVENT_THROW_GRENADE,
-//	PLAYERANIMEVENT_ROLL_GRENADE,
-//	PLAYERANIMEVENT_JUMP,
-//	PLAYERANIMEVENT_RELOAD,
-//	PLAYERANIMEVENT_SECONDARY_ATTACK,
-//
-//	PLAYERANIMEVENT_HS_NONE,
-//	PLAYERANIMEVENT_CANCEL_GESTURES,	// cancel current gesture
-//
-//	PLAYERANIMEVENT_COUNT
-//};
+#ifdef CLIENT_DLL
+	class C_BaseAnimatingOverlay;
+	class C_Portal_Player;
+#define CBaseAnimatingOverlay C_BaseAnimatingOverlay
+#define CPortal_Player C_Portal_Player
+#else
+	class CBaseAnimatingOverlay;
+	class CPortal_Player;
+#endif
 
-// ------------------------------------------------------------------------------------------------ //
-// CPlayerAnimState declaration.
-// ------------------------------------------------------------------------------------------------ //
-class CPortalPlayerAnimState : public CMultiPlayerAnimState
-{
-public:
-	
-	DECLARE_CLASS( CPortalPlayerAnimState, CMultiPlayerAnimState );
+	// When moving this fast, he plays run anim.
+#define ARBITRARY_RUN_SPEED		175.0f
 
-	CPortalPlayerAnimState();
-	CPortalPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
-	~CPortalPlayerAnimState();
+	enum PlayerAnimEvent_t
+	{
+		PLAYERANIMEVENT_FIRE_GUN_PRIMARY = 0,
+		PLAYERANIMEVENT_FIRE_GUN_SECONDARY,
+		PLAYERANIMEVENT_THROW_GRENADE,
+		PLAYERANIMEVENT_JUMP,
+		PLAYERANIMEVENT_RELOAD,
 
-	void InitPortal( CPortal_Player *pPlayer );
-	CPortal_Player *GetPortalPlayer( void )							{ return m_pPortalPlayer; }
+		PLAYERANIMEVENT_ATTACK_PRIMARY,
+		PLAYERANIMEVENT_ATTACK_SECONDARY,
+		PLAYERANIMEVENT_ATTACK_GRENADE,
+		PLAYERANIMEVENT_RELOAD,
+		PLAYERANIMEVENT_RELOAD_LOOP,
+		PLAYERANIMEVENT_RELOAD_END,
+		PLAYERANIMEVENT_JUMP,
+		PLAYERANIMEVENT_SWIM,
+		PLAYERANIMEVENT_DIE,
+		PLAYERANIMEVENT_FLINCH_CHEST,
+		PLAYERANIMEVENT_FLINCH_HEAD,
+		PLAYERANIMEVENT_FLINCH_LEFTARM,
+		PLAYERANIMEVENT_FLINCH_RIGHTARM,
+		PLAYERANIMEVENT_FLINCH_LEFTLEG,
+		PLAYERANIMEVENT_FLINCH_RIGHTLEG,
+		PLAYERANIMEVENT_DOUBLEJUMP,
 
-	virtual void ClearAnimationState();
+		// Cancel.
+		PLAYERANIMEVENT_CANCEL,
+		PLAYERANIMEVENT_SPAWN,
 
-	virtual Activity TranslateActivity( Activity actDesired );
+		// Snap to current yaw exactly
+		PLAYERANIMEVENT_SNAP_YAW,
 
-	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+		PLAYERANIMEVENT_CUSTOM,				// Used to play specific activities
+		PLAYERANIMEVENT_CUSTOM_GESTURE,
+		PLAYERANIMEVENT_CUSTOM_SEQUENCE,	// Used to play specific sequences
+		PLAYERANIMEVENT_CUSTOM_GESTURE_SEQUENCE,
 
-	void    Teleport( const Vector *pNewOrigin, const QAngle *pNewAngles, CPortal_Player* pPlayer );
+		// TF Specific. Here until there's a derived game solution to this.
+		PLAYERANIMEVENT_ATTACK_PRE,
+		PLAYERANIMEVENT_ATTACK_POST,
+		PLAYERANIMEVENT_GRENADE1_DRAW,
+		PLAYERANIMEVENT_GRENADE2_DRAW,
+		PLAYERANIMEVENT_GRENADE1_THROW,
+		PLAYERANIMEVENT_GRENADE2_THROW,
+		PLAYERANIMEVENT_VOICE_COMMAND_GESTURE,
+		PLAYERANIMEVENT_DOUBLEJUMP_CROUCH,
+		PLAYERANIMEVENT_STUN_BEGIN,
+		PLAYERANIMEVENT_STUN_MIDDLE,
+		PLAYERANIMEVENT_STUN_END,
 
-	bool	HandleMoving( Activity &idealActivity );
-	bool	HandleJumping( Activity &idealActivity );
-	bool	HandleDucking( Activity &idealActivity );
+		PLAYERANIMEVENT_ATTACK_PRIMARY_SUPER,
 
-private:
-	
-	CPortal_Player   *m_pPortalPlayer;
-	bool		m_bInAirWalk;
+		PLAYERANIMEVENT_COUNT
+	};
 
-	float		m_flHoldDeployedPoseUntilTime;
-};
+	class IPortalPlayerAnimState : virtual public IPlayerAnimState
+	{
+	public:
+		// This is called by both the client and the server in the same way to trigger events for
+		// players firing, jumping, throwing grenades, etc.
+		virtual void DoAnimationEvent(PlayerAnimEvent_t event, int nData = 0) = 0;
 
+		// Returns true if we're playing the grenade prime or throw animation.
+		virtual bool IsThrowingGrenade() = 0;
+	};
 
-CPortalPlayerAnimState* CreatePortalPlayerAnimState( CPortal_Player *pPlayer );
+	IPortalPlayerAnimState* CreatePlayerAnimState(CBaseAnimatingOverlay *pEntity, LegAnimType_t legAnimType, bool bUseAimSequences);
 
-
-// If this is set, then the game code needs to make sure to send player animation events
-// to the local player if he's the one being watched.
-extern ConVar cl_showanimstate;
-
+	// If this is set, then the game code needs to make sure to send player animation events
+	// to the local player if he's the one being watched.
+	extern ConVar cl_showanimstate;
 
 #endif // PORTAL_PLAYERANIMSTATE_H
