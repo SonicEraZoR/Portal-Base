@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,9 +14,9 @@
 
 LINK_ENTITY_TO_CLASS( baseportalcombatweapon, CBasePortalCombatWeapon );
 
-IMPLEMENT_NETWORKCLASS_ALIASED( BasePortalCombatWeapon , DT_BasePortalCombatWeapon )
+IMPLEMENT_NETWORKCLASS_ALIASED(BasePortalCombatWeapon, DT_BasePortalCombatWeapon)
 
-BEGIN_NETWORK_TABLE( CBasePortalCombatWeapon , DT_BasePortalCombatWeapon )
+BEGIN_NETWORK_TABLE(CBasePortalCombatWeapon, DT_BasePortalCombatWeapon)
 #if !defined( CLIENT_DLL )
 //	SendPropInt( SENDINFO( m_bReflectViewModelAnimations ), 1, SPROP_UNSIGNED ),
 #else
@@ -34,15 +34,17 @@ END_NETWORK_TABLE()
 //---------------------------------------------------------
 BEGIN_DATADESC( CBasePortalCombatWeapon )
 
-	DEFINE_FIELD( m_bLowered,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flRaiseTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flHolsterTime,		FIELD_TIME ),
+DEFINE_FIELD( m_bLowered,			FIELD_BOOLEAN ),
+DEFINE_FIELD( m_flRaiseTime,		FIELD_TIME ),
+DEFINE_FIELD( m_flHolsterTime,		FIELD_TIME ),
+DEFINE_FIELD( m_iPrimaryAttacks,	FIELD_INTEGER ),
+DEFINE_FIELD( m_iSecondaryAttacks,	FIELD_INTEGER ),
 
 END_DATADESC()
 
 #endif
 
-BEGIN_PREDICTION_DATA( CBasePortalCombatWeapon )
+BEGIN_PREDICTION_DATA(CBasePortalCombatWeapon)
 END_PREDICTION_DATA()
 
 extern ConVar sk_auto_reload_time;
@@ -192,6 +194,15 @@ void CBasePortalCombatWeapon::WeaponIdle( void )
 	//See if we should idle high or low
 	if ( WeaponShouldBeLowered() )
 	{
+#if !defined( CLIENT_DLL )
+		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(GetOwner());
+
+		if (pPlayer)
+		{
+			pPlayer->Weapon_Lower();
+		}
+#endif
+
 		// Move to lowered position if we're not there yet
 		if ( GetActivity() != ACT_VM_IDLE_LOWERED && GetActivity() != ACT_VM_IDLE_TO_LOWERED 
 			 && GetActivity() != ACT_TRANSITION )
