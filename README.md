@@ -10,7 +10,8 @@ This is the old Portal source code ported to Source Engine 2013. I made this bec
 * Flashlight is enabled
 * NPCs can actually shoot you now (And even through portals! Because apparently Valve left some code for that)
 * Backported crosshair from current version of Half-Life 2
-* No crashes on the map load in Half-Life 2, don't know about the Episodes, needs testing
+* No crashes on the map load in Half-Life 2 and Episode 1, don't know about the Episode 2, needs testing
+* Even if "sv_regeneration_wait_time" is higher than 1 second, red tint will now be on the screen only for 1 second
 
 ## Dependencies
 
