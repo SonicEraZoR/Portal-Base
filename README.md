@@ -29,7 +29,7 @@ This is the old Portal source code ported to Source Engine 2013. I made this bec
 
 Compiling process is the same as for Source SDK 2013. Instructions for building Source SDK 2013 can be found here: https://developer.valvesoftware.com/wiki/Source_SDK_2013
 
-You will Portal installed though
+You will need Portal installed though
 
 ## Installing:
 
