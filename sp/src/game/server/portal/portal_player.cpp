@@ -214,7 +214,7 @@ BEGIN_DATADESC( CPortal_Player )
 END_DATADESC()
 
 ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED );
-ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED);
+ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
 //const char *g_pszChellModel = "models/player/chell.mdl";
 //const char *g_pszPlayerModel = g_pszChellModel;
@@ -654,7 +654,10 @@ void CPortal_Player::PostThink( void )
 		else
 		{
 			m_bIsRegenerating = false;
-			UTIL_ScreenFade( this, hurtScreenOverlay, 1.0f, 0.1f, FFADE_IN|FFADE_PURGE );
+			if (gpGlobals->curtime < m_fTimeLastHurt + 1.0)
+			{
+				UTIL_ScreenFade(this, hurtScreenOverlay, 1.0f, 0.1f, FFADE_IN | FFADE_PURGE);
+			}
 		}
 	}
 	
