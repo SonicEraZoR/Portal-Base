@@ -741,6 +741,10 @@ static void change_portalgun_linkage_id_f( const CCommand &args )
 //-----------------------------------------------------------------------------
 bool CWeaponPortalgun::Reload(void)
 {
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return false;
+
 	bool bFizzledPortal = false;
 
 	if (CanFirePortal1())
@@ -791,10 +795,12 @@ bool CWeaponPortalgun::Reload(void)
 
 	if (bFizzledPortal)
 	{
-		CBasePlayer* pPlayer = AI_GetSinglePlayer();
 		SendWeaponAnim(ACT_VM_FIZZLE);
 		SetLastFiredPortal(0);
-		pPlayer->RumbleEffect(RUMBLE_RPG_MISSILE, 0, RUMBLE_FLAG_RESTART);
+		if (pOwner->IsPlayer())
+		{
+			((CBasePlayer *)pOwner)->RumbleEffect(RUMBLE_RPG_MISSILE, 0, RUMBLE_FLAG_RESTART);
+		}
 		return bFizzledPortal;
 	}
 

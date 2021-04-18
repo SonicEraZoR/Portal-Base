@@ -411,9 +411,12 @@ void C_Portal_Player::Initialize( void )
 	GetPoseParameterRange( m_headPitchPoseParam, m_headPitchMin, m_headPitchMax );
 
 	CStudioHdr *hdr = GetModelPtr();
-	for ( int i = 0; i < hdr->GetNumPoseParameters() ; i++ )
+	if (hdr)
 	{
-		SetPoseParameter( hdr, i, 0.0 );
+		for (int i = 0; i < hdr->GetNumPoseParameters(); i++)
+		{
+			SetPoseParameter(hdr, i, 0.0);
+		}
 	}
 }
 
@@ -421,9 +424,13 @@ CStudioHdr *C_Portal_Player::OnNewModel( void )
 {
 	CStudioHdr *hdr = BaseClass::OnNewModel();
 
-	Initialize( );
+	if (hdr)
+	{
+		Initialize();
 
-	return hdr;
+		return hdr;
+	}
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
