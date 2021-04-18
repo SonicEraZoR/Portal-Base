@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\episodic;.\hl2;.\episodic"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\episodic;.\hl2;.\episodic;$SRCDIR\game\shared\multiplayer"
 		$PreprocessorDefinitions		"$BASE;PORTAL;HL2_DLL;HL2_EPISODIC;USES_SAVERESTORE"
 	}
 }
@@ -315,6 +315,8 @@ $Project "Server (Portal) (Episodic)"
 			$File	"portal\func_portal_detector.h"
 			$File	"portal\func_portal_orientation.cpp"
 			$File	"portal\func_portal_orientation.h"
+			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.cpp"
+			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.h"
 			$File	"portal\neurotoxin_countdown.cpp"
 			$File	"portal\npc_portal_turret_floor.cpp"
 			$File	"portal\npc_portal_turret_ground.cpp"
