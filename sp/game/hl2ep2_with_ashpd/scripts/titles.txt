@@ -120,47 +120,47 @@ $position -1 0.58
 
 EP2_CHAPTER1_TITLE
 {
-#ep2_Chapter1_Title
+#hl2ep2_with_ashpd_Chapter1_Title
 }
 
 EP2_CHAPTER2_TITLE
 {
-#ep2_Chapter2_Title
+#hl2ep2_with_ashpd_Chapter2_Title
 }
 
 EP2_CHAPTER3_TITLE
 {
-#ep2_Chapter3_Title
+#hl2ep2_with_ashpd_Chapter3_Title
 }
 
 EP2_CHAPTER4_TITLE
 {
-#ep2_Chapter4_Title
+#hl2ep2_with_ashpd_Chapter4_Title
 }
 
 EP2_CHAPTER5_TITLE
 {
-#ep2_Chapter5_Title
+#hl2ep2_with_ashpd_Chapter5_Title
 }
 
 EP2_CHAPTER6_TITLE
 {
-#ep2_Chapter6_Title
+#hl2ep2_with_ashpd_Chapter6_Title
 }
 
 EP2_CHAPTER7_TITLE
 {
-#ep2_Chapter7_Title
+#hl2ep2_with_ashpd_Chapter7_Title
 }
 
 EP2_CHAPTER8_TITLE
 {
-#ep2_Chapter8_Title
+#hl2ep2_with_ashpd_Chapter8_Title
 }
 
 EP2_CHAPTER9_TITLE
 {
-#ep2_Chapter9_Title
+#hl2ep2_with_ashpd_Chapter9_Title
 }
 
 
