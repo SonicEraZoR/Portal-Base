@@ -31,6 +31,8 @@
 
 void Host_Say( edict_t *pEdict, bool teamonly );
 
+ConVar sv_use_portal_gamerules("sv_use_portal_gamerules", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED);
+
 extern CBaseEntity*	FindPickerEntityClass( CBasePlayer *pPlayer, char *classname );
 extern bool			g_fGameOver;
 
@@ -160,7 +162,13 @@ void GameStartFrame( void )
 //=========================================================
 void InstallGameRules()
 {
-	CreateGameRulesObject( "CPortalGameRules" );
-	CreateGameRulesObject( "CHalfLife2" );
+	if (sv_use_portal_gamerules.GetBool())
+	{
+		CreateGameRulesObject("CPortalGameRules");
+	}
+	else
+	{
+		CreateGameRulesObject("CHalfLife2");
+	}
 }
 

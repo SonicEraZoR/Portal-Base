@@ -5,6 +5,7 @@
 	title2		"== episode one=="
 
 	type		singleplayer_only
+	hasportals  1
 	supportsvr	1
 
 	FileSystem

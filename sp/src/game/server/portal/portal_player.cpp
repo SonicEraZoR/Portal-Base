@@ -214,6 +214,7 @@ BEGIN_DATADESC( CPortal_Player )
 END_DATADESC()
 
 ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED );
+ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
 //const char *g_pszChellModel = "models/player/chell.mdl";
 //const char *g_pszPlayerModel = g_pszChellModel;
@@ -633,9 +634,9 @@ void CPortal_Player::PostThink( void )
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
 
-	/*
+	
 	// Regenerate heath after 3 seconds
-	if ( IsAlive() && GetHealth() < GetMaxHealth() )
+	if (IsAlive() && GetHealth() < GetMaxHealth() && sv_regeneration_enable.GetBool())
 	{
 		// Color to overlay on the screen while the player is taking damage
 		color32 hurtScreenOverlay = {64,0,0,64};
@@ -653,10 +654,13 @@ void CPortal_Player::PostThink( void )
 		else
 		{
 			m_bIsRegenerating = false;
-			UTIL_ScreenFade( this, hurtScreenOverlay, 1.0f, 0.1f, FFADE_IN|FFADE_PURGE );
+			if (gpGlobals->curtime < m_fTimeLastHurt + 1.0)
+			{
+				UTIL_ScreenFade(this, hurtScreenOverlay, 1.0f, 0.1f, FFADE_IN | FFADE_PURGE);
+			}
 		}
 	}
-	*/
+	
 
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
@@ -1050,6 +1054,7 @@ CAI_Expresser *CPortal_Player::GetExpresser()
 
 
 extern int	gEvilImpulse101;
+extern bool UTIL_ItemCanBeTouchedByPlayer(CBaseEntity *pItem, CBasePlayer *pPlayer);
 //-----------------------------------------------------------------------------
 // Purpose: Player reacts to bumping a weapon. 
 // Input  : pWeapon - the weapon that the player bumped into.
@@ -1072,17 +1077,26 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		return false;
 	}
 
-	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-	if( !pWeapon->FVisible( this, MASK_SOLID ) && !(GetFlags() & FL_NOTARGET) )
+	// Act differently in the episodes
+	if (hl2_episodic.GetBool())
 	{
-		return false;
+		// Don't let the player touch the item unless unobstructed
+		if (!UTIL_ItemCanBeTouchedByPlayer(pWeapon, this) && !gEvilImpulse101)
+			return false;
+	}
+	else
+	{
+		// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
+		if (pWeapon->FVisible(this, MASK_SOLID) == false && !(GetFlags() & FL_NOTARGET))
+			return false;
 	}
 
 	CWeaponPortalgun *pPickupPortalgun = dynamic_cast<CWeaponPortalgun*>( pWeapon );
 
-	bool bOwnsWeaponAlready = !!Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType());
-
-	if ( bOwnsWeaponAlready == true ) 
+	// ----------------------------------------
+	// If I already have it just take the ammo
+	// ----------------------------------------
+	if (Weapon_OwnsThisType(pWeapon->GetClassname(), pWeapon->GetSubType()))
 	{
 		// If we picked up a second portal gun set the bool to alow secondary fire
 		if ( pPickupPortalgun )
@@ -1099,12 +1113,13 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 			return true;
 		}
 
-		//If we have room for the ammo, then "take" the weapon too.
-		if ( Weapon_EquipAmmoOnly( pWeapon ) )
+		if (Weapon_EquipAmmoOnly(pWeapon))
 		{
-			pWeapon->CheckRespawn();
+			// Only remove me if I have no ammo left
+			if (pWeapon->HasPrimaryAmmo())
+				return false;
 
-			UTIL_Remove( pWeapon );
+			UTIL_Remove(pWeapon);
 			return true;
 		}
 		else
@@ -1112,17 +1127,54 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 			return false;
 		}
 	}
-
-	pWeapon->CheckRespawn();
-	Weapon_Equip( pWeapon );
-
-	// If we're holding and object before picking up portalgun, drop it
-	if ( pPickupPortalgun )
+	// -------------------------
+	// Otherwise take the weapon
+	// -------------------------
+	else
 	{
-		ForceDropOfCarriedPhysObjects( GetPlayerHeldEntity( this ) );
-	}
+		pWeapon->CheckRespawn();
 
-	return true;
+		pWeapon->AddSolidFlags(FSOLID_NOT_SOLID);
+		pWeapon->AddEffects(EF_NODRAW);
+
+		Weapon_Equip(pWeapon);
+
+		// If we're holding and object before picking up portalgun, drop it
+		if (pPickupPortalgun)
+		{
+			ForceDropOfCarriedPhysObjects(GetPlayerHeldEntity(this));
+		}
+
+		if (IsInAVehicle())
+		{
+			pWeapon->Holster();
+		}
+		else
+		{
+#ifdef HL2_DLL
+
+			if (IsX360())
+			{
+				CFmtStr hint;
+				hint.sprintf("#valve_hint_select_%s", pWeapon->GetClassname());
+				UTIL_HudHintText(this, hint.Access());
+			}
+
+			// Always switch to a newly-picked up weapon
+			if (!PlayerHasMegaPhysCannon())
+			{
+				// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
+				if (pWeapon->UsesClipsForAmmo1())
+				{
+					pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+				}
+
+				Weapon_Switch(pWeapon);
+			}
+#endif
+		}
+		return true;
+	}
 }
 
 void CPortal_Player::ShutdownUseEntity( void )

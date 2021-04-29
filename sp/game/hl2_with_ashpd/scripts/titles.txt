@@ -110,73 +110,73 @@ $position -1 0.58
 
 CHAPTER1_TITLE
 {
-#HL2_Chapter1_Title
+#hl2_with_ashpd_Chapter1_Title
 }
 
 CHAPTER2_TITLE
 {
-#HL2_Chapter2_Title
+#hl2_with_ashpd_Chapter2_Title
 }
 
 CHAPTER3_TITLE
 {
-#HL2_Chapter3_Title
+#hl2_with_ashpd_Chapter3_Title
 }
 
 CHAPTER4_TITLE
 {
-#HL2_Chapter4_Title
+#hl2_with_ashpd_Chapter4_Title
 }
 
 CHAPTER5_TITLE
 {
-#HL2_Chapter5_Title
+#hl2_with_ashpd_Chapter5_Title
 }
 
 CHAPTER6_TITLE
 {
-#HL2_Chapter6_Title
+#hl2_with_ashpd_Chapter6_Title
 }
 
 CHAPTER7_TITLE
 {
-#HL2_Chapter7_Title
+#hl2_with_ashpd_Chapter7_Title
 }
 
 CHAPTER8_TITLE
 {
-#HL2_Chapter8_Title
+#hl2_with_ashpd_Chapter8_Title
 }
 
 CHAPTER9_TITLE
 {
-#HL2_Chapter9_Title
+#hl2_with_ashpd_Chapter9_Title
 }
 
 CHAPTER9A_TITLE
 {
-#HL2_Chapter9a_Title
+#hl2_with_ashpd_Chapter9a_Title
 }
 
 
 CHAPTER10_TITLE
 {
-#HL2_Chapter10_Title
+#hl2_with_ashpd_Chapter10_Title
 }
 
 CHAPTER11_TITLE
 {
-#HL2_Chapter11_Title
+#hl2_with_ashpd_Chapter11_Title
 }
 
 CHAPTER12_TITLE
 {
-#HL2_Chapter12_Title
+#hl2_with_ashpd_Chapter12_Title
 }
 
 CHAPTER13_TITLE
 {
-#HL2_Chapter13_Title
+#hl2_with_ashpd_Chapter13_Title
 }
 
 
