@@ -1943,7 +1943,11 @@ void CPortalSimulator::CreatePolyhedrons( void )
 				ICollideable *pProp = StaticProps[i];
 
 				CPolyhedron *PolyhedronArray[1024];
-				int iPolyhedronCount = g_StaticCollisionPolyhedronCache.GetStaticPropPolyhedrons( pProp, PolyhedronArray, 1024 );
+				int iPolyhedronCount = 0;
+				if (pProp->GetSolid() != SOLID_NONE)
+				{
+					iPolyhedronCount = g_StaticCollisionPolyhedronCache.GetStaticPropPolyhedrons(pProp, PolyhedronArray, 1024);
+				}
 
 				StaticPropPolyhedronGroups_t indices;
 				indices.iStartIndex = m_InternalData.Simulation.Static.World.StaticProps.Polyhedrons.Count();
