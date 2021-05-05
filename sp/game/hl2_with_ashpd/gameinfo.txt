@@ -38,6 +38,7 @@
 			// folder.
 			//
 			// Note that this folder is scanned only when the game is booted.
+			game+mod			|gameinfo_path|custom/*
 			game+mod			hl2/custom/*
 			game+mod			|all_source_engine_paths|../Portal/portal/custom/*
 
