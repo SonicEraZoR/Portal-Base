@@ -216,7 +216,7 @@ ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPL
 ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
 const char *g_pszChellModel = "models/player/chell.mdl";
-const char *g_pszPlayerModel = g_pszChellModel;
+const char *g_pszPlayerModel = "models/player.mdl";
 
 
 #define MAX_COMBINE_MODELS 4
