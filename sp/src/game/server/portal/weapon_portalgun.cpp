@@ -521,10 +521,10 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 	{
 		CPortal_Player *pPlayer = (CPortal_Player *)pOwner;
 
-//		if ( !bTest && pPlayer )
-//		{
-//			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY, 0 );
-//		}
+		if ( !bTest && pPlayer )
+		{
+			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY, 0 );
+		}
 
 		Vector forward, right, up;
 		AngleVectors( pPlayer->EyeAngles(), &forward, &right, &up );

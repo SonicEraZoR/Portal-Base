@@ -12,7 +12,7 @@
 class CPortal_Player;
 
 #include "player.h"
-//#include "portal_playeranimstate.h"
+#include "portal_playeranimstate.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
 #include "simtimer.h"
@@ -126,7 +126,7 @@ public:
 
 	void ResetAnimation( void );
 
-//	void SetPlayerModel( void );
+	void SetPlayerModel( void );
 	
 	void UpdateExpression ( void );
 	void ClearExpression ( void );
@@ -137,8 +137,8 @@ public:
 	void UnDuck ( void );
 	inline void ForceJumpThisFrame( void ) { ForceButtons( IN_JUMP ); }
 
-//	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
-//	void SetupBones( matrix3x4_t *pBoneToWorld, int boneMask );
+	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
+	void SetupBones( matrix3x4_t *pBoneToWorld, int boneMask );
 
 	// physics interactions
 	virtual void PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize );
@@ -172,8 +172,6 @@ public:
 
 	bool m_bSilentDropAndPickup;
 
-	int m_iThrowGrenadeCounter;
-
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
 		
@@ -187,7 +185,7 @@ private:
 
 	CNetworkQAngle( m_angEyeAngles );
 
-//	CPortalPlayerAnimState*   m_PlayerAnimState;
+	CPortalPlayerAnimState*   m_PlayerAnimState;
 
 	int m_iLastWeaponFireUsercmd;
 	CNetworkVar( int, m_iSpawnInterpCounter );
