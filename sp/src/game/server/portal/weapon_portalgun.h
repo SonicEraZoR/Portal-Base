@@ -110,6 +110,8 @@ public:
 
 	PortalWeaponID GetWeaponID( void ) const { return WEAPON_PORTALGUN; }
 
+	void ItemPostFrame(void);
+
 protected:
 
 	void	StartEffects( void );	// Initialize all sprites and beams
@@ -135,6 +137,7 @@ public:
 private:
 	CWeaponPortalgun( const CWeaponPortalgun & );
 
+	float	m_flSoonestPrimaryAttack;
 };
 
 

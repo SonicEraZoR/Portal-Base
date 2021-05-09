@@ -53,6 +53,11 @@ CWeaponPortalgun::CWeaponPortalgun( void )
 	m_fMaxRange2	= MAX_TRACE_LENGTH;
 
 	m_EffectState	= EFFECT_NONE;
+
+#ifdef GAME_DLL
+	m_flSoonestPrimaryAttack = gpGlobals->curtime;
+#endif // GAME_DLL
+
 }
 
 void CWeaponPortalgun::Precache()
@@ -126,6 +131,9 @@ void CWeaponPortalgun::DryFire( void )
 	WeaponSound(EMPTY);
 	SendWeaponAnim( ACT_VM_DRYFIRE );
 	
+#ifdef GAME_DLL
+	m_flSoonestPrimaryAttack = gpGlobals->curtime + PORTALGUN_FASTEST_DRY_REFIRE_TIME;
+#endif
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 }
 
@@ -208,6 +216,7 @@ void CWeaponPortalgun::PrimaryAttack( void )
 	}
 
 #ifndef CLIENT_DLL
+	m_flSoonestPrimaryAttack = gpGlobals->curtime + PORTALGUN_FASTEST_REFIRE_TIME;
 	inputdata_t inputdata;
 	inputdata.pActivator = this;
 	inputdata.pCaller = this;
