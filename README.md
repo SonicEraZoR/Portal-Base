@@ -15,6 +15,8 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 * No crashes on the map load in Half-Life 2 and Episodes
 * Even if "sv_regeneration_wait_time" is higher than 1 second, red tint will now be on the screen only for 1 second
 * You won't get stuck in non-solid static props near portals
+* You can change the **maximum** delay between shooting a Portal and it opening with sv_portal_projectile_delay (defalult is 0.5 seconds), if set to a very high number behaviour will be the same as in normal Portal
+* You can rapid click to shoot Portals faster, like in Portal 2
 
 ## Dependencies
 
