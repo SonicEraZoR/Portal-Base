@@ -14,9 +14,10 @@ WeaponData
 	"primary_ammo"			"None"
 	"secondary_ammo"		"None"
 
-	"weight"			"4"
+	"weight"			"0"
+	"autoswitchto"		"0"
+	"autoswitchfrom"	"0"
 	"item_flags"			"0"
-	"damage"			"9"
 
 	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
 	SoundData

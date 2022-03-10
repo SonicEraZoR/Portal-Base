@@ -77,6 +77,7 @@ PRECACHE_WEAPON_REGISTER(weapon_portalgun);
 
 extern ConVar sv_portal_placement_debug;
 extern ConVar sv_portal_placement_never_fail;
+ConVar sv_portal_projectile_delay("sv_portal_projectile_delay", "0.5", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Maximum delay after firing and before portal is placed. If set to a very high number behaviour will be the same as in normal Portal.");
 
 
 void CWeaponPortalgun::Spawn( void )
@@ -521,10 +522,10 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 	{
 		CPortal_Player *pPlayer = (CPortal_Player *)pOwner;
 
-//		if ( !bTest && pPlayer )
-//		{
-//			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY, 0 );
-//		}
+		if ( !bTest && pPlayer )
+		{
+			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY, 0 );
+		}
 
 		Vector forward, right, up;
 		AngleVectors( pPlayer->EyeAngles(), &forward, &right, &up );
@@ -622,7 +623,8 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 
 		pPortal->PlacePortal( vFinalPosition, qFinalAngles, fPlacementSuccess, true );
 
-		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
+//		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
+		float fDelay = clamp(vTracerOrigin.DistTo(tr.endpos) / ((bPlayer) ? (BLAST_SPEED) : (BLAST_SPEED_NON_PLAYER)), 0.0f, sv_portal_projectile_delay.GetFloat());
 
 		QAngle qFireAngles;
 		VectorAngles( vDirection, qFireAngles );
@@ -805,6 +807,33 @@ bool CWeaponPortalgun::Reload(void)
 	}
 
 	return bFizzledPortal;
+}
+
+//====================================================================================
+// WEAPON BEHAVIOUR
+//====================================================================================
+void CWeaponPortalgun::ItemPostFrame(void)
+{
+	BaseClass::ItemPostFrame();
+
+	if (m_bInReload)
+		return;
+
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+
+	if (pOwner == NULL)
+		return;
+
+	//Allow a refire as fast as the player can click
+	if (((pOwner->m_nButtons & IN_ATTACK) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime))
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
+	}
+
+	if (((pOwner->m_nButtons & IN_ATTACK2) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime)) // we use the same delay as primary attack that's why m_flSoonestPrimaryAttack is used
+	{
+		m_flNextSecondaryAttack = gpGlobals->curtime - 0.1f;
+	}
 }
 
 ConCommand change_portalgun_linkage_id( "change_portalgun_linkage_id", change_portalgun_linkage_id_f, "Changes the portal linkage ID for the portal gun held by the commanding player.", FCVAR_CHEAT );

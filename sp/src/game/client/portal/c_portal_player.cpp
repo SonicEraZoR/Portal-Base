@@ -46,7 +46,7 @@ ConVar cl_reorient_in_air("cl_reorient_in_air", "1", FCVAR_ARCHIVE, "Allows the 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
 // -------------------------------------------------------------------------------- //
-/*
+
 class C_TEPlayerAnimEvent : public C_BaseTempEntity
 {
 public:
@@ -76,7 +76,7 @@ RecvPropEHandle( RECVINFO( m_hPlayer ) ),
 RecvPropInt( RECVINFO( m_iEvent ) ),
 RecvPropInt( RECVINFO( m_nData ) )
 END_RECV_TABLE()
-*/
+
 
 //=================================================================================
 //
@@ -304,7 +304,7 @@ C_Portal_Player::C_Portal_Player()
 {
 	m_bCrosshairSuppressed = false;
 
-//	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
+	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
 
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
@@ -331,10 +331,10 @@ C_Portal_Player::C_Portal_Player()
 
 C_Portal_Player::~C_Portal_Player( void )
 {
-//	if ( m_PlayerAnimState )
-//	{
-//		m_PlayerAnimState->Release();
-//	}
+	if ( m_PlayerAnimState )
+	{
+		m_PlayerAnimState->Release();
+	}
 
 	g_pColorCorrectionMgr->RemoveColorCorrection( m_CCDeathHandle );
 }
@@ -411,7 +411,6 @@ void C_Portal_Player::Initialize( void )
 	GetPoseParameterRange( m_headPitchPoseParam, m_headPitchMin, m_headPitchMax );
 
 	CStudioHdr *hdr = GetModelPtr();
-
 	if (hdr)
 	{
 		for (int i = 0; i < hdr->GetNumPoseParameters(); i++)
@@ -431,8 +430,7 @@ CStudioHdr *C_Portal_Player::OnNewModel( void )
 
 		return hdr;
 	}
-
-	return null;
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -796,7 +794,6 @@ void C_Portal_Player::FixTeleportationRoll( void )
 		g_bUpsideDown = false;
 }
 
-/*
 const QAngle& C_Portal_Player::GetRenderAngles()
 {
 	if ( IsRagdoll() )
@@ -808,7 +805,6 @@ const QAngle& C_Portal_Player::GetRenderAngles()
 		return m_PlayerAnimState->GetRenderAngles();
 	}
 }
-
 
 void C_Portal_Player::UpdateClientSideAnimation( void )
 {
@@ -828,7 +824,7 @@ void C_Portal_Player::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 {
 	m_PlayerAnimState->DoAnimationEvent( event, nData );
 }
-*/
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1141,7 +1137,7 @@ bool C_Portal_Player::DetectAndHandlePortalTeleportation( void )
 				SetLocalAngles( m_angEyeAngles );
 			}
 
-//			m_PlayerAnimState->Teleport ( &ptNewPosition, &GetNetworkAngles(), this );
+			m_PlayerAnimState->Teleport ( &ptNewPosition, &GetNetworkAngles(), this );
 
 			// Reorient last facing direction to fix pops in view model lag
 			for ( int i = 0; i < MAX_VIEWMODELS; i++ )

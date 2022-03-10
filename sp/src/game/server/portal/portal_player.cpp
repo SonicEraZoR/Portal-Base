@@ -46,7 +46,7 @@ extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
 // -------------------------------------------------------------------------------- //
-/*
+
 class CTEPlayerAnimEvent : public CBaseTempEntity
 {
 public:
@@ -64,12 +64,11 @@ public:
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 SendPropEHandle( SENDINFO( m_hPlayer ) ),
-//SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
+SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
 SendPropInt( SENDINFO( m_nData ), 32 ),
 END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
-
 
 void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData )
 {
@@ -80,7 +79,7 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nDat
 	g_TEPlayerAnimEvent.m_nData = nData;
 	g_TEPlayerAnimEvent.Create( filter, 0 );
 }
-*/
+
 
 
 //=================================================================================
@@ -216,8 +215,8 @@ END_DATADESC()
 ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED );
 ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
-//const char *g_pszChellModel = "models/player/chell.mdl";
-//const char *g_pszPlayerModel = g_pszChellModel;
+const char *g_pszChellModel = "models/player/chell.mdl";
+const char *g_pszPlayerModel = "models/player.mdl";
 
 
 #define MAX_COMBINE_MODELS 4
@@ -245,7 +244,7 @@ extern float IntervalDistance( float x, float x0, float x1 );
 CPortal_Player::CPortal_Player()
 {
 
-//	m_PlayerAnimState = CreatePlayerAnimState(this, LEGANIM_9WAY, true);
+	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
 	CreateExpresser();
 
 	UseClientSideAnimation();
@@ -268,16 +267,14 @@ CPortal_Player::CPortal_Player()
 	m_iszExpressionScene = NULL_STRING;
 	m_hExpressionSceneEnt = NULL;
 	m_flExpressionLoopTime = 0.0f;
-
-	m_iThrowGrenadeCounter = 0;
 }
 
 CPortal_Player::~CPortal_Player( void )
 {
 	ClearSceneEvents( NULL, true );
 
-//	if ( m_PlayerAnimState )
-//		m_PlayerAnimState->Release();
+	if ( m_PlayerAnimState )
+		m_PlayerAnimState->Release();
 
 	CPortalRagdoll *pRagdoll = dynamic_cast<CPortalRagdoll*>( m_hRagdoll.Get() );	
 	if( pRagdoll )
@@ -304,8 +301,8 @@ void CPortal_Player::Precache( void )
 	PrecacheModel ( "sprites/glow01.vmt" );
 
 	//Precache Citizen models
-//	PrecacheModel( g_pszPlayerModel );
-//	PrecacheModel( g_pszChellModel );
+	PrecacheModel( g_pszPlayerModel );
+	PrecacheModel( g_pszChellModel );
 
 	PrecacheScriptSound( "NPC_Citizen.die" );
 }
@@ -399,9 +396,7 @@ void CPortal_Player::GiveDefaultItems( void )
 //-----------------------------------------------------------------------------
 void CPortal_Player::Spawn(void)
 {
-//	SetPlayerModel();
-
-	SetModel("models/player.mdl");
+	SetPlayerModel();
 
 	BaseClass::Spawn();
 
@@ -479,7 +474,6 @@ void CPortal_Player::OnRestore( void )
 
 bool CPortal_Player::ValidatePlayerModel( const char *pModel )
 {
-	/*
 	if ( !Q_stricmp( g_pszPlayerModel, pModel ) )
 	{
 		return true;
@@ -491,11 +485,8 @@ bool CPortal_Player::ValidatePlayerModel( const char *pModel )
 	}
 
 	return false;
-	*/
-	return true;
 }
 
-/*
 void CPortal_Player::SetPlayerModel( void )
 {
 	const char *szModelName = NULL;
@@ -533,7 +524,7 @@ void CPortal_Player::SetPlayerModel( void )
 	SetModel( szModelName );
 	m_iPlayerSoundType = PLAYER_SOUNDS_CITIZEN;
 }
-*/
+
 
 bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 {
@@ -665,7 +656,7 @@ void CPortal_Player::PostThink( void )
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
 
-//	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 
 	if ( IsAlive() && m_flExpressionLoopTime >= 0 && gpGlobals->curtime > m_flExpressionLoopTime )
 	{
@@ -935,19 +926,17 @@ bool CPortal_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, c
 	return true;
 }
 
-/*
+
 void CPortal_Player::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 {
 	m_PlayerAnimState->DoAnimationEvent( event, nData );
 	TE_PlayerAnimEvent( this, event, nData );	// Send to any clients who can see this guy.
 }
-*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Override setup bones so that is uses the render angles from
 //			the Portal animation state to setup the hitboxes.
 //-----------------------------------------------------------------------------
-/*
 void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 {
 	VPROF_BUDGET( "CBaseAnimating::SetupBones", VPROF_BUDGETGROUP_SERVER_ANIM );
@@ -1014,7 +1003,7 @@ void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 		pBoneToWorld,
 		boneMask );
 }
-*/
+
 
 // Set the activity based on an event or current state
 void CPortal_Player::SetAnimation( PLAYER_ANIM playerAnim )
@@ -1196,7 +1185,7 @@ void CPortal_Player::Teleport( const Vector *newPosition, const QAngle *newAngle
 	BaseClass::Teleport( newPosition, newAngles, newVelocity );
 	m_angEyeAngles = pl.v_angle;
 
-//	m_PlayerAnimState->Teleport( newPosition, newAngles, this );
+	m_PlayerAnimState->Teleport( newPosition, newAngles, this );
 }
 
 void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
