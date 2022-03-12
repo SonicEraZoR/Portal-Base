@@ -18,7 +18,7 @@
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "c_portal_player.h"
 #include "c_weapon_portalgun.h"
-#include "igameuifuncs.h"
+#include "IGameUIFuncs.h"
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"

@@ -22,10 +22,10 @@ extern IVModelInfo* modelinfo;
 #if defined( CLIENT_DLL )
 
 	#include "vgui/ISurface.h"
-	#include "vgui_controls/controls.h"
+	#include "vgui_controls/Controls.h"
 	#include "c_portal_player.h"
 	#include "hud_crosshair.h"
-	#include "portalrender.h"
+	#include "PortalRender.h"
 
 #else
 

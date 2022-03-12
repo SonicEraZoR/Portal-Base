@@ -6,7 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "portal_render_targets.h"
-#include "materialsystem\imaterialsystem.h"
+#include "materialsystem/imaterialsystem.h"
 #include "rendertexture.h"
 
 //-----------------------------------------------------------------------------

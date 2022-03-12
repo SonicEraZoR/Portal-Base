@@ -8,7 +8,7 @@
 //=====================================================================================//
 
 
-#include "IGameSystem.h"
+#include "igamesystem.h"
 #include "mathlib/polyhedron.h"
 #include "tier1/utlvector.h"
 #include "tier1/utlstring.h"
