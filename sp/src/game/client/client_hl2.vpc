@@ -20,7 +20,7 @@ $Configuration
 	}
 }
 
-$Project "Client (Portal) (HL2)"
+$Project "Client (Portal_HL2)"
 {
 	$Folder	"Source Files"
 	{
