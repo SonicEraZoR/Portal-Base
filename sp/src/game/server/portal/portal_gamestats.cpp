@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "portal_gamestats.h"
-#include "tier1/UtlBuffer.h"
+#include "tier1/utlbuffer.h"
 #include "portal_player.h"
 
 #define PORTALSTATS_TRIMEVENT( varName, varType )\
