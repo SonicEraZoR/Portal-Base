@@ -19,7 +19,7 @@ $Configuration
 	}
 }
 
-$Project "Server (Portal) (HL2)"
+$Project "Server (Portal_HL2)"
 {
 	$Folder	"Source Files"
 	{
