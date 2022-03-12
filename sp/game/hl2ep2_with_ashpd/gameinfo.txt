@@ -1,8 +1,8 @@
 "GameInfo"
 {
 	game 		"Half-Life 2: Episode Two with ASHPD"
-	title 		"HALF-LIFE'"
-	title2		"== episode two =="
+	title 		"Half-Life 2: Episode Two with"
+	title2		"Aperture Science Handheld Portal Device"
 
 	type		singleplayer_only
 	hasportals  1
