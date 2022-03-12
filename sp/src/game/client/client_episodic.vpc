@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\episodic;..\..\public;$BASE;$SRCDIR\game\shared\multiplayer"
+		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\episodic;..\..\public;$BASE;$SRCDIR\game\shared\Multiplayer"
 		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;HL2_EPISODIC;PORTAL"
 	}
 }
