@@ -1639,13 +1639,18 @@ void CPortal_Player::CheatImpulseCommands( int iImpulse )
 	switch ( iImpulse )
 	{
 	case 101:
+	{
+		if (sv_cheats->GetBool())
 		{
-			if( sv_cheats->GetBool() )
-			{
-				GiveAllItems();
-			}
+			GiveAllItems();
 		}
-		break;
+	}
+	break;
+	case 102:
+	{
+		GivePortalGun();
+	}
+	break;
 
 	default:
 		BaseClass::CheatImpulseCommands( iImpulse );
@@ -2388,4 +2393,21 @@ CON_COMMAND( startneurotoxins, "Starts the nerve gas timer." )
 
 	if( pPlayer )
 		pPlayer->SetNeuroToxinDamageTime( fCoundownTime );
+}
+
+void CPortal_Player::GivePortalGun(void)
+{
+	//GiveNamedItem( "weapon_physcannon" );
+	CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+	if (!pPortalGun)
+	{
+		pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+	}
+
+	if (pPortalGun)
+	{
+		pPortalGun->SetCanFirePortal1();
+		pPortalGun->SetCanFirePortal2();
+	}
 }
