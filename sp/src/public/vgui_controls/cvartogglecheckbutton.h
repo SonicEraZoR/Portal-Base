@@ -36,6 +36,8 @@ public:
 	void			ApplyChanges();
 	bool			HasBeenModified();
 	virtual void	ApplySettings( KeyValues *inResourceData );
+	void			SetCvarName(char const *cvarname); // added these so i can set cvar through code because vgui build mode editor resets it for some reason
+	void			SetCvarValue(char const *cvarvalue);
 
 private:
 	// Called when the OK / Apply button is pressed.  Changed data should be written into cvar.
@@ -184,6 +186,28 @@ void CvarToggleCheckButton<T>::ApplySettings( KeyValues *inResourceData )
 	{
 		SetSelected( m_cvar.GetBool() );
 	}
+}
+
+template< class T >
+void CvarToggleCheckButton<T>::SetCvarName(char const *cvarname)
+{
+	if (Q_stricmp(cvarname, "") == 0)
+		return;
+
+	m_cvar.Init(cvarname, m_bIgnoreMissingCvar);
+	if (m_cvar.IsValid())
+	{
+		SetSelected(m_cvar.GetBool());
+	}
+}
+
+template< class T >
+void CvarToggleCheckButton<T>::SetCvarValue(char const *cvarvalue)
+{
+	if (Q_stricmp(cvarvalue, "1") == 0)
+		m_bStartValue = true;
+	else
+		m_bStartValue = false;
 }
 
 } // namespace vgui
