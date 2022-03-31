@@ -40,6 +40,7 @@ public:
 	// HACK HACK! Used to make the gun visually change when going through a cleanser!
 	CNetworkVar( float,	m_fEffectsMaxSize1 );
 	CNetworkVar( float,	m_fEffectsMaxSize2 );
+	CNetworkVar(float, m_fPortalPlacementDelay); // Delay for placing portals
 
 public:
 	virtual const Vector& GetBulletSpread( void )
