@@ -161,6 +161,8 @@ public:
 	virtual float GetFireRate( void ) { return 0.7; };
 	void WeaponIdle( void );
 
+	float m_fPortalPlacementDelay;
+
 protected:
 
 	void	StartEffects( void );	// Initialize all sprites and beams
