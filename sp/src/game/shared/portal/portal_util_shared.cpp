@@ -283,6 +283,80 @@ bool UTIL_Portal_TraceRay_Bullets( const CProp_Portal *pPortal, const Ray_t &ray
 	return true;
 }
 
+//added this overload to use in void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
+bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, const IHandleEntity *ignore, int collisionGroup, trace_t *pTrace, bool bTraceHolyWall)
+{
+	CTraceFilterSimple traceFilter( ignore, collisionGroup );
+	if (!pPortal || !pPortal->IsActivedAndLinked())
+	{
+		//not in a portal environment, use regular traces
+		enginetrace->TraceRay(ray, fMask, &traceFilter, pTrace);
+		return false;
+	}
+
+	trace_t trReal;
+
+	enginetrace->TraceRay(ray, fMask, &traceFilter, &trReal);
+
+	Vector vRayNormal = ray.m_Delta;
+	VectorNormalize(vRayNormal);
+
+	Vector vPortalForward;
+	pPortal->GetVectors(&vPortalForward, 0, 0);
+
+	// If the ray isn't going into the front of the portal, just use the real trace
+	if (vPortalForward.Dot(vRayNormal) > 0.0f)
+	{
+		*pTrace = trReal;
+		return false;
+	}
+
+	// If the real trace collides before the portal plane, just use the real trace
+	float fPortalFraction = UTIL_IntersectRayWithPortal(ray, pPortal);
+
+	if (fPortalFraction == -1.0f || trReal.fraction + 0.0001f < fPortalFraction)
+	{
+		// Didn't intersect or the real trace intersected closer
+		*pTrace = trReal;
+		return false;
+	}
+
+	Ray_t rayPostPortal;
+	rayPostPortal = ray;
+	rayPostPortal.m_Start = ray.m_Start + ray.m_Delta * fPortalFraction;
+	rayPostPortal.m_Delta = ray.m_Delta * (1.0f - fPortalFraction);
+
+	VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+
+	Ray_t rayTransformed;
+	UTIL_Portal_RayTransform(matThisToLinked, rayPostPortal, rayTransformed);
+
+	// After a bullet traces through a portal it can hit the player that fired it
+	CTraceFilterSimple *pSimpleFilter = dynamic_cast<CTraceFilterSimple*>(&traceFilter);
+	const IHandleEntity *pPassEntity = NULL;
+	if (pSimpleFilter)
+	{
+		pPassEntity = pSimpleFilter->GetPassEntity();
+		pSimpleFilter->SetPassEntity(0);
+	}
+
+	trace_t trPostPortal;
+	enginetrace->TraceRay(rayTransformed, fMask, &traceFilter, &trPostPortal);
+
+	if (pSimpleFilter)
+	{
+		pSimpleFilter->SetPassEntity(pPassEntity);
+	}
+
+	//trPostPortal.startpos = ray.m_Start;
+	UTIL_Portal_PointTransform(matThisToLinked, ray.m_Start, trPostPortal.startpos);
+	trPostPortal.fraction = trPostPortal.fraction * (1.0f - fPortalFraction) + fPortalFraction;
+
+	*pTrace = trPostPortal;
+
+	return true;
+}
+
 CProp_Portal* UTIL_Portal_TraceRay_Beam( const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, float *pfFraction )
 {
 	// Do a regular trace
