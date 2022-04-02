@@ -49,3 +49,6 @@ ccache binary
 
 gtest_output_test_golden_lin.txt binary
 *_english.txt binary
+*_russian.txt binary
+*_with_ashpd_english.txt
+*_with_ashpd_russian.txt
