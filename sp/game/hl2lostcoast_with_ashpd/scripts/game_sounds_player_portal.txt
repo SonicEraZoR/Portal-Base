@@ -1,0 +1,85 @@
+"PortalPlayer.BonkYelp"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"0.4,0.6"
+	"pitch"			"95,105"
+
+	"soundlevel"	"SNDLVL_IDLE"
+
+	"rndwave"
+	{
+		"wave"	"*vo/npc/$gender01/pain01.wav"
+		"wave"	"*vo/npc/$gender01/pain02.wav"
+		"wave"	"*vo/npc/$gender01/ow02.wav"
+	}
+}
+
+"PortalPlayer.PainYelp"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"0.4,0.6"
+	"pitch"			"95,105"
+
+	"soundlevel"	"SNDLVL_IDLE"
+
+	"rndwave"
+	{
+		"wave"	"*vo/npc/$gender01/pain01.wav"
+		"wave"	"*vo/npc/$gender01/pain02.wav"
+		"wave"	"*vo/npc/$gender01/pain04.wav"
+		"wave"	"*vo/npc/$gender01/pain05.wav"
+		"wave"	"*vo/npc/$gender01/pain07.wav"
+		"wave"	"*vo/npc/$gender01/pain09.wav"
+	}
+}
+
+"PortalPlayer.EnterPortal"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.5"
+	"soundlevel"		"SNDLVL_70db"
+	"pitch"			"95,105"
+	"rndwave"
+	{
+		
+		"wave"			"player/portal_enter1.wav"
+		"wave"			"player/portal_enter2.wav"
+	}
+}
+
+"PortalPlayer.ExitPortal"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.5"
+	"soundlevel"		"SNDLVL_70db"
+	"pitch"			"95,105"
+	"rndwave"
+	{
+		
+		"wave"			"player/portal_exit1.wav"
+		"wave"			"player/portal_exit2.wav"
+	}
+}
+
+"PortalPlayer.Woosh"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"0.9"
+	"soundlevel"		"SNDLVL_75dB"
+	"pitch"			"140"
+	"wave"			"player/fling_whoosh.wav"
+}
+
+"PortalPlayer.FallRecover"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"0.40"
+	"pitch"		"95,105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"		"player/futureshoes1.wav"
+		"wave"		"player/futureshoes2.wav"
+	}
+}
