@@ -24,6 +24,7 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 * Crowbar swings through Portals
 * No crash when Magnusson Device hits the ground
 * "impulse 102" gives portal gun
+* There's portal gun bind in the settings
 
 ## Demonstration
 [![Demonstration](https://img.youtube.com/vi/xhmXAUB8P4Y/0.jpg)](https://www.youtube.com/watch?v=xhmXAUB8P4Y)
