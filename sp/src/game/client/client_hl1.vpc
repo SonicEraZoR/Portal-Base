@@ -1,0 +1,111 @@
+//-----------------------------------------------------------------------------
+//	CLIENT_HL1.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"hl1" [!$SOURCESDK]
+$Macro GAMENAME 	"hl1_with_ashpd" [$SOURCESDK]
+
+$Include "$SRCDIR\game\client\client_base_hl1.vpc"
+$Include "$SRCDIR\game\protobuf_include.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories	".\hl1;$SRCDIR\game\shared\hl1;.\hl2;.\hl2\elements;$SRCDIR\game\shared\hl2;$BASE"
+		$PreprocessorDefinitions		"$BASE;HL1_CLIENT_DLL;SOURCE_2013"
+	}
+}
+
+$Project "Client (Portal_HL1)"
+{
+	$Folder	"Source Files"
+	{
+		$File	"hud_chat.cpp"
+		$File	"c_team_objectiveresource.cpp"
+		$File	"c_team_objectiveresource.h"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
+
+		$Folder "HL1 DLL"
+		{
+			$File	"hl1\c_hl1_legacytempents.cpp"
+			$File	"hl1\c_hl1_player.cpp"
+			$File	"hl1\c_hl1_player.h"
+			$File	"hl1\c_hl1_rpg_rocket.cpp"
+			$File	"hl1\c_hl1_weapon_stubs.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1_baseweapon_shared.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1_baseweapon_shared.h"
+			$File	"hl1\hl1_clientmode.cpp"
+			$File	"hl1\hl1_clientmode.h"
+			$File	"hl1\hl1_fx_gauss.cpp"
+			$File	"hl1\hl1_fx_gibs.cpp"
+			$File	"hl1\hl1_fx_impacts.cpp"
+			$File	"hl1\hl1_fx_shelleject.cpp"
+			$File 	"hl1\hl1_menu_hls.cpp"
+			$File 	"hl1\hl1_menu_rm.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1_gamemovement.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1_gamemovement.h"
+			$File	"$SRCDIR\game\shared\hl1\hl1_gamerules.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1_gamerules.h"
+			$File	"hl1\hl1_usermessages.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_357.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_crossbow.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_egon.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_gauss.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_glock.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_handgrenade.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_hornetgun.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_mp5.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_mp5.h"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_rpg.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_rpg.h"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_satchel.cpp"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_satchel.h"
+			$File 	"$SRCDIR\game\shared\hl1\hl1_weapon_shotgun.cpp"
+			$File	"hl1\hud_hl1_ammo.cpp"
+			$File	"hl1\hud_hl1_battery.cpp"
+			$File	"hl1\hud_hl1_damageindicator.cpp"
+			$File	"hl1\hud_hl1_damagetiles.cpp"
+			$File	"hl1\hud_hl1_flashlight.cpp"
+			$File	"hl1\hud_hl1_geiger.cpp"
+			$File	"hl1\hud_hl1_health.cpp"
+			$File	"hl1\hud_hl1_history.cpp"
+			$File	"hl1\hud_hl1_train.cpp"
+			$File	"hl1\hud_hl1_weapons.cpp"
+			$File	"hl1\hud_numbers.cpp"
+			$File	"hl1\hud_numbers.h"
+		}
+
+		$Folder	"HL2 DLL"
+		{
+			$File	"hl2\c_antlion_dust.cpp"
+			$File	"hl2\c_basehelicopter.cpp"
+			$File	"hl2\c_basehelicopter.h"
+			$File	"hl2\c_basehlcombatweapon.h"
+			$File	"hl2\c_corpse.cpp"
+			$File	"hl2\c_corpse.h"
+			$File	"hl2\c_hl2_playerlocaldata.h"
+			$File	"hl2\c_rotorwash.cpp"
+			$File	"$SRCDIR\game\shared\hl2\citadel_effects_shared.h"
+			$File	"$SRCDIR\game\shared\hl2\env_headcrabcanister_shared.h"
+			$File	"hl2\fx_bugbait.cpp"
+			$File	"hl2\hl_in_main.cpp"
+			$File	"hl2\hl_prediction.cpp"
+			$File	"$SRCDIR\game\shared\hl2\hl2_shareddefs.h"
+			$File	"hl2\vgui_rootpanel_hl2.cpp"
+		}
+
+		$Folder "Shader Editor"
+		{
+			$File	"shadereditor/isedit_modelrender.h"
+			$File	"shadereditor/ivshadereditor.h"
+			$File	"shadereditor/shadereditorsystem.h"
+			$File	"shadereditor/sedit_modelrender.h"
+			$File	"shadereditor/sedit_modelrender.cpp"
+			$File	"shadereditor/shadereditorsystem.cpp"
+		}
+}

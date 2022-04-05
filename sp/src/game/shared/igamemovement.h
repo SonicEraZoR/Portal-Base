@@ -75,7 +75,7 @@ public:
 	void			SetAbsOrigin( const Vector &vec );
 	const Vector	&GetAbsOrigin() const;
 
-private:
+//private: needs to be public for hl1_gamemovement.cpp VectorCopy(mv->m_vecAbsOrigin, newOrigin); to work
 	Vector			m_vecAbsOrigin;		// edict::origin
 };
 

@@ -141,6 +141,7 @@ enum Class_T
 	CLASS_PLAYER_ALLY,
 	CLASS_PLAYER_BIOWEAPON,
 	CLASS_ALIEN_BIOWEAPON,
+	CLASS_BARNACLE, // needs to be here for hl1_gamerules.cpp InitDefaultAIRelationships to work
 
 	NUM_AI_CLASSES
 };
