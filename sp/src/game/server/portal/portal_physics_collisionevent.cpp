@@ -29,6 +29,8 @@ int CPortal_CollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject
 		if( (pObj0->GetGameFlags() & pObj1->GetGameFlags()) & FVPHYSICS_IS_SHADOWCLONE )
 			return 0; //both are shadow clones
 
+		// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 		if( (pObj0->GetGameFlags() | pObj1->GetGameFlags()) & FVPHYSICS_PLAYER_HELD )
 		{
 			//at least one is held
@@ -40,6 +42,7 @@ int CPortal_CollisionEvent::ShouldCollide( IPhysicsObject *pObj0, IPhysicsObject
 			if( pGameData1 && ((CBaseEntity *)pGameData1)->IsPlayer() && (GetPlayerHeldEntity( (CBasePlayer *)pGameData1 ) == (CBaseEntity *)pGameData0) )
 				return 0;
 		}
+#endif // !HL1_DLL
 	}
 
 
@@ -201,6 +204,8 @@ int CPortal_CollisionEvent::ShouldSolvePenetration( IPhysicsObject *pObj0, IPhys
 			pPhysOther = pObj0;
 		}
 
+		// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 		//don't let players collide with objects they're holding, they get kinda messed up sometimes
 		if( pOther->IsPlayer() && (GetPlayerHeldEntity( (CBasePlayer *)pOther ) == pHeld) )
 			return 0;
@@ -231,6 +236,7 @@ int CPortal_CollisionEvent::ShouldSolvePenetration( IPhysicsObject *pObj0, IPhys
 			//pPhysOther->Wake();
 			//FindClosestPassableSpace( pOther, Vector( 0.0f, 0.0f, 1.0f ) );
 		}
+#endif // !HL1_DLL
 	}
 
 
@@ -374,8 +380,11 @@ static void ModifyWeight_PreCollision( vcollisionevent_t *pEvent )
 				s_bChangedMass[i] = true;
 				s_fSavedMass[i] = pUnshadowedObjects[i]->GetMass();
 
+				// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 				CGrabController *pGrabController = NULL;
 				CBaseEntity *pLookingForEntity = (CBaseEntity*)pEvent->pObjects[i]->GetGameData();
+
 				CBasePlayer *pHoldingPlayer = GetPlayerHoldingEntity( pLookingForEntity );
 				if( pHoldingPlayer )
 					pGrabController = GetGrabControllerForPlayer( pHoldingPlayer );
@@ -393,6 +402,7 @@ static void ModifyWeight_PreCollision( vcollisionevent_t *pEvent )
 
 					pUnshadowedObjects[i]->SetMass( fSavedMass );
 				}
+#endif
 			}
 		}
 	}

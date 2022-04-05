@@ -297,6 +297,8 @@ void CWeaponPortalgun::ItemHolsterFrame( void )
 	if ( GetOwner()->GetActiveWeapon() == this )
 		return;
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 	// If it's been longer than three seconds, reload
 	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
 	{
@@ -315,6 +317,8 @@ void CWeaponPortalgun::ItemHolsterFrame( void )
 		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;
 	}
+#endif
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -1100,7 +1100,12 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 		float fPlayerFaceDotPortalFace = LocalPortalDataAccess.Placement.vForward.Dot( vPlayerForward );
 		float fPlayerFaceDotPortalUp = LocalPortalDataAccess.Placement.vUp.Dot( vPlayerForward );
 
+// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 		CBaseEntity *pHeldEntity = GetPlayerHeldEntity( pOtherAsPlayer );
+#else
+		CBaseEntity *pHeldEntity = NULL;
+#endif
 
 		// Sometimes reorienting by pitch is more desirable than by roll depending on the portals' orientations and the relative player facing direction
 		if ( pHeldEntity )	// never pitch reorient while holding an object
@@ -1225,6 +1230,8 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 		pOther->RemoveEffects( EF_NOINTERP );
 	}
 
+// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 	IPhysicsObject *pPhys = pOther->VPhysicsGetObject();
 	if( (pPhys != NULL) && (pPhys->GetGameFlags() & FVPHYSICS_PLAYER_HELD) )
 	{
@@ -1263,6 +1270,7 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 		//we haven't found a good way of fixing the problem of "how do you reorient an AABB". So we just move the player so that they fit
 		//m_hLinkedPortal->ForceEntityToFitInPortalWall( pOtherAsPlayer );
 	}
+#endif
 
 	//force the entity to be touching the other portal right this millisecond
 	{

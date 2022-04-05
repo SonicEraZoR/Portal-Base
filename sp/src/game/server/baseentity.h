@@ -1634,7 +1634,6 @@ private:
 	unsigned char	m_nWaterTouch;
 	unsigned char	m_nSlimeTouch;
 	unsigned char	m_nWaterType;
-	CNetworkVarForDerived( unsigned char, m_nWaterLevel );
 	float			m_flNavIgnoreUntilTime;
 
 	CNetworkHandleForDerived( CBaseEntity, m_hGroundEntity );
@@ -1726,6 +1725,8 @@ public:
 
 	// So it can get at the physics methods
 	friend class CCollisionEvent;
+
+	CNetworkVarForDerived(unsigned char, m_nWaterLevel);
 
 // Methods shared by client and server
 public:

@@ -47,7 +47,11 @@ END_DATADESC()
 BEGIN_PREDICTION_DATA(CBasePortalCombatWeapon)
 END_PREDICTION_DATA()
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 extern ConVar sk_auto_reload_time;
+#endif
+#endif
 
 CBasePortalCombatWeapon::CBasePortalCombatWeapon( void )
 {
@@ -69,6 +73,8 @@ void CBasePortalCombatWeapon::ItemHolsterFrame( void )
 	if ( GetOwner()->GetActiveWeapon() == this )
 		return;
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 	// If it's been longer than three seconds, reload
 	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
 	{
@@ -76,6 +82,8 @@ void CBasePortalCombatWeapon::ItemHolsterFrame( void )
 		FinishReload();
 		m_flHolsterTime = gpGlobals->curtime;
 	}
+#endif
+#endif
 }
 
 bool CBasePortalCombatWeapon::CanLower()
@@ -236,8 +244,12 @@ void CBasePortalCombatWeapon::WeaponIdle( void )
 #define	HL2_BOB			0.002f
 #define	HL2_BOB_UP		0.5f
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 extern float	g_lateralBob;
 extern float	g_verticalBob;
+#endif
+#endif
 
 static ConVar	cl_bobcycle( "cl_bobcycle","0.8" );
 static ConVar	cl_bob( "cl_bob","0.002" );
@@ -257,6 +269,8 @@ static ConVar	v_ipitch_level( "v_ipitch_level", "0.3", FCVAR_REPLICATED | FCVAR_
 //-----------------------------------------------------------------------------
 float CBasePortalCombatWeapon::CalcViewmodelBob( void )
 {
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 	static	float bobtime;
 	static	float lastbobtime;
 	float	cycle;
@@ -319,6 +333,8 @@ float CBasePortalCombatWeapon::CalcViewmodelBob( void )
 	g_lateralBob = speed*0.005f;
 	g_lateralBob = g_lateralBob*0.3 + g_lateralBob*0.7*sin(cycle);
 	g_lateralBob = clamp( g_lateralBob, -7.0f, 4.0f );
+#endif
+#endif
 	
 	//NOTENOTE: We don't use this return value in our case (need to restructure the calculation function setup!)
 	return 0.0f;
@@ -337,6 +353,8 @@ void CBasePortalCombatWeapon::AddViewmodelBob( CBaseViewModel *viewmodel, Vector
 
 	CalcViewmodelBob();
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 	// Apply bob, but scaled down to 40%
 	VectorMA( origin, g_verticalBob * 0.1f, forward, origin );
 	
@@ -350,6 +368,8 @@ void CBasePortalCombatWeapon::AddViewmodelBob( CBaseViewModel *viewmodel, Vector
 	angles[ YAW ]	-= g_lateralBob  * 0.3f;
 
 	VectorMA( origin, g_lateralBob * 0.8f, right, origin );
+#endif
+#endif
 }
 
 //-----------------------------------------------------------------------------

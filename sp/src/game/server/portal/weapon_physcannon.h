@@ -32,7 +32,9 @@ CBasePlayer *GetPlayerHoldingEntity( CBaseEntity *pEntity );
 
 CGrabController *GetGrabControllerForPlayer( CBasePlayer *pPlayer );
 CGrabController *GetGrabControllerForPhysCannon( CBaseCombatWeapon *pActiveWeapon );
+#ifndef HL1_DLL
 void GetSavedParamsForCarriedPhysObject( CGrabController *pGrabController, IPhysicsObject *pObject, float *pSavedMassOut, float *pSavedRotationalDampingOut );
+#endif
 void UpdateGrabControllerTargetPosition( CBasePlayer *pPlayer, Vector *vPosition, QAngle *qAngles );
 bool PhysCannonAccountableForObject( CBaseCombatWeapon *pPhysCannon, CBaseEntity *pObject );
 

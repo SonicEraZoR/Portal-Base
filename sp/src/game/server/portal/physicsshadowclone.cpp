@@ -411,6 +411,9 @@ static void FullSyncPhysicsObject( IPhysicsObject *pSource, IPhysicsObject *pDes
 		pDest->Wake();
 
 	float fSavedMass = 0.0f, fSavedRotationalDamping; //setting mass to 0.0f purely to kill a warning that I can't seem to kill with pragmas
+
+	// No need for this in HLS since the player can't hold anything in HLS
+#ifndef HL1_DLL
 	if( pSource->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
 		//CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
@@ -430,6 +433,7 @@ static void FullSyncPhysicsObject( IPhysicsObject *pSource, IPhysicsObject *pDes
 		AssertMsg( pGrabController, "Physics object is held, but we can't find the holding controller." );
 		GetSavedParamsForCarriedPhysObject( pGrabController, pSource, &fSavedMass, &fSavedRotationalDamping );
 	}
+#endif // !HL1_DLL
 
 	//Boiler plate
 	{

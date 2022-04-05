@@ -40,6 +40,10 @@ enum
 	EFFECT_HOLDING,
 };
 
+#ifndef HL1_CLIENT_DLL
+#ifndef HL1_DLL
 extern ConVar sk_auto_reload_time;
+#endif
+#endif
 
 #endif // WEAPON_PORTALGUN_SHARED_H
