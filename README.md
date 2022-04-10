@@ -62,3 +62,13 @@ You will need Portal installed though
 Same as Source SDK 2013 mod: https://developer.valvesoftware.com/wiki/Setup_mod_on_steam
 
 P. S. This ReadMe was mostly copied from this repo https://github.com/NicknineTheEagle/TF2-Base
+
+## P. S.
+
+If you want the game to behave exactly like normal Portal first use *Half-Life 2 binaries not Episodic ones*, second, create autoexec.cfg in your mod directory and add those commands:
+```
+sv_regeneration_enable 1
+sv_use_portal_gamerules 1
+cl_playermodel "models/player/chell.mdl"
+```
+And it should be just like normal Portal
