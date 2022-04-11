@@ -1,4 +1,4 @@
-//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -172,7 +172,6 @@ BEGIN_NETWORK_TABLE( C_WeaponPortalgun, DT_WeaponPortalgun )
 	RecvPropBool( RECVINFO( m_bOpenProngs ) ),
 	RecvPropFloat( RECVINFO( m_fCanPlacePortal1OnThisSurface ) ),
 	RecvPropFloat( RECVINFO( m_fCanPlacePortal2OnThisSurface ) ),
-	RecvPropFloat( RECVINFO( m_fPortalPlacementDelay ) ),
 	RecvPropFloat( RECVINFO( m_fEffectsMaxSize1 ) ), // HACK HACK! Used to make the gun visually change when going through a cleanser!
 	RecvPropFloat( RECVINFO( m_fEffectsMaxSize2 ) ),
 	RecvPropInt( RECVINFO( m_EffectState ) ),

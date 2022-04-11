@@ -130,6 +130,7 @@ private:
 	CPortalPlayerAnimState *m_PlayerAnimState;
 
 	QAngle	m_angEyeAngles;
+	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	virtual IRagdoll		*GetRepresentativeRagdoll() const;
 	EHANDLE	m_hRagdoll;
@@ -179,6 +180,14 @@ private:
 		PortalEyeInterpolation_t( void ) : m_iTickLastUpdated(0), m_fTickInterpolationAmountLastUpdated(0.0f), m_bDisableFreeMovement(false), m_bUpdatePosition_FreeMove(false) { };
 	} PortalEyeInterpolation;
 
+	struct PreDataChanged_Backup_t
+	{
+		CHandle<C_Prop_Portal>	m_hPortalEnvironment;
+		CHandle<C_Func_LiquidPortal>	m_hSurroundingLiquidPortal;
+		//Vector					m_ptPlayerPosition;
+		QAngle					m_qEyeAngles;
+	} PreDataChanged_Backup;
+
 	Vector	m_ptEyePosition_LastCalcView;
 	QAngle	m_qEyeAngles_LastCalcView; //we've got some VERY persistent single frame errors while teleporting, this will be updated every frame in CalcView() and will serve as a central source for fixed angles
 	C_Prop_Portal *m_pPortalEnvironment_LastCalcView;
@@ -190,16 +199,6 @@ private:
 	VMatrix m_PendingPortalMatrix;
 
 public:
-	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
-
-	struct PreDataChanged_Backup_t
-	{
-		CHandle<C_Prop_Portal>	m_hPortalEnvironment;
-		CHandle<C_Func_LiquidPortal>	m_hSurroundingLiquidPortal;
-		//Vector					m_ptPlayerPosition;
-		QAngle					m_qEyeAngles;
-	} PreDataChanged_Backup;
-
 	bool	m_bPitchReorientation;
 	float	m_fReorientationRate;
 	bool	m_bEyePositionIsTransformedByPortal; //when the eye and body positions are not on the same side of a portal

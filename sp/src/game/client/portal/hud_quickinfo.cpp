@@ -34,13 +34,8 @@ int ScreenTransform(const Vector& point, Vector& screen);
 
 static ConVar	hud_quickinfo( "hud_quickinfo", "1", FCVAR_ARCHIVE );
 static ConVar	hud_quickinfo_swap( "hud_quickinfo_swap", "0", FCVAR_ARCHIVE );
-static ConVar	beta_quickinfo_older_gun("beta_quickinfo_older_gun", "1", FCVAR_ARCHIVE);
 
-extern ConVar	crosshair;
-
-ConVar	beta_quickinfo("beta_quickinfo", "0", FCVAR_ARCHIVE);
-
-#define BaseLPOpacity	48.0f //Minimum opacity for the last placed portal indicator (What it fades out to)
+extern ConVar crosshair;
 
 #define QUICKINFO_EVENT_DURATION	1.0f
 #define	QUICKINFO_BRIGHTNESS_FULL	255
@@ -90,9 +85,6 @@ private:
 	
 	float	m_fLastPlacedAlpha[2];
 	bool	m_bLastPlacedAlphaCountingUp[2];
-
-	CPanelAnimationVar(float, m_fCBlend1, "CBlend1", "0");
-	CPanelAnimationVar(float, m_fCBlend2, "CBlend2", "0");
 
 	CHudTexture	*m_icon_c;
 
@@ -243,55 +235,42 @@ void CHUDQuickInfo::OnThink()
 	if (player == NULL)
 		return;
 
-	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
-	if (pWeapon == NULL)
-		return;
+	// see if we should fade in/out
+	bool bFadeOut = player->IsZoomed();
 
-	C_WeaponPortalgun *pPortalgun = dynamic_cast<C_WeaponPortalgun*>(pWeapon);
-
-	if (!hud_quickinfo.GetInt() || !pPortalgun || (!pPortalgun->CanFirePortal1() && !pPortalgun->CanFirePortal2()))
+	// check if the state has changed
+	if (m_bFadedOut != bFadeOut)
 	{
-		// see if we should fade in/out
-		bool bFadeOut = player->IsZoomed();
+		m_bFadedOut = bFadeOut;
 
-		// check if the state has changed
-		if (m_bFadedOut != bFadeOut)
+		m_bDimmed = false;
+
+		if (bFadeOut)
 		{
-			m_bFadedOut = bFadeOut;
-
-			m_bDimmed = false;
-
-			if (bFadeOut)
-			{
-				g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", 0.0f, 0.0f, 0.25f, vgui::AnimationController::INTERPOLATOR_LINEAR);
-			}
-			else
-			{
-				g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_FULL, 0.0f, QUICKINFO_FADE_IN_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
-			}
+			g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", 0.0f, 0.0f, 0.25f, vgui::AnimationController::INTERPOLATOR_LINEAR);
 		}
-		else if (!m_bFadedOut)
+		else
 		{
-			// If we're dormant, fade out
-			if (EventTimeElapsed())
-			{
-				if (!m_bDimmed)
-				{
-					m_bDimmed = true;
-					g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_DIM, 0.0f, QUICKINFO_FADE_OUT_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
-				}
-			}
-			else if (m_bDimmed)
-			{
-				// Fade back up, we're active
-				m_bDimmed = false;
-				g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_FULL, 0.0f, QUICKINFO_FADE_IN_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
-			}
+			g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_FULL, 0.0f, QUICKINFO_FADE_IN_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
 		}
 	}
-	else
+	else if (!m_bFadedOut)
 	{
-		g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_FULL, 0.0f, QUICKINFO_FADE_IN_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
+		// If we're dormant, fade out
+		if (EventTimeElapsed())
+		{
+			if (!m_bDimmed)
+			{
+				m_bDimmed = true;
+				g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_DIM, 0.0f, QUICKINFO_FADE_OUT_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
+			}
+		}
+		else if (m_bDimmed)
+		{
+			// Fade back up, we're active
+			m_bDimmed = false;
+			g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "Alpha", QUICKINFO_BRIGHTNESS_FULL, 0.0f, QUICKINFO_FADE_IN_TIME, vgui::AnimationController::INTERPOLATOR_LINEAR);
+		}
 	}
 }
 
@@ -314,9 +293,6 @@ void CHUDQuickInfo::Paint()
 
 	int		xCenter = (int)fX;
 	int		yCenter = (int)fY - m_icon_lb->Height() / 2;
-
-	int		xCenter_portal = ScreenWidth() / 2;
-	int		yCenter_portal = (ScreenHeight() - m_icon_lb_portal->Height()) / 2;
 
 	float	scalar = 138.0f / 255.0f;
 
@@ -478,331 +454,117 @@ void CHUDQuickInfo::Paint()
 	
 	float fLeftPlaceBarFill = 0.0f;
 	float fRightPlaceBarFill = 0.0f;
-	
-	if (!beta_quickinfo.GetBool())
+
+	if ( pPortalgun->CanFirePortal1() && pPortalgun->CanFirePortal2() )
 	{
-		if (pPortalgun->CanFirePortal1() && pPortalgun->CanFirePortal2())
+		int iDrawLastPlaced = 0;
+
+		//do last placed indicator effects
+		if ( pPortalgun->GetLastFiredPortal() == 1 )
 		{
-			int iDrawLastPlaced = 0;
-
-			//do last placed indicator effects
-			if (pPortalgun->GetLastFiredPortal() == 1)
-			{
-				iDrawLastPlaced = 0;
-				fLeftPlaceBarFill = 1.0f;
-			}
-			else if (pPortalgun->GetLastFiredPortal() == 2)
-			{
-				iDrawLastPlaced = 1;
-				fRightPlaceBarFill = 1.0f;
-			}
-
-			if (m_bLastPlacedAlphaCountingUp[iDrawLastPlaced])
-			{
-				m_fLastPlacedAlpha[iDrawLastPlaced] += gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed * 2.0f;
-				if (m_fLastPlacedAlpha[iDrawLastPlaced] > 255.0f)
-				{
-					m_bLastPlacedAlphaCountingUp[iDrawLastPlaced] = false;
-					m_fLastPlacedAlpha[iDrawLastPlaced] = 255.0f - (m_fLastPlacedAlpha[iDrawLastPlaced] - 255.0f);
-				}
-			}
-			else
-			{
-				m_fLastPlacedAlpha[iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
-				if (m_fLastPlacedAlpha[iDrawLastPlaced] < (float)iBaseLastPlacedAlpha)
-				{
-					m_fLastPlacedAlpha[iDrawLastPlaced] = (float)iBaseLastPlacedAlpha;
-				}
-			}
-
-			//reset the last placed indicator on the other side
-			m_fLastPlacedAlpha[1 - iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
-			if (m_fLastPlacedAlpha[1 - iDrawLastPlaced] < 0.0f)
-			{
-				m_fLastPlacedAlpha[1 - iDrawLastPlaced] = 0.0f;
-			}
-			m_bLastPlacedAlphaCountingUp[1 - iDrawLastPlaced] = true;
-
-			if (pPortalgun->GetLastFiredPortal() != 0)
-			{
-				lastPlaced1Color[3] = m_fLastPlacedAlpha[0];
-				lastPlaced2Color[3] = m_fLastPlacedAlpha[1];
-			}
-			else
-			{
-				lastPlaced1Color[3] = 0.0f;
-				lastPlaced2Color[3] = 0.0f;
-			}
+			iDrawLastPlaced = 0;
+			fLeftPlaceBarFill = 1.0f;
 		}
-		//can't fire both portals, and we want the crosshair to remain somewhat symmetrical without being confusing
-		else if (!pPortalgun->CanFirePortal1())
+		else if ( pPortalgun->GetLastFiredPortal() == 2 )
 		{
-			// clone portal2 info to portal 1
-			portal1Color = portal2Color;
-			lastPlaced1Color[3] = 0.0f;
-			lastPlaced2Color[3] = 0.0f;
-			bPortalPlacability[0] = bPortalPlacability[1];
-		}
-		else if (!pPortalgun->CanFirePortal2())
-		{
-			// clone portal1 info to portal 2
-			portal2Color = portal1Color;
-			lastPlaced1Color[3] = 0.0f;
-			lastPlaced2Color[3] = 0.0f;
-			bPortalPlacability[1] = bPortalPlacability[0];
+			iDrawLastPlaced = 1;
+			fRightPlaceBarFill = 1.0f;			
 		}
 
-		if (pPortalgun->IsHoldingObject())
+		if( m_bLastPlacedAlphaCountingUp[iDrawLastPlaced] )
 		{
-			// Change the middle to orange 
-			portal1Color = portal2Color = UTIL_Portal_Color(0);
-			bPortalPlacability[0] = bPortalPlacability[1] = false;
-		}
-
-		if (!hud_quickinfo_swap.GetBool())
-		{
-			if (bPortalPlacability[0])
-				m_icon_lb_portal->DrawSelf(xCenter_portal - (m_icon_lb_portal->Width() * 0.64f), yCenter_portal - (m_icon_rb_portal->Height() * 0.17f), portal1Color);
-			else
-				m_icon_lbn_portal->DrawSelf(xCenter_portal - (m_icon_lbn_portal->Width() * 0.64f), yCenter_portal - (m_icon_rb_portal->Height() * 0.17f), portal1Color);
-
-			if (bPortalPlacability[1])
-				m_icon_rb_portal->DrawSelf(xCenter_portal + (m_icon_rb_portal->Width() * -0.35f), yCenter_portal + (m_icon_rb_portal->Height() * 0.17f), portal2Color);
-			else
-				m_icon_rbn_portal->DrawSelf(xCenter_portal + (m_icon_rbn_portal->Width() * -0.35f), yCenter_portal + (m_icon_rb_portal->Height() * 0.17f), portal2Color);
-
-			//last placed portal indicator
-			m_icon_lbe_portal->DrawSelf(xCenter_portal - (m_icon_lbe_portal->Width() * 1.85f), yCenter_portal, lastPlaced1Color);
-			m_icon_rbe_portal->DrawSelf(xCenter_portal + (m_icon_rbe_portal->Width() * 0.75f), yCenter_portal, lastPlaced2Color);
+			m_fLastPlacedAlpha[iDrawLastPlaced] += gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed * 2.0f;
+			if( m_fLastPlacedAlpha[iDrawLastPlaced] > 255.0f )
+			{
+				m_bLastPlacedAlphaCountingUp[iDrawLastPlaced] = false;
+				m_fLastPlacedAlpha[iDrawLastPlaced] = 255.0f - (m_fLastPlacedAlpha[iDrawLastPlaced] - 255.0f);
+			}
 		}
 		else
 		{
-			if (bPortalPlacability[1])
-				m_icon_lb_portal->DrawSelf(xCenter_portal - (m_icon_lb_portal->Width() * 0.64f), yCenter_portal - (m_icon_rb_portal->Height() * 0.17f), portal2Color);
-			else
-				m_icon_lbn_portal->DrawSelf(xCenter_portal - (m_icon_lbn_portal->Width() * 0.64f), yCenter_portal - (m_icon_rb_portal->Height() * 0.17f), portal2Color);
-
-			if (bPortalPlacability[0])
-				m_icon_rb_portal->DrawSelf(xCenter_portal + (m_icon_rb_portal->Width() * -0.35f), yCenter_portal + (m_icon_rb_portal->Height() * 0.17f), portal1Color);
-			else
-				m_icon_rbn_portal->DrawSelf(xCenter_portal + (m_icon_rbn_portal->Width() * -0.35f), yCenter_portal + (m_icon_rb_portal->Height() * 0.17f), portal1Color);
-
-			//last placed portal indicator
-			m_icon_lbe_portal->DrawSelf(xCenter_portal - (m_icon_lbe_portal->Width() * 1.85f), yCenter_portal, lastPlaced2Color);
-			m_icon_rbe_portal->DrawSelf(xCenter_portal + (m_icon_rbe_portal->Width() * 0.75f), yCenter_portal, lastPlaced1Color);
+			m_fLastPlacedAlpha[iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
+			if( m_fLastPlacedAlpha[iDrawLastPlaced] < (float)iBaseLastPlacedAlpha )
+			{
+				m_fLastPlacedAlpha[iDrawLastPlaced] = (float)iBaseLastPlacedAlpha;
+			}
 		}
+
+		//reset the last placed indicator on the other side
+		m_fLastPlacedAlpha[1 - iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
+		if( m_fLastPlacedAlpha[1 - iDrawLastPlaced] < 0.0f )
+		{
+			m_fLastPlacedAlpha[1 - iDrawLastPlaced] = 0.0f;
+		}
+		m_bLastPlacedAlphaCountingUp[1 - iDrawLastPlaced] = true;
+
+		if ( pPortalgun->GetLastFiredPortal() != 0 )
+		{
+			lastPlaced1Color[3] = m_fLastPlacedAlpha[0];
+			lastPlaced2Color[3] = m_fLastPlacedAlpha[1];
+		}
+		else
+		{
+			lastPlaced1Color[3] = 0.0f;
+			lastPlaced2Color[3] = 0.0f;
+		}
+	}
+	//can't fire both portals, and we want the crosshair to remain somewhat symmetrical without being confusing
+	else if ( !pPortalgun->CanFirePortal1() )
+	{
+		// clone portal2 info to portal 1
+		portal1Color = portal2Color;
+		lastPlaced1Color[3] = 0.0f;
+		lastPlaced2Color[3] = 0.0f;
+		bPortalPlacability[0] = bPortalPlacability[1];
+	}
+	else if ( !pPortalgun->CanFirePortal2() )
+	{
+		// clone portal1 info to portal 2
+		portal2Color = portal1Color;
+		lastPlaced1Color[3] = 0.0f;
+		lastPlaced2Color[3] = 0.0f;
+		bPortalPlacability[1] = bPortalPlacability[0];
+	}
+
+	if ( pPortalgun->IsHoldingObject() )
+	{
+		// Change the middle to orange 
+		portal1Color = portal2Color = UTIL_Portal_Color( 0 );
+		bPortalPlacability[0] = bPortalPlacability[1] = false;
+	}
+	
+	if ( !hud_quickinfo_swap.GetBool() )
+	{
+		if ( bPortalPlacability[0] )
+			m_icon_lb_portal->DrawSelf(xCenter - (m_icon_lb_portal->Width() * 0.64f), yCenter - (m_icon_rb_portal->Height() * 0.17f), portal1Color);
+		else
+			m_icon_lbn_portal->DrawSelf(xCenter - (m_icon_lbn_portal->Width() * 0.64f), yCenter - (m_icon_rb_portal->Height() * 0.17f), portal1Color);
+
+		if ( bPortalPlacability[1] )
+			m_icon_rb_portal->DrawSelf(xCenter + (m_icon_rb_portal->Width() * -0.35f), yCenter + (m_icon_rb_portal->Height() * 0.17f), portal2Color);
+		else
+			m_icon_rbn_portal->DrawSelf(xCenter + (m_icon_rbn_portal->Width() * -0.35f), yCenter + (m_icon_rb_portal->Height() * 0.17f), portal2Color);
+
+		//last placed portal indicator
+		m_icon_lbe_portal->DrawSelf(xCenter - (m_icon_lbe_portal->Width() * 1.85f), yCenter, lastPlaced1Color);
+		m_icon_rbe_portal->DrawSelf(xCenter + (m_icon_rbe_portal->Width() * 0.75f), yCenter, lastPlaced2Color);
 	}
 	else
 	{
-		if (pPortalgun->CanFirePortal1() && pPortalgun->CanFirePortal2())
-		{
-			int iDrawLastPlaced = 0;
-
-			//do last placed indicator effects
-			if (pPortalgun->GetLastFiredPortal() == 1)
-			{
-				iDrawLastPlaced = 0;
-				fLeftPlaceBarFill = 1.0f;
-			}
-			else if (pPortalgun->GetLastFiredPortal() == 2)
-			{
-				iDrawLastPlaced = 1;
-				fRightPlaceBarFill = 1.0f;
-			}
-
-			if (m_bLastPlacedAlphaCountingUp[iDrawLastPlaced])
-			{
-				m_fLastPlacedAlpha[iDrawLastPlaced] += gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed * 2.0f;
-				if (m_fLastPlacedAlpha[iDrawLastPlaced] > 255.0f)
-				{
-					m_bLastPlacedAlphaCountingUp[iDrawLastPlaced] = false;
-					m_fLastPlacedAlpha[iDrawLastPlaced] = 255.0f - (m_fLastPlacedAlpha[iDrawLastPlaced] - 255.0f);
-				}
-			}
-			else
-			{
-				m_fLastPlacedAlpha[iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
-				if (m_fLastPlacedAlpha[iDrawLastPlaced] < (float)BaseLPOpacity)
-				{
-					m_fLastPlacedAlpha[iDrawLastPlaced] = (float)BaseLPOpacity;
-				}
-			}
-
-			//reset the last placed indicator on the other side
-			m_fLastPlacedAlpha[1 - iDrawLastPlaced] -= gpGlobals->absoluteframetime * fLastPlacedAlphaLerpSpeed;
-			if (m_fLastPlacedAlpha[1 - iDrawLastPlaced] < BaseLPOpacity)
-			{
-				m_fLastPlacedAlpha[1 - iDrawLastPlaced] = BaseLPOpacity;
-			}
-			m_bLastPlacedAlphaCountingUp[1 - iDrawLastPlaced] = true;
-
-			if (pPortalgun->GetLastFiredPortal() != 0)
-			{
-				lastPlaced1Color[3] = m_fLastPlacedAlpha[0];
-				lastPlaced2Color[3] = m_fLastPlacedAlpha[1];
-			}
-			else
-			{
-				lastPlaced1Color[3] = BaseLPOpacity;
-				lastPlaced2Color[3] = BaseLPOpacity;
-			}
-
-		}
-		//can't fire both portals, and we want the crosshair to remain somewhat symmetrical without being confusing
-		else if (!pPortalgun->CanFirePortal1())
-		{
-			// clone portal2 info to portal 1
-			portal1Color = portal2Color;
-			lastPlaced1Color[3] = 0.0f;
-			lastPlaced2Color[3] = 0.0f;
-			bPortalPlacability[0] = bPortalPlacability[1];
-
-		}
-		else if (!pPortalgun->CanFirePortal2())
-		{
-			// clone portal1 info to portal 2
-			portal2Color = portal1Color;
-			lastPlaced1Color[3] = 0.0f;
-			lastPlaced2Color[3] = 0.0f;
-			bPortalPlacability[1] = bPortalPlacability[0];
-		}
-
-		if (pPortalgun->IsHoldingObject())
-		{
-			// Change the middle to orange 
-			portal1Color = portal2Color = UTIL_Portal_Color(0);
-
-			if (!beta_quickinfo_older_gun.GetBool())
-			{
-				if (lastPlaced1Color[3] != 0)
-				{
-					lastPlaced1Color[0] = UTIL_Portal_Color(0)[0];
-					lastPlaced1Color[1] = UTIL_Portal_Color(0)[1];
-					lastPlaced1Color[2] = UTIL_Portal_Color(0)[2];
-				}
-
-				if (lastPlaced2Color[3] != 0)
-				{
-					lastPlaced2Color[0] = UTIL_Portal_Color(0)[0];
-					lastPlaced2Color[1] = UTIL_Portal_Color(0)[1];
-					lastPlaced2Color[2] = UTIL_Portal_Color(0)[2];
-				}
-			}
-			//The last placed portal indicators do not change color in 2006, only the center. --PelPix
-			bPortalPlacability[0] = bPortalPlacability[1] = 1.0f;
-		}
-		/*
-		// Note
-		1.0f = full
-		0.0 = empty
-		We need to make the transistions have a delay and not be instant.
-		*/
-
-		float fDelay = 0.0f;
-		float fDelay2 = 0.0f;
-		float fSnapBackDelay = 0.0f;
-		Vector Null_vector(0, 0, 0);
-		bool bluePortalPlacabilityControllable = bPortalPlacability[0];
-		bool orangePortalPlacabilityControllable = bPortalPlacability[1];
-		ConVar *beta_quickinfo_show_portal_delay = cvar->FindVar("beta_quickinfo_show_portal_delay");
-		
-		if (beta_quickinfo_show_portal_delay->GetBool())
-		{
-			fDelay = pPortalgun->m_fPortalPlacementDelay;
-			fDelay2 = 0.1f;
-			fSnapBackDelay = 0.0001f;
-			if ((pPortalPlayer->PreDataChanged_Backup.m_qEyeAngles != pPortalPlayer->m_iv_angEyeAngles.GetCurrent()) || (pPortalPlayer->GetAbsVelocity() != Null_vector)) //either camera is moving or player is moving
-			{
-				bluePortalPlacabilityControllable = false;
-				orangePortalPlacabilityControllable = false;
-			}
-		}
-
-		if (pPortalgun->IsHoldingObject())
-		{
-			m_fCBlend1 = bPortalPlacability[0];
-			m_fCBlend2 = bPortalPlacability[1];
-		}
+		if ( bPortalPlacability[1] )
+			m_icon_lb_portal->DrawSelf(xCenter - (m_icon_lb_portal->Width() * 0.64f), yCenter - (m_icon_rb_portal->Height() * 0.17f), portal2Color);
 		else
-		{
-			if (beta_quickinfo_show_portal_delay->GetBool())
-			{
-				if (bluePortalPlacabilityControllable)
-				{
-					g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend1", bPortalPlacability[0], 0.0f, fDelay, vgui::AnimationController::INTERPOLATOR_LINEAR);
-				}
-				else
-				{
-					if (bPortalPlacability[0])
-					{
-						g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend1", 0.2f, 0.0f, fSnapBackDelay, vgui::AnimationController::INTERPOLATOR_LINEAR);
-					}
-					else
-					{
-						g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend1", 0.0f, 0.0f, fDelay2, vgui::AnimationController::INTERPOLATOR_LINEAR);
-					}
-				}
+			m_icon_lbn_portal->DrawSelf(xCenter - (m_icon_lbn_portal->Width() * 0.64f), yCenter - (m_icon_rb_portal->Height() * 0.17f), portal2Color);
 
-				if (orangePortalPlacabilityControllable)
-				{
-					g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend2", bPortalPlacability[1], 0.0f, fDelay, vgui::AnimationController::INTERPOLATOR_LINEAR);
-				}
-				else
-				{
-					if (bPortalPlacability[1])
-					{
-						g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend2", 0.2f, 0.0f, fSnapBackDelay, vgui::AnimationController::INTERPOLATOR_LINEAR);
-					}
-					else
-					{
-						g_pClientMode->GetViewportAnimationController()->RunAnimationCommand(this, "CBlend2", 0.0f, 0.0f, fDelay2, vgui::AnimationController::INTERPOLATOR_LINEAR);
-					}
-				}
-			}
-			else
-			{
-				m_fCBlend1 = bPortalPlacability[0];
-				m_fCBlend2 = bPortalPlacability[1];
-			}
-		}
-
-		gHUD.DrawIconProgressBar(xCenter - (m_icon_lb->Width() * 2), yCenter, m_icon_lb, m_icon_lbe, (1.0f - m_fCBlend1), portal1Color, CHud::HUDPB_VERTICAL);
-		gHUD.DrawIconProgressBar(xCenter + m_icon_rb->Width(), yCenter, m_icon_rb, m_icon_rbe, (1.0f - m_fCBlend2), portal2Color, CHud::HUDPB_VERTICAL);
+		if ( bPortalPlacability[0] )
+			m_icon_rb_portal->DrawSelf(xCenter + (m_icon_rb_portal->Width() * -0.35f), yCenter + (m_icon_rb_portal->Height() * 0.17f), portal1Color);
+		else
+			m_icon_rbn_portal->DrawSelf(xCenter + (m_icon_rbn_portal->Width() * -0.35f), yCenter + (m_icon_rb_portal->Height() * 0.17f), portal1Color);
 
 		//last placed portal indicator
-		if (pPortalgun->CanFirePortal1() && pPortalgun->CanFirePortal2())
-		{
-			if (pPortalgun->GetLastFiredPortal() == 1)
-			{
-				m_icon_lb->DrawSelf(xCenter - (m_icon_lb->Width() * 2.60f), yCenter, lastPlaced1Color); //2.75f
-			}
-			else
-			{
-				m_icon_lbe->DrawSelf(xCenter - (m_icon_lbe->Width() * 2.60f), yCenter, lastPlaced1Color);//2.75f
-			}
-
-			if (pPortalgun->GetLastFiredPortal() == 2)
-			{
-				m_icon_rb->DrawSelf(xCenter + (m_icon_rb->Width() * 1.60f), yCenter, lastPlaced2Color); //1.75f
-			}
-			else
-			{
-				m_icon_rbe->DrawSelf(xCenter + (m_icon_rbe->Width() * 1.60f), yCenter, lastPlaced2Color);//1.75f
-			}
-		}
-		else if (pPortalgun->CanFirePortal1() && !pPortalgun->CanFirePortal2())
-		{
-			m_icon_lbe->DrawSelf(xCenter - (m_icon_lbe->Width() * 2.60f), yCenter, portal1Color);//2.75f
-			m_icon_rbe->DrawSelf(xCenter + (m_icon_rbe->Width() * 1.60f), yCenter, portal1Color);//1.75f
-
-		}
-		else if (!pPortalgun->CanFirePortal1() && pPortalgun->CanFirePortal2())
-		{
-			m_icon_lbe->DrawSelf(xCenter - (m_icon_lbe->Width() * 2.60f), yCenter, portal2Color);//2.75f
-			m_icon_rbe->DrawSelf(xCenter + (m_icon_rbe->Width() * 1.60f), yCenter, portal2Color);//1.75f
-		}
+		m_icon_lbe_portal->DrawSelf(xCenter - (m_icon_lbe_portal->Width() * 1.85f), yCenter, lastPlaced2Color);
+		m_icon_rbe_portal->DrawSelf(xCenter + (m_icon_rbe_portal->Width() * 0.75f), yCenter, lastPlaced1Color);
 	}
-
 }
 
 //-----------------------------------------------------------------------------
