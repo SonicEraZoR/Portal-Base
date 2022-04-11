@@ -174,9 +174,7 @@ public:
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
-
-	void GivePortalGun(void);
-
+		
 private:
 
 	CNetworkVar(bool, m_bCrosshairSuppressed);
