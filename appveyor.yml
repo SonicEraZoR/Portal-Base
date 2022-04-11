@@ -29,8 +29,8 @@ for:
 
   after_build:
     - 7z a hl2-with-ashpd-win.zip .\sp\game\hl2_with_ashpd\bin\server.* .\sp\game\hl2_with_ashpd\bin\client.*
-    - 7z a hl2ep1_with_ashpd-win.zip .\sp\game\hl2ep1_with_ashpd\bin\server.* .\sp\game\hl2ep1_with_ashpd\bin\client.*
-    - 7z a hl2ep2_with_ashpd-win.zip .\sp\game\hl2ep2_with_ashpd\bin\server.* .\sp\game\hl2ep2_with_ashpd\bin\client.*
+      7z a hl2ep1_with_ashpd-win.zip .\sp\game\hl2ep1_with_ashpd\bin\server.* .\sp\game\hl2ep1_with_ashpd\bin\client.*
+      7z a hl2ep2_with_ashpd-win.zip .\sp\game\hl2ep2_with_ashpd\bin\server.* .\sp\game\hl2ep2_with_ashpd\bin\client.*
 
   test: off
 
