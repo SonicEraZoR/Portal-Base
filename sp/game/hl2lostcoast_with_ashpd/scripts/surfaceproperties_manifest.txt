@@ -12,5 +12,6 @@ surfaceproperties_manifest
 	
 	// List additional surface property files here:
 	"file"		"scripts/surfaceproperties_hl2.txt"
-	"file"		"scripts/surfaceproperties_portal.txt"
+
+	
 }

@@ -14,11 +14,6 @@ game_sounds_manifest
 	"precache_file"		"scripts/game_sounds_physics.txt"
 	"precache_file"		"scripts/game_sounds_vehicles.txt"
 
-	//Portal content Sounds
-	"precache_file"		"scripts/game_sounds_portal.txt"
-	"precache_file"		"scripts/game_sounds_player_portal.txt"
-	"precache_file"		"scripts/game_sounds_weapons_portal.txt"
-
 	// E3 level sounds
 	"precache_file"		"scripts/level_sounds_e3_c17.txt"
 	"precache_file"		"scripts/level_sounds_e3_town.txt"
