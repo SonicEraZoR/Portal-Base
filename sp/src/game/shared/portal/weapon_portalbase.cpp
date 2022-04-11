@@ -381,11 +381,41 @@ void CWeaponPortalBase::	Materialize( void )
 
 #endif
 
+const CPortalSWeaponInfo &CWeaponPortalBase::GetPortalWpnData() const
+{
+	const FileWeaponInfo_t *pWeaponInfo = &GetWpnData();
+	const CPortalSWeaponInfo *pPortalInfo;
+
+	#ifdef _DEBUG
+		pPortalInfo = dynamic_cast< const CPortalSWeaponInfo* >( pWeaponInfo );
+		Assert( pPortalInfo );
+	#else
+		pPortalInfo = static_cast< const CPortalSWeaponInfo* >( pWeaponInfo );
+	#endif
+
+	return *pPortalInfo;
+}
+void CWeaponPortalBase::FireBullets( const FireBulletsInfo_t &info )
+{
+	FireBulletsInfo_t modinfo = info;
+
+	modinfo.m_iPlayerDamage = GetPortalWpnData().m_iPlayerDamage;
+
+	BaseClass::FireBullets( modinfo );
+}
+
+
 #if defined( CLIENT_DLL )
 
 #include "c_te_effect_dispatch.h"
 
 #define NUM_MUZZLE_FLASH_TYPES 4
+
+bool CWeaponPortalBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options )
+{
+	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
+}
+
 
 void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip )
 {
