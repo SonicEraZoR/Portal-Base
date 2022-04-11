@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 //	c_prop_energy_ball.cpp
 // 
@@ -10,7 +10,7 @@
 
 #include "cbase.h"							// precompiled headers
 #include "c_prop_combine_ball.h"			// Our parent class
-#include "ClientEffectPrecacheSystem.h"		// To precache our new material
+#include "clienteffectprecachesystem.h"		// To precache our new material
 
 ConVar cl_energy_ball_start_fade_time ( "cl_energy_ball_start_fade_time", "8", FCVAR_CHEAT );
 

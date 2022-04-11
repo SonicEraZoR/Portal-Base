@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include "cbase.h"
 
 #ifdef CLIENT_DLL
-#include "C_Prop_Portal.h"
+#include "c_prop_portal.h"
 #else
 #include "prop_portal.h"
 #endif

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #include "iviewrender_beams.h"
 #include "model_types.h"
 #include "fx_interpvalue.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "bone_setup.h"
 #include "c_rumble.h"
 #include "rumble_shared.h"
@@ -172,6 +172,7 @@ BEGIN_NETWORK_TABLE( C_WeaponPortalgun, DT_WeaponPortalgun )
 	RecvPropBool( RECVINFO( m_bOpenProngs ) ),
 	RecvPropFloat( RECVINFO( m_fCanPlacePortal1OnThisSurface ) ),
 	RecvPropFloat( RECVINFO( m_fCanPlacePortal2OnThisSurface ) ),
+	RecvPropFloat( RECVINFO( m_fPortalPlacementDelay ) ),
 	RecvPropFloat( RECVINFO( m_fEffectsMaxSize1 ) ), // HACK HACK! Used to make the gun visually change when going through a cleanser!
 	RecvPropFloat( RECVINFO( m_fEffectsMaxSize2 ) ),
 	RecvPropInt( RECVINFO( m_EffectState ) ),
@@ -885,10 +886,13 @@ void C_WeaponPortalgun::GetEffectParameters( EffectType_t effectID, color32 &col
 	if ( pOwner != NULL )
 	{
 		C_BaseAnimating *pModel;
+		int originalModelIndex = 0;
 
 		if ( b3rdPerson )
 		{
 			pModel = this;
+			originalModelIndex = GetModelIndex();
+			SetModelIndex( GetWorldModelIndex() );
 		}
 		else
 		{
@@ -900,6 +904,10 @@ void C_WeaponPortalgun::GetEffectParameters( EffectType_t effectID, color32 &col
 		if ( !b3rdPerson )
 		{
 			::FormatViewModelAttachment( vecAttachment, true );
+		}
+		else
+		{
+			SetModelIndex( originalModelIndex );
 		}
 	}
 }

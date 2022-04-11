@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -184,10 +184,10 @@ void CEnvPortalPathTrack::InputDeactivateEndpoint(inputdata_t &inputdata)
 void CEnvPortalPathTrack::ActivateTrackFX ( void )
 {
 	m_pBeam->SetColor( TRACK_FX_COLOR_ON );
-	m_pBeam->SetScrollRate( TRACK_FX_SCROLL );
+	m_pBeam->SetScrollRate( (int)TRACK_FX_SCROLL );
 	m_pBeam->SetBrightness( TRACK_FX_BRIGHTNESS_ON );
 	m_pBeam->TurnOff();
-	m_nState = PORTAL_PATH_TRACK_STATE_ACTIVE;
+	m_nState = (int)PORTAL_PATH_TRACK_STATE_ACTIVE;
 }
 
 //-----------------------------------------------------------------------------
@@ -197,7 +197,7 @@ void CEnvPortalPathTrack::ActivateTrackFX ( void )
 void CEnvPortalPathTrack::DeactivateTrackFX ( void )
 {
 	m_pBeam->SetColor( TRACK_FX_COLOR_OFF );
-	m_pBeam->SetScrollRate( TRACK_FX_SCROLL );
+	m_pBeam->SetScrollRate( (int)TRACK_FX_SCROLL );
 	m_pBeam->SetBrightness( TRACK_FX_BRIGHTNESS_OFF );
 }
 

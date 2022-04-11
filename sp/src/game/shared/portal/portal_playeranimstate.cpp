@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2003, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,11 +14,11 @@
 #include "base_playeranimstate.h"
 
 #ifdef CLIENT_DLL
-#include "C_Portal_Player.h"
-#include "C_Weapon_Portalgun.h"
+#include "c_portal_player.h"
+#include "c_weapon_portalgun.h"
 #else
-#include "Portal_Player.h"
-#include "Weapon_Portalgun.h"
+#include "portal_player.h"
+#include "weapon_portalgun.h"
 #endif
 
 #define PORTAL_RUN_SPEED			320.0f
@@ -111,7 +111,7 @@ Activity CPortalPlayerAnimState::TranslateActivity( Activity actDesired )
 
 	if ( GetPortalPlayer()->GetActiveWeapon() )
 	{
-		translateActivity = GetPortalPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, false );
+		translateActivity = GetPortalPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, NULL );
 	}
 
 	return translateActivity;

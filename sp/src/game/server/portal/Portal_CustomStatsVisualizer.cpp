@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -182,7 +182,7 @@ static int PortalStats_LoadFile_f_CompletionFunc( char const *partial, char comm
 {
 	PortalStats_UpdateFileList();
 
-	int iRetCount = min( s_PortalStatsDataFileList.Count(), COMMAND_COMPLETION_MAXITEMS );
+	int iRetCount = MIN( s_PortalStatsDataFileList.Count(), COMMAND_COMPLETION_MAXITEMS );
 	for( int i = 0; i != iRetCount; ++i )
 	{
 		Q_snprintf( commands[i], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", partial, s_PortalStatsDataFileList[i].Get() );

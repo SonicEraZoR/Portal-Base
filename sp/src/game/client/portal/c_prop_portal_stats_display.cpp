@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "dlight.h"
 #include "iefx.h"
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "point_bonusmaps_accessor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -197,7 +197,7 @@ void C_PropPortalStatsDisplay::ClientThink( void )
 
 				if ( m_fNumPlayerDisplay < m_iNumStepsTaken )
 				{
-					m_fNumPlayerDisplay += min( iNumStepsThisFrame, m_iNumStepsTaken - m_fNumPlayerDisplay );
+					m_fNumPlayerDisplay += MIN( iNumStepsThisFrame, m_iNumStepsTaken - m_fNumPlayerDisplay );
 
 					int iStepsMod10 = static_cast<int>( m_fNumPlayerDisplay ) % 10;
 					if ( iStepsMod10 == 0 )

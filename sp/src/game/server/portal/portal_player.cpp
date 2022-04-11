@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for Portal.
 //
@@ -14,7 +14,7 @@
 #include "in_buttons.h"
 #include "portal_gamerules.h"
 #include "weapon_portalgun.h"
-#include "portal\weapon_physcannon.h"
+#include "portal/weapon_physcannon.h"
 #include "KeyValues.h"
 #include "team.h"
 #include "eventqueue.h"
@@ -167,10 +167,8 @@ SendPropEHandle( SENDINFO( m_pHeldObjectPortal ) ),
 SendPropBool( SENDINFO( m_bPitchReorientation ) ),
 SendPropEHandle( SENDINFO( m_hPortalEnvironment ) ),
 SendPropEHandle( SENDINFO( m_hSurroundingLiquidPortal ) ),
-
+SendPropBool( SENDINFO( m_bSuppressingCrosshair ) ),
 SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
-
-SendPropBool(SENDINFO(m_bCrosshairSuppressed)),
 
 END_SEND_TABLE()
 
@@ -205,6 +203,7 @@ BEGIN_DATADESC( CPortal_Player )
 	DEFINE_FIELD( m_matLastPortalled, FIELD_VMATRIX_WORLDSPACE ),
 	DEFINE_FIELD( m_vWorldSpaceCenterHolder, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hSurroundingLiquidPortal, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_bSuppressingCrosshair, FIELD_BOOLEAN ),
 	//DEFINE_FIELD ( m_PlayerAnimState, CPortalPlayerAnimState ),
 	//DEFINE_FIELD ( m_StatsThisLevel, PortalPlayerStatistics_t ),
 
@@ -245,7 +244,7 @@ CPortal_Player::CPortal_Player()
 {
 
 	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
-	CreateExpresser();
+	//CreateExpresser();
 
 	UseClientSideAnimation();
 
@@ -267,6 +266,7 @@ CPortal_Player::CPortal_Player()
 	m_iszExpressionScene = NULL_STRING;
 	m_hExpressionSceneEnt = NULL;
 	m_flExpressionLoopTime = 0.0f;
+	m_bSuppressingCrosshair = false;
 }
 
 CPortal_Player::~CPortal_Player( void )
@@ -387,7 +387,8 @@ void CPortal_Player::GiveDefaultItems( void )
 {
 	castable_string_t st( "suit_no_sprint" );
 	GlobalEntity_SetState( st, GLOBAL_OFF );
-//	InputDisableFlashlight( inputdata_t() );
+	//inputdata_t in;
+	//InputDisableFlashlight( in ); disables flashlight in portal
 }
 
 
@@ -408,7 +409,7 @@ void CPortal_Player::Spawn(void)
 	RemoveEffects( EF_NODRAW );
 	StopObserverMode();
 
-//	GiveDefaultItems();
+//	GiveDefaultItems(); no need to do this
 
 	m_nRenderFX = kRenderNormal;
 
@@ -522,7 +523,7 @@ void CPortal_Player::SetPlayerModel( void )
 	}
 
 	SetModel( szModelName );
-	m_iPlayerSoundType = PLAYER_SOUNDS_CITIZEN;
+	m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
 }
 
 
@@ -533,6 +534,8 @@ bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelind
 	return bRet;
 }
 
+/*
+I think it makes the player make rebel hurt sounds when hit
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -550,15 +553,15 @@ void CPortal_Player::UpdateExpression( void )
 	GetExpresser()->SetOuter( this );
 
 	ClearExpression();
-	AI_Response *result = SpeakFindResponse( g_pszChellConcepts[iConcept] );
+	AI_Response response;
+	bool result = SpeakFindResponse( response, g_pszChellConcepts[iConcept] );
 	if ( !result )
 	{
 		m_flExpressionLoopTime = gpGlobals->curtime + RandomFloat(30,40);
 		return;
 	}
 
-	char szScene[ MAX_PATH ];
-	result->GetResponse( szScene, sizeof( szScene ) );
+	char const *szScene = response.GetResponsePtr();
 
 	// Ignore updates that choose the same scene
 	if ( m_iszExpressionScene != NULL_STRING && stricmp( STRING(m_iszExpressionScene), szScene ) == 0 )
@@ -585,7 +588,7 @@ void CPortal_Player::ClearExpression( void )
 	}
 	m_flExpressionLoopTime = gpGlobals->curtime;
 }
-
+*/
 
 void CPortal_Player::PreThink( void )
 {
@@ -625,7 +628,6 @@ void CPortal_Player::PostThink( void )
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
 
-	
 	// Regenerate heath after 3 seconds
 	if (IsAlive() && GetHealth() < GetMaxHealth() && sv_regeneration_enable.GetBool())
 	{
@@ -651,7 +653,6 @@ void CPortal_Player::PostThink( void )
 			}
 		}
 	}
-	
 
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
@@ -662,9 +663,9 @@ void CPortal_Player::PostThink( void )
 	{
 		// Random expressions need to be cleared, because they don't loop. So if we
 		// pick the same one again, we want to restart it.
-		ClearExpression();
+		//ClearExpression();
 		m_iszExpressionScene = NULL_STRING;
-		UpdateExpression();
+		//UpdateExpression();
 	}
 
 	UpdateSecondsTaken();
@@ -724,7 +725,7 @@ void CPortal_Player::PlayerDeathThink(void)
 
 	StopAnimation();
 
-	AddEffects( EF_NOINTERP );
+	IncrementInterpolationFrame();
 	m_flPlaybackRate = 0.0;
 
 	int fAnyButtonDown = (m_nButtons & ~IN_SCORE);
@@ -802,7 +803,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 					{
 						EmitSound_t ep( params );
 						ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-						ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+						ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 						EmitSound( filter, entindex(), ep );
 					}
@@ -822,7 +823,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 					{
 						EmitSound_t ep( params );
 						ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-						ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+						ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 						EmitSound( filter, entindex(), ep );
 					}
@@ -842,7 +843,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 			Vector vVelocity;
 			GetVelocity( &vVelocity, NULL );
 			ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-			ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+			ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 			EmitSound( filter, entindex(), ep );
 		}
@@ -999,7 +1000,7 @@ void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 		pos, 
 		q, 
 		-1,
-		GetModelScale(),
+		GetModelScale(), // Scaling
 		pBoneToWorld,
 		boneMask );
 }
@@ -1011,6 +1012,7 @@ void CPortal_Player::SetAnimation( PLAYER_ANIM playerAnim )
 	return;
 }
 
+/*
 CAI_Expresser *CPortal_Player::CreateExpresser()
 {
 	Assert( !m_pExpresser );
@@ -1040,7 +1042,7 @@ CAI_Expresser *CPortal_Player::GetExpresser()
 	}
 	return m_pExpresser; 
 }
-
+*/
 
 extern int	gEvilImpulse101;
 extern bool UTIL_ItemCanBeTouchedByPlayer(CBaseEntity *pItem, CBasePlayer *pPlayer);
@@ -1174,7 +1176,7 @@ void CPortal_Player::ShutdownUseEntity( void )
 const Vector& CPortal_Player::WorldSpaceCenter( ) const
 {
 	m_vWorldSpaceCenterHolder = GetAbsOrigin();
-	m_vWorldSpaceCenterHolder.z += ( (IsDucked()) ? (VEC_DUCK_HULL_MAX.z) : (VEC_HULL_MAX.z) ) * 0.5f;
+	m_vWorldSpaceCenterHolder.z += ( (IsDucked()) ? (VEC_DUCK_HULL_MAX_SCALED( this ).z) : (VEC_HULL_MAX_SCALED( this ).z) ) * 0.5f;
 	return m_vWorldSpaceCenterHolder;
 }
 
@@ -1639,13 +1641,18 @@ void CPortal_Player::CheatImpulseCommands( int iImpulse )
 	switch ( iImpulse )
 	{
 	case 101:
+	{
+		if (sv_cheats->GetBool())
 		{
-			if( sv_cheats->GetBool() )
-			{
-				GiveAllItems();
-			}
+			GiveAllItems();
 		}
-		break;
+	}
+	break;
+	case 102:
+	{
+		GivePortalGun();
+	}
+	break;
 
 	default:
 		BaseClass::CheatImpulseCommands( iImpulse );
@@ -1779,7 +1786,7 @@ void CPortal_Player::Event_Killed( const CTakeDamageInfo &info )
 	//else
 	//	m_hObserverTarget.Set( NULL );
 
-	UpdateExpression();
+	//UpdateExpression();
 
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
@@ -1923,7 +1930,7 @@ int CPortal_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( event )
 	{
 		event->SetInt("userid", GetUserID() );
-		event->SetInt("health", max(0, m_iHealth) );
+		event->SetInt("health", MAX(0, m_iHealth) );
 		event->SetInt("priority", 5 );	// HLTV event priority, not transmitted
 
 		if ( attacker->IsPlayer() )
@@ -2222,10 +2229,6 @@ void CPortal_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *p
 	PortalSetupVisibility( this, area, pvs, pvssize );
 }
 
-void CPortal_Player::SuppressCrosshair(bool a)
-{
-	m_bCrosshairSuppressed = a;
-}
 
 #ifdef PORTAL_MP
 
@@ -2388,4 +2391,21 @@ CON_COMMAND( startneurotoxins, "Starts the nerve gas timer." )
 
 	if( pPlayer )
 		pPlayer->SetNeuroToxinDamageTime( fCoundownTime );
+}
+
+void CPortal_Player::GivePortalGun(void)
+{
+	//GiveNamedItem( "weapon_physcannon" );
+	CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+	if (!pPortalGun)
+	{
+		pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+	}
+
+	if (pPortalGun)
+	{
+		pPortalGun->SetCanFirePortal1();
+		pPortalGun->SetCanFirePortal2();
+	}
 }

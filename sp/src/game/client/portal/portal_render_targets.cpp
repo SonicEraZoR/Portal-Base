@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Portal mod render targets are specified by and accessable through this singleton
 //
@@ -6,7 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "portal_render_targets.h"
-#include "materialsystem\imaterialsystem.h"
+#include "materialsystem/imaterialsystem.h"
 #include "rendertexture.h"
 
 //-----------------------------------------------------------------------------

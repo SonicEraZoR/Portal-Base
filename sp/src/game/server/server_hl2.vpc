@@ -14,12 +14,12 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\multiplayer"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\Multiplayer"
 		$PreprocessorDefinitions		"$BASE;HL2_DLL;USES_SAVERESTORE;PORTAL"
 	}
 }
 
-$Project "Server (Portal) (HL2)"
+$Project "Server (Portal_HL2)"
 {
 	$Folder	"Source Files"
 	{
@@ -52,7 +52,6 @@ $Project "Server (Portal) (HL2)"
 
 		$Folder	"HL2 DLL"
 		{
-			$File	"$SRCDIR\game\shared\hl2\achievements_hl2.cpp"
 			$File	"hl2\ai_allymanager.cpp"
 			$File	"hl2\ai_behavior_actbusy.cpp"
 			$File	"hl2\ai_behavior_actbusy.h"

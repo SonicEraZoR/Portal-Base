@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -88,6 +88,8 @@ public:
 
 	void WeaponSound( WeaponSound_t sound_type, float soundtime = 0.0f );
 
+	virtual void FireBullets( const FireBulletsInfo_t &info );
+	
 public:
 	#if defined( CLIENT_DLL )
 	
@@ -100,6 +102,8 @@ public:
 
 		virtual void	DoAnimationEvents( CStudioHdr *pStudio );
 		virtual void	GetRenderBounds( Vector& theMins, Vector& theMaxs );
+
+		virtual bool	OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
 
 	#else
 

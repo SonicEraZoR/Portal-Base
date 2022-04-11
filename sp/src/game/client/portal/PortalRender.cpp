@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,15 +7,15 @@
 
 
 #include "cbase.h"
-#include "portalrender.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "PortalRender.h"
+#include "clienteffectprecachesystem.h"
 #include "view.h"
 #include "c_pixel_visibility.h"
 #include "glow_overlay.h"
 #include "portal_render_targets.h" //depth doubler
-#include "materialsystem/ITexture.h"
+#include "materialsystem/itexture.h"
 #include "toolframework/itoolframework.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "view_scene.h"
 #include "viewrender.h"
 #include "vprof.h"
@@ -496,7 +496,7 @@ bool CPortalRender::DrawPortalsUsingStencils( CViewRender *pViewRender )
 	if( iNumRenderablePortals == 0 )
 		return false;
 
-	const int iMaxDepth = min( r_portal_stencil_depth.GetInt(), min( MAX_PORTAL_RECURSIVE_VIEWS, (1 << materials->StencilBufferBits()) ) - 1 );
+	const int iMaxDepth = MIN( r_portal_stencil_depth.GetInt(), MIN( MAX_PORTAL_RECURSIVE_VIEWS, (1 << materials->StencilBufferBits()) ) - 1 );
 
 	if( m_iViewRecursionLevel >= iMaxDepth ) //can't support any more views	
 	{
@@ -551,8 +551,6 @@ bool CPortalRender::DrawPortalsUsingStencils( CViewRender *pViewRender )
 		pRenderContext->SetStencilReferenceValue( 0 );
 
         m_RecursiveViewComplexFrustums[0].RemoveAll(); //clear any garbage leftover in the complex frustums from last frame
-
-		pRenderContext->ClearBuffers( false, false, true ); //FIXME: We should clear the stencils with the existing depth clear for this frame
 	}
 
 	if( m_RecursiveViewComplexFrustums[m_iViewRecursionLevel].Count() == 0 )

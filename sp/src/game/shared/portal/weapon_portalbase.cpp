@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,10 +22,10 @@ extern IVModelInfo* modelinfo;
 #if defined( CLIENT_DLL )
 
 	#include "vgui/ISurface.h"
-	#include "vgui_controls/controls.h"
+	#include "vgui_controls/Controls.h"
 	#include "c_portal_player.h"
 	#include "hud_crosshair.h"
-	#include "portalrender.h"
+	#include "PortalRender.h"
 
 #else
 
@@ -381,11 +381,22 @@ void CWeaponPortalBase::	Materialize( void )
 
 #endif
 
+void CWeaponPortalBase::FireBullets(const FireBulletsInfo_t &info)
+{	
+	BaseClass::FireBullets(info);
+}
+
 #if defined( CLIENT_DLL )
 
 #include "c_te_effect_dispatch.h"
 
 #define NUM_MUZZLE_FLASH_TYPES 4
+
+bool CWeaponPortalBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options )
+{
+	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
+}
+
 
 void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip )
 {

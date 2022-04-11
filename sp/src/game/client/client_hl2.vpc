@@ -15,12 +15,12 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;$SRCDIR\game\shared\hl2;$BASE;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\multiplayer"
+		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;$SRCDIR\game\shared\hl2;$BASE;.\portal;.\portal\vgui;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\Multiplayer"
 		$PreprocessorDefinitions		"$BASE;HL2_CLIENT_DLL;PORTAL"
 	}
 }
 
-$Project "Client (Portal) (HL2)"
+$Project "Client (Portal_HL2)"
 {
 	$Folder	"Source Files"
 	{
@@ -31,7 +31,6 @@ $Project "Client (Portal) (HL2)"
 		$Folder	"HL2 DLL"
 		{
 			$File	"$SRCDIR\game\shared\hl2\basehlcombatweapon_shared.cpp"
-			$File	"$SRCDIR\game\shared\hl2\achievements_hl2.cpp"
 			$File	"hl2\c_antlion_dust.cpp"
 			$File	"hl2\c_ar2_explosion.cpp"
 			$File	"hl2\c_barnacle.cpp"
@@ -82,7 +81,6 @@ $Project "Client (Portal) (HL2)"
 			$File	"hl2\fx_bugbait.cpp"
 			$File	"hl2\fx_hl2_impacts.cpp"
 			$File	"hl2\fx_hl2_tracers.cpp"
-			$File	"hl2\hl2_clientmode.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.cpp"
 			$File	"$SRCDIR\game\shared\hl2\hl2_gamerules.h"
 			$File	"$SRCDIR\game\shared\hl2\hl2_shareddefs.h"
@@ -134,8 +132,10 @@ $Project "Client (Portal) (HL2)"
 			$File	"$SRCDIR\game\shared\portal\env_portal_path_track_shared.h"
 			$File	"portal\fx_portal.cpp"
 			$File	"portal\hud_quickinfo.cpp"
+			$File	"portal\IModSettingsPanel.h"
 			$File	"portal\MaterialProxy_Portal_PickAlphaMask.cpp"
 			$File	"portal\materialproxy_portalstatic.cpp"
+			$File	"portal\ModSettingsPanel.cpp"
 			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.cpp"
 			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.h"
 			$File	"$SRCDIR\game\shared\portal\portal_collideable_enumerator.cpp"

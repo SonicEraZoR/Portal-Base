@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,7 +22,7 @@ class CPortal_Player;
 #include "weapon_portalbase.h"
 #include "in_buttons.h"
 #include "func_liquidportal.h"
-#include "ai_speech.h"			// For expresser host
+//#include "ai_speech.h"			// For expresser host
 
 struct PortalPlayerStatistics_t
 {
@@ -34,7 +34,7 @@ struct PortalPlayerStatistics_t
 //=============================================================================
 // >> Portal_Player
 //=============================================================================
-class CPortal_Player : public CAI_ExpresserHost<CHL2_Player>
+class CPortal_Player : public CHL2_Player
 {
 public:
 	DECLARE_CLASS( CPortal_Player, CHL2_Player );
@@ -74,7 +74,7 @@ public:
 
 	virtual void SetAnimation( PLAYER_ANIM playerAnim );
 
-	virtual CAI_Expresser* GetExpresser( void );
+	//virtual CAI_Expresser* GetExpresser( void );
 
 	virtual void PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
@@ -128,8 +128,8 @@ public:
 
 	void SetPlayerModel( void );
 	
-	void UpdateExpression ( void );
-	void ClearExpression ( void );
+	//void UpdateExpression ( void );
+	//void ClearExpression ( void );
 	
 	int	  GetPlayerModelType( void ) { return m_iPlayerSoundType; }
 
@@ -166,7 +166,6 @@ public:
 
 	void IncNumCamerasDetatched( void ) { ++m_iNumCamerasDetatched; }
 	int GetNumCamerasDetatched( void ) const { return m_iNumCamerasDetatched; }
-	void SuppressCrosshair( bool a );
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
@@ -174,12 +173,14 @@ public:
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
+
+	void SuppressCrosshair( bool bState ) { m_bSuppressingCrosshair = bState; }
+	
+	void GivePortalGun(void);
 		
 private:
 
-	CNetworkVar(bool, m_bCrosshairSuppressed);
-
-	virtual CAI_Expresser* CreateExpresser( void );
+	//virtual CAI_Expresser* CreateExpresser( void );
 
 	CSoundPatch		*m_pWooshSound;
 
@@ -190,6 +191,7 @@ private:
 	int m_iLastWeaponFireUsercmd;
 	CNetworkVar( int, m_iSpawnInterpCounter );
 	CNetworkVar( int, m_iPlayerSoundType );
+	CNetworkVar( bool, m_bSuppressingCrosshair );
 
 	CNetworkVar( bool, m_bHeldObjectOnOppositeSideOfPortal );
 	CNetworkHandle( CProp_Portal, m_pHeldObjectPortal );	// networked entity handle
@@ -228,6 +230,13 @@ public:
 	CNetworkHandle( CFunc_LiquidPortal, m_hSurroundingLiquidPortal ); //if the player is standing in a liquid portal, this will point to it
 
 	friend class CProp_Portal;
+
+
+#ifdef PORTAL_MP
+public:
+	virtual CBaseEntity* EntSelectSpawnPoint( void );
+	void PickTeam( void );
+#endif
 };
 
 inline CPortal_Player *ToPortalPlayer( CBaseEntity *pEntity )

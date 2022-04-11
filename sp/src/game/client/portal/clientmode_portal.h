@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,29 +23,20 @@ namespace vgui
 
 class ClientModePortalNormal : public ClientModeShared 
 {
-DECLARE_CLASS( ClientModePortalNormal, ClientModeShared );
-
-private:
-
-// IClientMode overrides.
 public:
+	DECLARE_CLASS(ClientModePortalNormal, ClientModeShared);
 
 					ClientModePortalNormal();
 	virtual			~ClientModePortalNormal();
 
 	virtual void	Init();
 	virtual bool	ShouldDrawCrosshair(void);
-
-	
-private:
-	
-	//	void	UpdateSpectatorMode( void );
-
 };
 
 
 extern IClientMode *GetClientModeNormal();
 extern ClientModePortalNormal* GetClientModePortalNormal();
+
 extern vgui::HScheme g_hVGuiCombineScheme;
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -445,6 +445,13 @@ void CPortal_CollisionEvent::PortalPostSimulationFrame( void )
 void CPortal_CollisionEvent::AddDamageEvent( CBaseEntity *pEntity, const CTakeDamageInfo &info, IPhysicsObject *pInflictorPhysics, bool bRestoreVelocity, const Vector &savedVel, const AngularImpulse &savedAngVel )
 {
 	const CTakeDamageInfo *pPassDownInfo = &info;
+
+	if (!pInflictorPhysics) // if this doesn't exist we just let the base class method handle it
+	{
+		BaseClass::AddDamageEvent(pEntity, *pPassDownInfo, pInflictorPhysics, bRestoreVelocity, savedVel, savedAngVel);
+		return;
+	}
+
 	CTakeDamageInfo ReplacementDamageInfo; //only used some of the time
 
 	if( (info.GetDamageType() & DMG_CRUSH) &&
