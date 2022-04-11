@@ -18,9 +18,6 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 * You can change the **maximum** delay between shooting a Portal and it opening with sv_portal_projectile_delay (defalult is 0.5 seconds), if set to a very high number behaviour will be the same as in normal Portal
 * You can rapid click to shoot Portals faster, like in Portal 2
 
-## Demonstration
-[![Demonstration](https://img.youtube.com/vi/xhmXAUB8P4Y/0.jpg)](https://www.youtube.com/watch?v=xhmXAUB8P4Y)
-
 ## Dependencies
 
 ### Windows
