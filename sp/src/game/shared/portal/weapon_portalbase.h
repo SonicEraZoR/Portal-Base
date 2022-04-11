@@ -11,7 +11,7 @@
 #endif
 
 #include "basecombatweapon_shared.h"
-#include "portal_weapon_parse.h"
+#include "weapon_parse.h"
 
 #if defined( CLIENT_DLL )
 	#define CWeaponPortalBase C_WeaponPortalBase
@@ -87,12 +87,7 @@ public:
 	virtual PortalWeaponID GetWeaponID( void ) const { return WEAPON_NONE; }
 
 	void WeaponSound( WeaponSound_t sound_type, float soundtime = 0.0f );
-	
-	CPortalSWeaponInfo const	&GetPortalWpnData() const;
 
-
-	virtual void FireBullets( const FireBulletsInfo_t &info );
-	
 public:
 	#if defined( CLIENT_DLL )
 	
@@ -105,8 +100,6 @@ public:
 
 		virtual void	DoAnimationEvents( CStudioHdr *pStudio );
 		virtual void	GetRenderBounds( Vector& theMins, Vector& theMaxs );
-
-		virtual bool	OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
 
 	#else
 
