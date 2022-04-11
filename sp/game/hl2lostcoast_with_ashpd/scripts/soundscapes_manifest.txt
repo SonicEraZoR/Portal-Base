@@ -1,6 +1,0 @@
-soundscaples_manifest
-{
-	"file"		"scripts/soundscapes.txt"
-
-	"file"		"scripts/soundscapes_lostcoast.txt"
-}
