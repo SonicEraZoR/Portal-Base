@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,7 +24,7 @@
 
 bool g_bAllowForcePortalTrace = false;
 bool g_bForcePortalTrace = false;
-bool g_bBulletPortalTrace = true;
+bool g_bBulletPortalTrace = true; // makes metrocops shoot through portals (sometimes)
 
 ConVar sv_portal_trace_vs_world ("sv_portal_trace_vs_world", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment world geometry" );
 ConVar sv_portal_trace_vs_displacements ("sv_portal_trace_vs_displacements", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment displacement geometry" );
@@ -52,17 +52,17 @@ public:
 
 	//abstract functions which require no transforms, just pass them along to the wrapped collideable
 	virtual IHandleEntity	*GetEntityHandle() { return m_pWrappedCollideable->GetEntityHandle(); }
-	virtual const Vector&	OBBMinsPreScaled() const { return m_pWrappedCollideable->OBBMinsPreScaled(); };
-	virtual const Vector&	OBBMaxsPreScaled() const { return m_pWrappedCollideable->OBBMaxsPreScaled(); };
-	virtual const Vector&	OBBMins() const { return m_pWrappedCollideable->OBBMins(); };
-	virtual const Vector&	OBBMaxs() const { return m_pWrappedCollideable->OBBMaxs(); };
-	virtual int				GetCollisionModelIndex() { return m_pWrappedCollideable->GetCollisionModelIndex(); };
-	virtual const model_t*	GetCollisionModel() { return m_pWrappedCollideable->GetCollisionModel(); };
-	virtual SolidType_t		GetSolid() const { return m_pWrappedCollideable->GetSolid(); };
-	virtual int				GetSolidFlags() const { return m_pWrappedCollideable->GetSolidFlags(); };
-	virtual IClientUnknown*	GetIClientUnknown() { return m_pWrappedCollideable->GetIClientUnknown(); };
-	virtual int				GetCollisionGroup() const { return m_pWrappedCollideable->GetCollisionGroup(); };
-	virtual bool			ShouldTouchTrigger( int triggerSolidFlags ) const { return m_pWrappedCollideable->ShouldTouchTrigger(triggerSolidFlags); };
+	virtual const Vector&	OBBMinsPreScaled() const { return m_pWrappedCollideable->OBBMinsPreScaled(); }
+	virtual const Vector&	OBBMaxsPreScaled() const { return m_pWrappedCollideable->OBBMaxsPreScaled(); }
+	virtual const Vector&	OBBMins() const { return m_pWrappedCollideable->OBBMins(); }
+	virtual const Vector&	OBBMaxs() const { return m_pWrappedCollideable->OBBMaxs(); }
+	virtual int				GetCollisionModelIndex() { return m_pWrappedCollideable->GetCollisionModelIndex(); }
+	virtual const model_t*	GetCollisionModel() { return m_pWrappedCollideable->GetCollisionModel(); }
+	virtual SolidType_t		GetSolid() const { return m_pWrappedCollideable->GetSolid(); }
+	virtual int				GetSolidFlags() const { return m_pWrappedCollideable->GetSolidFlags(); }
+	virtual IClientUnknown*	GetIClientUnknown() { return m_pWrappedCollideable->GetIClientUnknown(); }
+	virtual int				GetCollisionGroup() const { return m_pWrappedCollideable->GetCollisionGroup(); }
+	virtual bool			ShouldTouchTrigger( int triggerSolidFlags ) const { return m_pWrappedCollideable->ShouldTouchTrigger(triggerSolidFlags); }
 
 	//slightly trickier functions
 	virtual void			WorldSpaceTriggerBounds( Vector *pVecWorldMins, Vector *pVecWorldMaxs ) const;
@@ -175,6 +175,7 @@ void UTIL_Portal_Trace_Filter( CTraceFilterSimpleClassnameList *traceFilterPorta
 	traceFilterPortalShot->AddClassnameToIgnore( "simple_physics_brush" );
 	traceFilterPortalShot->AddClassnameToIgnore( "prop_ragdoll" );
 	traceFilterPortalShot->AddClassnameToIgnore( "prop_glados_core" );
+	traceFilterPortalShot->AddClassnameToIgnore( "updateitem2" );
 }
 
 
@@ -1837,7 +1838,7 @@ void UTIL_TransformInterpolatedAngle( CInterpolatedVar< QAngle > &qInterped, mat
 	if( !qInterped.IsValidIndex( iHead ) )
 		return;
 
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	float fHeadTime;
 	qInterped.GetHistoryValue( iHead, fHeadTime );
 #endif
@@ -1872,7 +1873,7 @@ void UTIL_TransformInterpolatedPosition( CInterpolatedVar< Vector > &vInterped, 
 	if( !vInterped.IsValidIndex( iHead ) )
 		return;
 
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	float fHeadTime;
 	vInterped.GetHistoryValue( iHead, fHeadTime );
 #endif

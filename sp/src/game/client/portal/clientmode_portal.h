@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,7 +34,7 @@ public:
 	virtual			~ClientModePortalNormal();
 
 	virtual void	Init();
-	virtual bool	ShouldDrawCrosshair(void);
+	virtual void	InitViewport();
 
 	
 private:
@@ -46,7 +46,6 @@ private:
 
 extern IClientMode *GetClientModeNormal();
 extern ClientModePortalNormal* GetClientModePortalNormal();
-extern vgui::HScheme g_hVGuiCombineScheme;
 
 
 #endif // PORTAL_CLIENTMODE_H

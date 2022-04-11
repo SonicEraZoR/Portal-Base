@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,16 +15,9 @@
 #include "vgui_controls/Panel.h"
 #include "vgui/ISurface.h"
 #include "../hud_crosshair.h"
-#include "VGuiMatSurface/IMatSystemSurface.h"
 #include "c_portal_player.h"
 #include "c_weapon_portalgun.h"
 #include "IGameUIFuncs.h"
-
-#ifdef SIXENSE
-#include "sixense/in_sixense.h"
-#include "view.h"
-int ScreenTransform(const Vector& point, Vector& screen);
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -131,7 +124,6 @@ void CHUDQuickInfo::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	SetPaintBackgroundEnabled( false );
-	SetForceStereoRenderToFrameBuffer(true);
 }
 
 
@@ -222,11 +214,14 @@ bool CHUDQuickInfo::ShouldDraw( void )
 	if ( !m_icon_c || !m_icon_rb || !m_icon_rbe || !m_icon_lb || !m_icon_lbe )
 		return false;
 
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	C_Portal_Player *player = ToPortalPlayer(C_BasePlayer::GetLocalPlayer());
 	if ( player == NULL )
 		return false;
 
-	if (!crosshair.GetBool() && !IsX360())
+	if ( !crosshair.GetBool() )
+		return false;
+
+	if ( player->IsSuppressingCrosshair() )
 		return false;
 
 	return ( CHudElement::ShouldDraw() && !engine->IsDrawingLoadingImage() );
@@ -374,6 +369,9 @@ void CHUDQuickInfo::Paint()
 
 	Color clrNormal = gHUD.m_clrNormal;
 	clrNormal[3] = 255 * scalar;
+	
+	SetActive( true );
+	
 	m_icon_c->DrawSelf(xCenter, yCenter, clrNormal);
 
 	if (IsX360())

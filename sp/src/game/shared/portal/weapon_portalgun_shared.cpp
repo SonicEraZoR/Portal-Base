@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -52,7 +52,7 @@ CWeaponPortalgun::CWeaponPortalgun( void )
 	m_fMinRange2	= 0.0f;
 	m_fMaxRange2	= MAX_TRACE_LENGTH;
 
-	m_EffectState	= EFFECT_NONE;
+	m_EffectState	= (int)EFFECT_NONE;
 
 #ifdef GAME_DLL
 	m_flSoonestPrimaryAttack = gpGlobals->curtime;
@@ -310,7 +310,7 @@ void CWeaponPortalgun::ItemHolsterFrame( void )
 			return;
 
 		// Just load the clip with no animations
-		int ammoFill = min( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
+		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
 		
 		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -886,10 +886,13 @@ void C_WeaponPortalgun::GetEffectParameters( EffectType_t effectID, color32 &col
 	if ( pOwner != NULL )
 	{
 		C_BaseAnimating *pModel;
+		int originalModelIndex = 0;
 
 		if ( b3rdPerson )
 		{
 			pModel = this;
+			originalModelIndex = GetModelIndex();
+			SetModelIndex( GetWorldModelIndex() );
 		}
 		else
 		{
@@ -901,6 +904,10 @@ void C_WeaponPortalgun::GetEffectParameters( EffectType_t effectID, color32 &col
 		if ( !b3rdPerson )
 		{
 			::FormatViewModelAttachment( vecAttachment, true );
+		}
+		else
+		{
+			SetModelIndex( originalModelIndex );
 		}
 	}
 }

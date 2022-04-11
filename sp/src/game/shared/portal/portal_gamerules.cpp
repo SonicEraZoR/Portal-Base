@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The Half-Life 2 game rules, such as the relationship tables and ammo
 //			damage cvars.
@@ -13,7 +13,6 @@
 #include "portal_shareddefs.h"
 
 #ifdef CLIENT_DLL
-
 #else
 	#include "player.h"
 	#include "game.h"
@@ -25,10 +24,17 @@
 	#include "portal/weapon_physcannon.h"
 	#include "props.h"		// For props flags used in making the portal weight box
 	#include "datacache/imdlcache.h"	// For precaching box model
+/*
+no achivments in my mod so no need for this
+	#include "achievementmgr.h"
+	extern CAchievementMgr g_AchievementMgrPortal;
+*/
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+
 
 
 REGISTER_GAMERULES_CLASS( CPortalGameRules );
@@ -1190,6 +1196,20 @@ bool CPortalGameRules::ShouldBurningPropsEmitLight()
 	return false;
 }
 
+/*
+only used in portal arg so no need for this
+//---------------------------------------------------------
+// This is the only way we can silence the radio sound from the first room without touching them map -- jdw
+//---------------------------------------------------------
+bool CPortalGameRules::ShouldRemoveRadio( void )
+{
+	IAchievement *pHeartbreaker = g_AchievementMgrPortal.GetAchievementByName( "PORTAL_BEAT_GAME" );
+	if ( pHeartbreaker && pHeartbreaker->IsAchieved() )
+		return true;
+
+	return false;
+}
+*/
 
 #endif//CLIENT_DLL
 
@@ -1265,3 +1285,4 @@ CAmmoDef *GetAmmoDef()
 
 	return &def;
 }
+

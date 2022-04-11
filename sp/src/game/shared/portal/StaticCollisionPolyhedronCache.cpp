@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -36,8 +36,8 @@ public:
 	}
 };
 
-static void *s_BrushPolyhedronMemory = NULL;
-static void *s_StaticPropPolyhedronMemory = NULL;
+static uint8 *s_BrushPolyhedronMemory = NULL;
+static uint8 *s_StaticPropPolyhedronMemory = NULL;
 
 CStaticCollisionPolyhedronCache g_StaticCollisionPolyhedronCache;
 

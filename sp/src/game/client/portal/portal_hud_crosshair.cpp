@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -145,6 +145,6 @@ void CHudPortalCrosshair::SetCrosshair( CHudTexture *texture, Color& clr )
 //-----------------------------------------------------------------------------
 void CHudPortalCrosshair::ResetCrosshair()
 {
-    Color a( 255, 255, 255, 255 );
-	SetCrosshair( m_pDefaultCrosshair, a );
+	Color white(255, 255, 255, 255);
+	SetCrosshair( m_pDefaultCrosshair, white );
 }
