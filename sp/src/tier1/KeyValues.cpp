@@ -2063,10 +2063,7 @@ bool EvaluateConditional( const char *str )
 	bool bNot = false; // should we negate this command?
 	if ( *str == '!' )
 		bNot = true;
-	
-        if( Q_stristr( str, "$DECK" ) )
-		return false ^ bNot; // Steam deck unsupported
-	
+
 	if ( Q_stristr( str, "$X360" ) )
 		return IsX360() ^ bNot;
 	
