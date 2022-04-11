@@ -381,10 +381,29 @@ void CWeaponPortalBase::	Materialize( void )
 
 #endif
 
-void CWeaponPortalBase::FireBullets(const FireBulletsInfo_t &info)
-{	
-	BaseClass::FireBullets(info);
+const CPortalSWeaponInfo &CWeaponPortalBase::GetPortalWpnData() const
+{
+	const FileWeaponInfo_t *pWeaponInfo = &GetWpnData();
+	const CPortalSWeaponInfo *pPortalInfo;
+
+	#ifdef _DEBUG
+		pPortalInfo = dynamic_cast< const CPortalSWeaponInfo* >( pWeaponInfo );
+		Assert( pPortalInfo );
+	#else
+		pPortalInfo = static_cast< const CPortalSWeaponInfo* >( pWeaponInfo );
+	#endif
+
+	return *pPortalInfo;
 }
+void CWeaponPortalBase::FireBullets( const FireBulletsInfo_t &info )
+{
+	FireBulletsInfo_t modinfo = info;
+
+	modinfo.m_iPlayerDamage = GetPortalWpnData().m_iPlayerDamage;
+
+	BaseClass::FireBullets( modinfo );
+}
+
 
 #if defined( CLIENT_DLL )
 
