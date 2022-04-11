@@ -7,6 +7,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "ivmodemanager.h"
+#include "ienginevgui.h"
 #include "clientmode_hlnormal.h"
 #include "panelmetaclassmgr.h"
 #include "c_playerresource.h"
@@ -17,6 +18,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern bool g_bRollingCredits;
 
 // default FOV for HL2
 ConVar default_fov( "default_fov", "75", FCVAR_CHEAT );
@@ -98,6 +101,8 @@ protected:
 	}
 
 	virtual IViewPortPanel *CreatePanelByName( const char *szPanelName );
+
+	virtual void CreateDefaultPanels(void) { /* don't create any panels yet*/ };
 };
 
 IViewPortPanel* CHudViewport::CreatePanelByName( const char *szPanelName )
@@ -184,6 +189,8 @@ void CHLModeManager::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 ClientModePortalNormal::ClientModePortalNormal()
 {
+	m_pViewport = new CHudViewport();
+	m_pViewport->Start(gameuifuncs, gameeventmanager);
 }
 
 //-----------------------------------------------------------------------------
@@ -198,18 +205,18 @@ void ClientModePortalNormal::Init()
 	BaseClass::Init();
 
 	//usermessages->HookMessage( "KillCam", MsgFunc_KillCam );
-}
 
-void ClientModePortalNormal::InitViewport()
-{
-	m_pViewport = new CHudViewport();
-	m_pViewport->Start( gameuifuncs, gameeventmanager );
+	// Load up the combine control panel scheme
+	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx(enginevgui->GetPanel(PANEL_CLIENTDLL), IsXbox() ? "resource/ClientScheme.res" : "resource/CombinePanelScheme.res", "CombineScheme");
+	if (!g_hVGuiCombineScheme)
+	{
+		Warning("Couldn't load combine panel scheme!\n");
+	}
 }
-
-ClientModePortalNormal g_ClientModeNormal;
 
 IClientMode *GetClientModeNormal()
 {
+	static ClientModePortalNormal g_ClientModeNormal;
 	return &g_ClientModeNormal;
 }
 
@@ -220,6 +227,12 @@ ClientModePortalNormal* GetClientModePortalNormal()
 
 	return static_cast< ClientModePortalNormal* >( GetClientModeNormal() );
 }
+
+bool ClientModePortalNormal::ShouldDrawCrosshair(void)
+{
+	return (g_bRollingCredits == false);
+}
+
 
 
 static CHLModeManager g_HLModeManager;
