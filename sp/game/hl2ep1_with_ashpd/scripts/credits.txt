@@ -98,8 +98,8 @@
 
 "CreditsParams"
 {
-	"logo" "Half-Life 2"
-	"logo2" "--Episode One--"
+	"logo" "HALF-LIFE'"
+	"logo2" "== episode one=="
 	
 	"fadeintime"	"2.5"
 	"fadeouttime"	"1"
