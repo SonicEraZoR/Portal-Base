@@ -677,7 +677,7 @@ void CProp_Portal::RemovePortalMicAndSpeaker()
 		CEnvMicrophone *pMicrophone = (CEnvMicrophone*)(m_hMicrophone.Get());
 		if ( pMicrophone )
 		{
-            inputdata_t a;
+            inputdata_t a();
 			pMicrophone->InputDisable( a );
 			UTIL_Remove( pMicrophone );
 		}
@@ -705,7 +705,7 @@ void CProp_Portal::RemovePortalMicAndSpeaker()
 					}
 				}
 			}
-			inputdata_t a;
+			inputdata_t a();
 			pSpeaker->InputTurnOff( a );
 			UTIL_Remove( pSpeaker );
 		}
@@ -1963,12 +1963,12 @@ void CProp_Portal::UpdatePortalLinkage( void )
 			CEnvMicrophone *pMicrophone = static_cast<CEnvMicrophone*>( m_hMicrophone.Get() );
 			pMicrophone->AddSpawnFlags( SF_MICROPHONE_IGNORE_NONATTENUATED );
 			pMicrophone->Teleport( &GetAbsOrigin(), &GetAbsAngles(), &vZero );
-            inputdata_t a;
+            inputdata_t a();
 			pMicrophone->InputEnable( a );
 
 			CSpeaker *pSpeaker = static_cast<CSpeaker*>( m_hSpeaker.Get() );
 			pSpeaker->Teleport( &GetAbsOrigin(), &GetAbsAngles(), &vZero );
-            inputdata_t b;
+            inputdata_t b();
 			pSpeaker->InputTurnOn( b );
 
 			UpdatePortalTeleportMatrix();
@@ -2093,7 +2093,7 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 	{
 		CEnvMicrophone *pMicrophone = static_cast<CEnvMicrophone*>( m_hMicrophone.Get() );
 		pMicrophone->Teleport( &vOrigin, &qAngles, 0 );
-        inputdata_t a;
+        inputdata_t a();
 		pMicrophone->InputEnable( a );
 	}
 
@@ -2101,7 +2101,7 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 	{
 		CSpeaker *pSpeaker = static_cast<CSpeaker*>( m_hSpeaker.Get() );
 		pSpeaker->Teleport( &vOrigin, &qAngles, 0 );
-        inputdata_t a;
+        inputdata_t a();
 		pSpeaker->InputTurnOn( a );
 	}
 
