@@ -22,7 +22,7 @@ class CPortal_Player;
 #include "weapon_portalbase.h"
 #include "in_buttons.h"
 #include "func_liquidportal.h"
-//#include "ai_speech.h"			// For expresser host
+#include "ai_speech.h"			// For expresser host
 
 struct PortalPlayerStatistics_t
 {
@@ -34,7 +34,7 @@ struct PortalPlayerStatistics_t
 //=============================================================================
 // >> Portal_Player
 //=============================================================================
-class CPortal_Player : public CHL2_Player
+class CPortal_Player : public CAI_ExpresserHost<CHL2_Player> 
 {
 public:
 	DECLARE_CLASS( CPortal_Player, CHL2_Player );
@@ -74,7 +74,7 @@ public:
 
 	virtual void SetAnimation( PLAYER_ANIM playerAnim );
 
-	//virtual CAI_Expresser* GetExpresser( void );
+	virtual CAI_Expresser* GetExpresser( void );
 
 	virtual void PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
@@ -128,8 +128,8 @@ public:
 
 	void SetPlayerModel( void );
 	
-	//void UpdateExpression ( void );
-	//void ClearExpression ( void );
+	void UpdateExpression ( void );
+	void ClearExpression ( void );
 	
 	int	  GetPlayerModelType( void ) { return m_iPlayerSoundType; }
 
@@ -180,7 +180,7 @@ public:
 		
 private:
 
-	//virtual CAI_Expresser* CreateExpresser( void );
+	virtual CAI_Expresser* CreateExpresser( void );
 
 	CSoundPatch		*m_pWooshSound;
 

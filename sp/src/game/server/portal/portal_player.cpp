@@ -244,7 +244,7 @@ CPortal_Player::CPortal_Player()
 {
 
 	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
-	//CreateExpresser();
+	CreateExpresser();
 
 	UseClientSideAnimation();
 
@@ -534,13 +534,13 @@ bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelind
 	return bRet;
 }
 
-/*
-I think it makes the player make rebel hurt sounds when hit
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CPortal_Player::UpdateExpression( void )
 {
+/*
+I think it makes the player make rebel hurt sounds when hit
 	if ( !m_pExpresser )
 		return;
 
@@ -575,6 +575,7 @@ void CPortal_Player::UpdateExpression( void )
 	m_iszExpressionScene = AllocPooledString( szScene );
 	float flDuration = InstancedScriptedScene( this, szScene, &m_hExpressionSceneEnt, 0.0, true, NULL );
 	m_flExpressionLoopTime = gpGlobals->curtime + flDuration;
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -588,7 +589,7 @@ void CPortal_Player::ClearExpression( void )
 	}
 	m_flExpressionLoopTime = gpGlobals->curtime;
 }
-*/
+
 
 void CPortal_Player::PreThink( void )
 {
@@ -663,9 +664,9 @@ void CPortal_Player::PostThink( void )
 	{
 		// Random expressions need to be cleared, because they don't loop. So if we
 		// pick the same one again, we want to restart it.
-		//ClearExpression();
+		ClearExpression();
 		m_iszExpressionScene = NULL_STRING;
-		//UpdateExpression();
+		UpdateExpression();
 	}
 
 	UpdateSecondsTaken();
@@ -1012,7 +1013,6 @@ void CPortal_Player::SetAnimation( PLAYER_ANIM playerAnim )
 	return;
 }
 
-/*
 CAI_Expresser *CPortal_Player::CreateExpresser()
 {
 	Assert( !m_pExpresser );
@@ -1042,7 +1042,7 @@ CAI_Expresser *CPortal_Player::GetExpresser()
 	}
 	return m_pExpresser; 
 }
-*/
+
 
 extern int	gEvilImpulse101;
 extern bool UTIL_ItemCanBeTouchedByPlayer(CBaseEntity *pItem, CBasePlayer *pPlayer);
@@ -1786,7 +1786,7 @@ void CPortal_Player::Event_Killed( const CTakeDamageInfo &info )
 	//else
 	//	m_hObserverTarget.Set( NULL );
 
-	//UpdateExpression();
+	UpdateExpression();
 
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
