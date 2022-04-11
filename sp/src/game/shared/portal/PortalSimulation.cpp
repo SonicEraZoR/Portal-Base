@@ -12,7 +12,7 @@
 #include "physics.h"
 #include "portal_shareddefs.h"
 #include "StaticCollisionPolyhedronCache.h"
-#include "model_types.h"
+#include "model_types.h."
 #include "filesystem.h"
 #include "collisionutils.h"
 #include "tier1/callqueue.h"

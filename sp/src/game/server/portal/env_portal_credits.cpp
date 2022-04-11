@@ -11,7 +11,7 @@
 #include "KeyValues.h"
 #include "filesystem.h"
 #include "Color.h"
-#include "gamestats.h"
+#include "GameStats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

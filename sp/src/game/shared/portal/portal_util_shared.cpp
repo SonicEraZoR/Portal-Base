@@ -11,11 +11,11 @@
 #include "portal_shareddefs.h"
 #include "portal_collideable_enumerator.h"
 #include "beam_shared.h"
-#include "collisionutils.h"
+#include "CollisionUtils.h"
 #include "util_shared.h"
 #ifndef CLIENT_DLL
-	#include "util.h"
-	#include "ndebugoverlay.h"
+	#include "Util.h"
+	#include "NDebugOverlay.h"
 	#include "env_debughistory.h"
 #else
 	#include "c_portal_player.h"

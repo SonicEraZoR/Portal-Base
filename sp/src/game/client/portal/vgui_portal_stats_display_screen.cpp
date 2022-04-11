@@ -8,8 +8,8 @@
 #include "cbase.h"
 #include "c_vguiscreen.h"
 #include "vgui_controls/Label.h"
-#include "vgui_bitmappanel.h"
-#include <vgui/IVGui.h>
+#include "vgui_BitmapPanel.h"
+#include <vgui/IVGUI.h>
 #include "c_prop_portal_stats_display.h"
 #include "ienginevgui.h"
 #include "fmtstr.h"

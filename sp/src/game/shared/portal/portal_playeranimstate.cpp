@@ -14,11 +14,11 @@
 #include "base_playeranimstate.h"
 
 #ifdef CLIENT_DLL
-#include "c_portal_player.h"
-#include "c_weapon_portalgun.h"
+#include "C_Portal_Player.h"
+#include "C_Weapon_Portalgun.h"
 #else
-#include "portal_player.h"
-#include "weapon_portalgun.h"
+#include "Portal_Player.h"
+#include "Weapon_Portalgun.h"
 #endif
 
 #define PORTAL_RUN_SPEED			320.0f

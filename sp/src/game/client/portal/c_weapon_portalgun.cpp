@@ -11,7 +11,7 @@
 #include "iviewrender_beams.h"
 #include "model_types.h"
 #include "fx_interpvalue.h"
-#include "clienteffectprecachesystem.h"
+#include "ClientEffectPrecacheSystem.h"
 #include "bone_setup.h"
 #include "c_rumble.h"
 #include "rumble_shared.h"

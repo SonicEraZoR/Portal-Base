@@ -10,20 +10,20 @@
 #include "portal_shareddefs.h"
 #include "clientsideeffects.h"
 #include "tier0/vprof.h"
-#include "materialsystem/itexture.h"
+#include "materialsystem/ITexture.h"
 #include "hud_macros.h"
-#include "igamesystem.h"
+#include "IGameSystem.h"
 #include "view.h"						// For MainViewOrigin()
 #include "clientleafsystem.h"			// For finding the leaves our portals are in
 #include "portal_render_targets.h"		// Access to static references to Portal-specific render textures
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
-#include "tier1/KeyValues.h"
+#include "tier1/keyvalues.h"
 #include "rendertexture.h"
 #include "prop_portal_shared.h"
 #include "particles_new.h"
 
-#include "c_portal_player.h"
+#include "C_Portal_Player.h"
 
 #include "c_pixel_visibility.h"
 

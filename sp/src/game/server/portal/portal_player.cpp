@@ -14,7 +14,7 @@
 #include "in_buttons.h"
 #include "portal_gamerules.h"
 #include "weapon_portalgun.h"
-#include "portal/weapon_physcannon.h"
+#include "portal\weapon_physcannon.h"
 #include "KeyValues.h"
 #include "team.h"
 #include "eventqueue.h"

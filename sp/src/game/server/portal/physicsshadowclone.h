@@ -13,7 +13,7 @@
 #endif
 
 #include "vphysics_interface.h"
-#include "baseentity.h"
+#include "BaseEntity.h"
 #include "baseanimating.h"
 
 class CPhysicsShadowClone;

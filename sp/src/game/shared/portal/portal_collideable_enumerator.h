@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-#include "ispatialpartition.h"
+#include "ISpatialPartition.h"
 
 #ifdef CLIENT_DLL
 class C_Prop_Portal;

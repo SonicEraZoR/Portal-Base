@@ -12,7 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "dlight.h"
 #include "iefx.h"
-#include "SoundEmitterSystem/isoundemittersystembase.h"
+#include "soundemittersystem/isoundemittersystembase.h"
 #include "point_bonusmaps_accessor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
