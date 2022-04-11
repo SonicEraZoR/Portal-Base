@@ -59,35 +59,35 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme"));
 
-	LoadControlSettings("Resource/UI/modsettingspanel.res");
+	LoadControlSettings("resource/UI/modsettingspanel.res");
 
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
 
-	m_pOKButton = dynamic_cast<Button*>( FindChildByName("ButtonOK", true) );
+	m_pOKButton = (Button*)FindChildByName("ButtonOK", true);
 	m_pOKButton->AddActionSignalTarget(this);
 	m_pOKButton->SetCommand("ok");
-	m_pCancelButton = dynamic_cast<Button*>( FindChildByName("ButtonCancel", true) );
+	m_pCancelButton = (Button*)FindChildByName("ButtonCancel", true);
 	m_pCancelButton->AddActionSignalTarget(this);
 	m_pCancelButton->SetCommand("turnoff");
-	m_pApplyButton = dynamic_cast<Button*>( FindChildByName("ButtonApply", true) );
+	m_pApplyButton = (Button*)FindChildByName("ButtonApply", true);
 	m_pApplyButton->AddActionSignalTarget(this);
 	m_pApplyButton->SetCommand("apply");
-	m_pBetaQuickInfoToggle = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("BetaQuickInfoToggle", true) );
+	m_pBetaQuickInfoToggle = (CvarToggleCheckButton<ConVarRef>*)FindChildByName("BetaQuickInfoToggle", true);
 	m_pBetaQuickInfoToggle->SetCvarName("beta_quickinfo");
 	m_pBetaQuickInfoToggle->SizeToContents();
-	m_pBetaQuickInfoDelayToggle = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("BetaQuickInfoDelayToggle", true) );
+	m_pBetaQuickInfoDelayToggle = (CvarToggleCheckButton<ConVarRef>*)FindChildByName("BetaQuickInfoDelayToggle", true);
 	m_pBetaQuickInfoDelayToggle->SetCvarName("beta_quickinfo_show_portal_delay");
 	m_pBetaQuickInfoDelayToggle->SizeToContents();
-	m_pBetaQuickInfoOlderGunToggle = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("BetaQuickInfoOlderGunToggle", true) );
+	m_pBetaQuickInfoOlderGunToggle = (CvarToggleCheckButton<ConVarRef>*)FindChildByName("BetaQuickInfoOlderGunToggle", true);
 	m_pBetaQuickInfoOlderGunToggle->SetCvarName("beta_quickinfo_older_gun");
 	m_pBetaQuickInfoOlderGunToggle->SizeToContents();
-	m_pRegenerationEnable = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("RegenerationEnable", true) );
+	m_pRegenerationEnable = (CvarToggleCheckButton<ConVarRef>*)FindChildByName("RegenerationEnable", true);
 	m_pRegenerationEnable->SetCvarName("sv_regeneration_enable");
 	m_pRegenerationEnable->SizeToContents();
-	m_pReceiveFallDamage = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("ReceiveFallDamage", true) );
+	m_pReceiveFallDamage = (CvarToggleCheckButton<ConVarRef>*)FindChildByName("ReceiveFallDamage", true);
 	m_pReceiveFallDamage->SetCvarName("sv_receive_fall_damage");
 	m_pReceiveFallDamage->SizeToContents();
-	m_pChellModel = dynamic_cast<CheckButton*>( FindChildByName("ChellModel", true) );
+	m_pChellModel = (CheckButton*)FindChildByName("ChellModel", true);
 	ConVar *cl_playermodel = cvar->FindVar("cl_playermodel");
 	if (Q_strcmp(cl_playermodel->GetString(), "models/player/chell.mdl") == 0)
 		m_pChellModel->SetSelected(true);
