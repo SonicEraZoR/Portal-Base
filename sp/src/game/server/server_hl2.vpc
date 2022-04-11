@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\Multiplayer"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\Multiplayer"
 		$PreprocessorDefinitions		"$BASE;HL2_DLL;USES_SAVERESTORE;PORTAL"
 	}
 }
