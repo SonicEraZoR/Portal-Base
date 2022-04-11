@@ -66,8 +66,6 @@ IMPLEMENT_NETWORKCLASS_ALIASED( HalfLife2Proxy, DT_HalfLife2Proxy )
 	BEGIN_SEND_TABLE( CHalfLife2Proxy, DT_HalfLife2Proxy )
 		SendPropDataTable( "hl2_gamerules_data", 0, &REFERENCE_SEND_TABLE( DT_HL2GameRules ), SendProxy_HL2GameRules )
 	END_SEND_TABLE()
-
-ConVar sv_receive_fall_damage("sv_receive_fall_damage", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 #endif
 
 ConVar  physcannon_mega_enabled( "physcannon_mega_enabled", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
@@ -1481,18 +1479,6 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	void CHalfLife2::NPC_DroppedGrenade( void )
 	{
 		m_flLastGrenadeDropTime = gpGlobals->curtime + sk_plr_grenade_drop_time.GetFloat();
-	}
-
-	//-----------------------------------------------------------------------------
-	// Purpose: Return fall damage based on convar setting
-	//-----------------------------------------------------------------------------
-	float CHalfLife2::FlPlayerFallDamage(CBasePlayer *pPlayer)
-	{
-		if (sv_receive_fall_damage.GetBool())
-			return BaseClass::FlPlayerFallDamage(pPlayer);
-		else
-			// No fall damage in Portal!
-			return 0.0f;
 	}
 
 #endif //} !CLIENT_DLL

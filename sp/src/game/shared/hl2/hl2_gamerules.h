@@ -45,7 +45,6 @@ public:
 	virtual float			GetAutoAimScale( CBasePlayer *pPlayer );
 	virtual float			GetAmmoQuantityScale( int iAmmoIndex );
 	virtual void			LevelInitPreEntity();
-	virtual float			FlPlayerFallDamage(CBasePlayer *pPlayer); //overides falldamage based on convar
 #endif
 
 private:
