@@ -17,7 +17,6 @@ $Project "client"
 {
 	"game\client\client_hl2.vpc"		[($WIN32||$X360||$POSIX) && $HL2]
 	"game\client\client_episodic.vpc"	[($WIN32||$X360||$POSIX) && $EPISODIC]
-	"game\client\client_lostcoast.vpc"	[($WIN32||$X360||$POSIX) && $LOSTCOAST]
 }
 
 $Project "fgdlib"
@@ -45,7 +44,6 @@ $Project "server"
 {
 	"game\server\server_hl2.vpc"		[($WIN32||$X360||$POSIX) && $HL2]
 	"game\server\server_episodic.vpc"	[($WIN32||$X360||$POSIX) && $EPISODIC]
-	"game\server\server_lostcoast.vpc"	[($WIN32||$X360||$POSIX) && $LOSTCOAST]
 }
 
 $Project "mathlib"

@@ -12,7 +12,6 @@ $Games
 {
 	"EPISODIC"
 	"HL2"
-	"LOSTCOAST"
 }
 
 // Makes the VPC scripts work in the SDK's context
