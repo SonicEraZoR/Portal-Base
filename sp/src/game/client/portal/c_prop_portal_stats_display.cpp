@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -197,7 +197,7 @@ void C_PropPortalStatsDisplay::ClientThink( void )
 
 				if ( m_fNumPlayerDisplay < m_iNumStepsTaken )
 				{
-					m_fNumPlayerDisplay += MIN( iNumStepsThisFrame, m_iNumStepsTaken - m_fNumPlayerDisplay );
+					m_fNumPlayerDisplay += min( iNumStepsThisFrame, m_iNumStepsTaken - m_fNumPlayerDisplay );
 
 					int iStepsMod10 = static_cast<int>( m_fNumPlayerDisplay ) % 10;
 					if ( iStepsMod10 == 0 )

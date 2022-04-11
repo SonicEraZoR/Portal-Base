@@ -1,13 +1,11 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================//
 
+
 #include "cbase.h"
-#include "hudelement.h"
-#include "hud_numericdisplay.h"
-#include <vgui_controls/Panel.h>
 #include "hud.h"
 #include "hud_suitpower.h"
 #include "hud_macros.h"
@@ -17,6 +15,9 @@
 #include <vgui/ILocalize.h>
 #include "KeyValues.h"
 #include "filesystem.h"
+#include "hudelement.h"
+#include "hud_numericdisplay.h"
+#include <vgui_controls/Panel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -287,8 +288,8 @@ void CHudPortalCredits::ReadNames( KeyValues *pKeyValue )
 	while ( pKVNames )
 	{
 		portalcreditname_t Credits;
-		V_strcpy_safe( Credits.szCreditName, pKVNames->GetName() );
-		V_strcpy_safe( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
+		Q_strcpy( Credits.szCreditName, pKVNames->GetName());
+		Q_strcpy( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
 
 		Credits.flTimeInit = 0.00;
 
@@ -334,8 +335,8 @@ void CHudPortalCredits::ReadLyrics( KeyValues *pKeyValue )
 		portalcreditname_t Credits;
 		vgui::HScheme scheme = vgui::scheme()->GetScheme( "ClientScheme" );
 		vgui::HFont m_hTFont = vgui::scheme()->GetIScheme(scheme)->GetFont( "CreditsOutroText", true );
-		V_strcpy_safe( Credits.szCreditName, pKVNames->GetName());
-		V_strcpy_safe( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
+		Q_strcpy( Credits.szCreditName, pKVNames->GetName());
+		Q_strcpy( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
 
 		Credits.flTimeInit = 0.00;
 
@@ -382,13 +383,14 @@ void CHudPortalCredits::ReadLyrics( KeyValues *pKeyValue )
 		{
 			iXOffsetTemp=0;
 			Credits.iXOffset = 0;
+			Q_strcpy(tmpstr,"");
 		}
 
 		if (Credits.szCreditName[0] == '*')
 		{
 			bNextOnSameLine = true;
-			Q_strcpy(tmpstr,&Credits.szCreditName[1]);
-			Q_strcpy(Credits.szCreditName,tmpstr);
+			Q_strcpy(Credits.szCreditName,&Credits.szCreditName[1]);
+			//Q_snprintf(tmpstr, 256, "%s%s",tmpstr,Credits.szCreditName);
 			bNoY = true;
 		}
 
@@ -450,8 +452,8 @@ void CHudPortalCredits::ReadAscii( KeyValues *pKeyValue )
 		//Q_strcpy( Credits.szCreditName, pKVNames->GetName());
 		//Q_strcpy( Credits.szFontName, pKeyValue->GetString( Credits.szCreditName, "Default" ) );
 
-		V_strcpy_safe( Credits.szFontName, pKVNames->GetName() );
-		V_strcpy_safe( Credits.szCreditName, pKeyValue->GetString( Credits.szFontName, "Default" ) );
+		Q_strcpy( Credits.szFontName, pKVNames->GetName());
+		Q_strcpy( Credits.szCreditName, pKeyValue->GetString( Credits.szFontName, "Default" ) );
 
 		Credits.flTimeInit = 0.00;
 
@@ -499,7 +501,7 @@ void CHudPortalCredits::ReadParams( KeyValues *pKeyValue )
 	m_iScreenWidthAdjustment = pKeyValue->GetInt( "screenwidthadjustment", 0 );
 	m_iScreenHeightAdjustment = pKeyValue->GetInt( "screenheightadjustment", 0 );
 
-	V_strcpy_safe( m_szAsciiArtFont, pKeyValue->GetString( "asciiartfont", "Default" ) );
+	Q_strcpy( m_szAsciiArtFont, pKeyValue->GetString( "asciiartfont", "Default" ) );
 
 	m_iAAScreenXOffset = pKeyValue->GetInt( "aascreenxoffset", 0 );
 	m_iAAScreenYOffset = pKeyValue->GetInt( "aascreenyoffset", 0 );
@@ -605,7 +607,7 @@ void CHudPortalCredits::DrawOutroCreditsName( void )
 					}
 				}
 
-				cColor[3] = MAX( 0, m_Alpha );
+				cColor[3] = max( 0, m_Alpha );
 			}
 		}
 		else
@@ -748,7 +750,7 @@ void CHudPortalCredits::DrawPortalOutroCreditsName( void )
 					}
 				}
 
-				cColor[3] = MAX( 0, m_Alpha );
+				cColor[3] = max( 0, m_Alpha );
 			}
 		}
 		else
@@ -1118,7 +1120,7 @@ void CHudPortalCredits::DrawLogo( void )
 		{
 			float flDeltaTime = ( m_flFadeTime - gpGlobals->curtime );
 
-			m_Alpha = MAX( 0, RemapValClamped( flDeltaTime, 5.0f, 0, -128, 255 ) );
+			m_Alpha = max( 0, RemapValClamped( flDeltaTime, 5.0f, 0, -128, 255 ) );
 
 			if ( flDeltaTime <= 0.0f )
 			{
@@ -1457,15 +1459,7 @@ void CHudPortalCredits::PreparePortalOutroCredits( void )
 			Q_strcpy(m_szBorderH,"-");
 			while(GetPixelWidth( m_szBorderH, m_hTFont )< ((iWidth/2)-GetPixelWidth( "---", m_hTFont )))
 			{
-				int iCurrentLength = Q_strlen(m_szBorderH);
-				if (iCurrentLength < sizeof(m_szBorderH))
-				{
-					m_szBorderH[iCurrentLength] = '-';
-				}
-				else
-				{
-					break;
-				}
+				Q_snprintf(m_szBorderH,512,"%s-",m_szBorderH);
 			}
 		}
 

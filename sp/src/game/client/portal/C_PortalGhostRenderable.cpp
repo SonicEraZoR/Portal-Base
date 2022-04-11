@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -89,14 +89,6 @@ bool C_PortalGhostRenderable::SetupBones( matrix3x4_t *pBoneToWorldOut, int nMax
 {
 	if( m_pGhostedRenderable == NULL )
 		return false;
-	
-	int nModelIndex = 0;
-	CBaseCombatWeapon *pParent = dynamic_cast<CBaseCombatWeapon*>( m_pGhostedRenderable );
-	if ( pParent )
-	{
-		nModelIndex = pParent->GetModelIndex();
-		pParent->SetModelIndex( pParent->GetWorldModelIndex() );
-	}
 
 	if( m_pGhostedRenderable->SetupBones( pBoneToWorldOut, nMaxBones, boneMask, currentTime ) )
 	{
@@ -108,11 +100,6 @@ bool C_PortalGhostRenderable::SetupBones( matrix3x4_t *pBoneToWorldOut, int nMax
 			}
 		}
 		return true;
-	}
-	
-	if ( pParent )
-	{
-		pParent->SetModelIndex( nModelIndex );
 	}
 
 	return false;
@@ -264,17 +251,11 @@ int C_PortalGhostRenderable::DrawModel( int flags )
 	}
 	else
 	{
-		DrawBrushModelMode_t mode = DBM_DRAW_ALL;
-		if ( flags & STUDIO_TWOPASS )
-		{
-			mode = ( flags & STUDIO_TRANSPARENCY ) ? DBM_DRAW_TRANSLUCENT_ONLY : DBM_DRAW_OPAQUE_ONLY;
-		}
-
-		render->DrawBrushModelEx( m_pGhostedRenderable, 
+		render->DrawBrushModel( m_pGhostedRenderable, 
 								(model_t *)m_pGhostedRenderable->GetModel(), 
 								GetRenderOrigin(), 
 								GetRenderAngles(), 
-								mode );
+								flags & STUDIO_TRANSPARENCY ? true : false );
 		
 		return 1;
 	}

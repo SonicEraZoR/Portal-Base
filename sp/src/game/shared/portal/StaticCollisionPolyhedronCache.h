@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Portals use polyhedrons to clip and carve their custom collision areas.
 //			This file should provide caches of polyhedrons with the initial conversion 

@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for Portal.
 //
@@ -167,8 +167,10 @@ SendPropEHandle( SENDINFO( m_pHeldObjectPortal ) ),
 SendPropBool( SENDINFO( m_bPitchReorientation ) ),
 SendPropEHandle( SENDINFO( m_hPortalEnvironment ) ),
 SendPropEHandle( SENDINFO( m_hSurroundingLiquidPortal ) ),
-SendPropBool( SENDINFO( m_bSuppressingCrosshair ) ),
+
 SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
+
+SendPropBool(SENDINFO(m_bCrosshairSuppressed)),
 
 END_SEND_TABLE()
 
@@ -203,7 +205,6 @@ BEGIN_DATADESC( CPortal_Player )
 	DEFINE_FIELD( m_matLastPortalled, FIELD_VMATRIX_WORLDSPACE ),
 	DEFINE_FIELD( m_vWorldSpaceCenterHolder, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hSurroundingLiquidPortal, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bSuppressingCrosshair, FIELD_BOOLEAN ),
 	//DEFINE_FIELD ( m_PlayerAnimState, CPortalPlayerAnimState ),
 	//DEFINE_FIELD ( m_StatsThisLevel, PortalPlayerStatistics_t ),
 
@@ -266,7 +267,6 @@ CPortal_Player::CPortal_Player()
 	m_iszExpressionScene = NULL_STRING;
 	m_hExpressionSceneEnt = NULL;
 	m_flExpressionLoopTime = 0.0f;
-	m_bSuppressingCrosshair = false;
 }
 
 CPortal_Player::~CPortal_Player( void )
@@ -387,8 +387,7 @@ void CPortal_Player::GiveDefaultItems( void )
 {
 	castable_string_t st( "suit_no_sprint" );
 	GlobalEntity_SetState( st, GLOBAL_OFF );
-	//inputdata_t in;
-	//InputDisableFlashlight( in ); disables flashlight in portal
+//	InputDisableFlashlight( inputdata_t() );
 }
 
 
@@ -409,7 +408,7 @@ void CPortal_Player::Spawn(void)
 	RemoveEffects( EF_NODRAW );
 	StopObserverMode();
 
-//	GiveDefaultItems(); no need to do this
+//	GiveDefaultItems();
 
 	m_nRenderFX = kRenderNormal;
 
@@ -523,7 +522,7 @@ void CPortal_Player::SetPlayerModel( void )
 	}
 
 	SetModel( szModelName );
-	m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
+	m_iPlayerSoundType = PLAYER_SOUNDS_CITIZEN;
 }
 
 
@@ -539,8 +538,6 @@ bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelind
 //-----------------------------------------------------------------------------
 void CPortal_Player::UpdateExpression( void )
 {
-/*
-I think it makes the player make rebel hurt sounds when hit
 	if ( !m_pExpresser )
 		return;
 
@@ -553,15 +550,15 @@ I think it makes the player make rebel hurt sounds when hit
 	GetExpresser()->SetOuter( this );
 
 	ClearExpression();
-	AI_Response response;
-	bool result = SpeakFindResponse( response, g_pszChellConcepts[iConcept] );
+	AI_Response *result = SpeakFindResponse( g_pszChellConcepts[iConcept] );
 	if ( !result )
 	{
 		m_flExpressionLoopTime = gpGlobals->curtime + RandomFloat(30,40);
 		return;
 	}
 
-	char const *szScene = response.GetResponsePtr();
+	char szScene[ MAX_PATH ];
+	result->GetResponse( szScene, sizeof( szScene ) );
 
 	// Ignore updates that choose the same scene
 	if ( m_iszExpressionScene != NULL_STRING && stricmp( STRING(m_iszExpressionScene), szScene ) == 0 )
@@ -575,7 +572,6 @@ I think it makes the player make rebel hurt sounds when hit
 	m_iszExpressionScene = AllocPooledString( szScene );
 	float flDuration = InstancedScriptedScene( this, szScene, &m_hExpressionSceneEnt, 0.0, true, NULL );
 	m_flExpressionLoopTime = gpGlobals->curtime + flDuration;
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -629,6 +625,7 @@ void CPortal_Player::PostThink( void )
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
 
+	
 	// Regenerate heath after 3 seconds
 	if (IsAlive() && GetHealth() < GetMaxHealth() && sv_regeneration_enable.GetBool())
 	{
@@ -654,6 +651,7 @@ void CPortal_Player::PostThink( void )
 			}
 		}
 	}
+	
 
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
@@ -726,7 +724,7 @@ void CPortal_Player::PlayerDeathThink(void)
 
 	StopAnimation();
 
-	IncrementInterpolationFrame();
+	AddEffects( EF_NOINTERP );
 	m_flPlaybackRate = 0.0;
 
 	int fAnyButtonDown = (m_nButtons & ~IN_SCORE);
@@ -804,7 +802,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 					{
 						EmitSound_t ep( params );
 						ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-						ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+						ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 						EmitSound( filter, entindex(), ep );
 					}
@@ -824,7 +822,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 					{
 						EmitSound_t ep( params );
 						ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-						ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+						ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 						EmitSound( filter, entindex(), ep );
 					}
@@ -844,7 +842,7 @@ void CPortal_Player::UpdatePortalPlaneSounds( void )
 			Vector vVelocity;
 			GetVelocity( &vVelocity, NULL );
 			ep.m_nPitch = 80.0f + vVelocity.Length() * 0.03f;
-			ep.m_flVolume = MIN( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
+			ep.m_flVolume = min( 0.3f + vVelocity.Length() * 0.00075f, 1.0f );
 
 			EmitSound( filter, entindex(), ep );
 		}
@@ -1001,7 +999,7 @@ void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 		pos, 
 		q, 
 		-1,
-		GetModelScale(), // Scaling
+		GetModelScale(),
 		pBoneToWorld,
 		boneMask );
 }
@@ -1176,7 +1174,7 @@ void CPortal_Player::ShutdownUseEntity( void )
 const Vector& CPortal_Player::WorldSpaceCenter( ) const
 {
 	m_vWorldSpaceCenterHolder = GetAbsOrigin();
-	m_vWorldSpaceCenterHolder.z += ( (IsDucked()) ? (VEC_DUCK_HULL_MAX_SCALED( this ).z) : (VEC_HULL_MAX_SCALED( this ).z) ) * 0.5f;
+	m_vWorldSpaceCenterHolder.z += ( (IsDucked()) ? (VEC_DUCK_HULL_MAX.z) : (VEC_HULL_MAX.z) ) * 0.5f;
 	return m_vWorldSpaceCenterHolder;
 }
 
@@ -1930,7 +1928,7 @@ int CPortal_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( event )
 	{
 		event->SetInt("userid", GetUserID() );
-		event->SetInt("health", MAX(0, m_iHealth) );
+		event->SetInt("health", max(0, m_iHealth) );
 		event->SetInt("priority", 5 );	// HLTV event priority, not transmitted
 
 		if ( attacker->IsPlayer() )
@@ -2229,6 +2227,10 @@ void CPortal_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *p
 	PortalSetupVisibility( this, area, pvs, pvssize );
 }
 
+void CPortal_Player::SuppressCrosshair(bool a)
+{
+	m_bCrosshairSuppressed = a;
+}
 
 #ifdef PORTAL_MP
 

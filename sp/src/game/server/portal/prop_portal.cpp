@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
@@ -630,7 +630,15 @@ void CProp_Portal::FizzleThink( void )
 		controller.SoundChangeVolume( m_pAmbientSound, 0.0, 0.0 );
 	}
 
-	StopParticleEffects( this );
+// This code replaces call for StopParticleEffects( this );
+	CEffectData	data;
+#ifdef CLIENT_DLL
+	data.m_hEntity = this;
+#else
+	data.m_nEntIndex = this->entindex();
+#endif
+	DispatchEffect("ParticleEffectStop", data);
+//
 
 	m_bActivated = false;
 	m_hLinkedPortal = NULL;
@@ -669,8 +677,8 @@ void CProp_Portal::RemovePortalMicAndSpeaker()
 		CEnvMicrophone *pMicrophone = (CEnvMicrophone*)(m_hMicrophone.Get());
 		if ( pMicrophone )
 		{
-			inputdata_t in;
-			pMicrophone->InputDisable( in );
+            inputdata_t a;
+			pMicrophone->InputDisable( a );
 			UTIL_Remove( pMicrophone );
 		}
 		m_hMicrophone = 0;
@@ -697,8 +705,8 @@ void CProp_Portal::RemovePortalMicAndSpeaker()
 					}
 				}
 			}
-			inputdata_t in;
-			pSpeaker->InputTurnOff( in );
+			inputdata_t a;
+			pSpeaker->InputTurnOff( a );
 			UTIL_Remove( pSpeaker );
 		}
 		m_hSpeaker = 0;
@@ -1213,6 +1221,8 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 				pOther->ApplyAbsVelocityImpulse( vNewVelocity );
 			}
 		}
+
+		pOther->RemoveEffects( EF_NOINTERP );
 	}
 
 	IPhysicsObject *pPhys = pOther->VPhysicsGetObject();
@@ -1751,7 +1761,7 @@ void CProp_Portal::ForceEntityToFitInPortalWall( CBaseEntity *pEntity )
 		{
 			Vector ptNewPos = ShortestTrace.endpos + vEntityCenterToOrigin;
 			pEntity->Teleport( &ptNewPos, NULL, NULL );
-			pEntity->IncrementInterpolationFrame();
+			pEntity->AddEffects( EF_NOINTERP );
 #if !defined ( DISABLE_DEBUG_HISTORY )
 			if ( !IsMarkedForDeletion() )
 			{
@@ -1953,12 +1963,13 @@ void CProp_Portal::UpdatePortalLinkage( void )
 			CEnvMicrophone *pMicrophone = static_cast<CEnvMicrophone*>( m_hMicrophone.Get() );
 			pMicrophone->AddSpawnFlags( SF_MICROPHONE_IGNORE_NONATTENUATED );
 			pMicrophone->Teleport( &GetAbsOrigin(), &GetAbsAngles(), &vZero );
-			inputdata_t in;
-			pMicrophone->InputEnable( in );
+            inputdata_t a;
+			pMicrophone->InputEnable( a );
 
 			CSpeaker *pSpeaker = static_cast<CSpeaker*>( m_hSpeaker.Get() );
 			pSpeaker->Teleport( &GetAbsOrigin(), &GetAbsAngles(), &vZero );
-			pSpeaker->InputTurnOn( in );
+            inputdata_t b;
+			pSpeaker->InputTurnOn( b );
 
 			UpdatePortalTeleportMatrix();
 		}
@@ -2082,16 +2093,16 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 	{
 		CEnvMicrophone *pMicrophone = static_cast<CEnvMicrophone*>( m_hMicrophone.Get() );
 		pMicrophone->Teleport( &vOrigin, &qAngles, 0 );
-		inputdata_t in;
-		pMicrophone->InputEnable( in );
+        inputdata_t a;
+		pMicrophone->InputEnable( a );
 	}
 
 	if ( m_hSpeaker )
 	{
 		CSpeaker *pSpeaker = static_cast<CSpeaker*>( m_hSpeaker.Get() );
 		pSpeaker->Teleport( &vOrigin, &qAngles, 0 );
-		inputdata_t in;
-		pSpeaker->InputTurnOn( in );
+        inputdata_t a;
+		pSpeaker->InputTurnOn( a );
 	}
 
 	CreateSounds();
@@ -2201,7 +2212,15 @@ void CProp_Portal::InputSetActivatedState( inputdata_t &inputdata )
 			controller.SoundChangeVolume( m_pAmbientSound, 0.0, 0.0 );
 		}
 
-		StopParticleEffects( this );
+		// This code replaces call for StopParticleEffects( this );
+		CEffectData	data;
+#ifdef CLIENT_DLL
+		data.m_hEntity = this;
+#else
+		data.m_nEntIndex = this->entindex();
+#endif
+		DispatchEffect("ParticleEffectStop", data);
+		//
 		
 	}
 

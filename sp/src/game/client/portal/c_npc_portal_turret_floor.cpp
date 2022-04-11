@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -164,5 +164,5 @@ void C_NPC_Portal_FloorTurret::LaserOn( void )
 
 float C_NPC_Portal_FloorTurret::LaserEndPointSize( void )
 {
-	return ( ( MAX( 0.0f, sinf( gpGlobals->curtime * M_PI + m_fPulseOffset ) ) ) * FLOOR_TURRET_PORTAL_END_POINT_PULSE_SCALE + 3.0f ) * ( IsX360() ? ( 3.0f ) : ( 1.5f ) );
+	return ( ( max( 0.0f, sinf( gpGlobals->curtime * M_PI + m_fPulseOffset ) ) ) * FLOOR_TURRET_PORTAL_END_POINT_PULSE_SCALE + 3.0f ) * ( IsX360() ? ( 3.0f ) : ( 1.5f ) );
 }

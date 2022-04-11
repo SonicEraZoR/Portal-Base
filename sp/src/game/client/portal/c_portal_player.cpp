@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose:		Player for .
 //
@@ -22,9 +22,6 @@
 #include "portal_shareddefs.h"
 #include "ivieweffects.h"		// for screenshake
 #include "prop_portal_shared.h"
-
-// NVNT for fov updates
-#include "haptics/ihaptics.h"
 
 
 // Don't alias here
@@ -282,7 +279,7 @@ RecvPropEHandle( RECVINFO( m_pHeldObjectPortal ) ),
 RecvPropBool( RECVINFO( m_bPitchReorientation ) ),
 RecvPropEHandle( RECVINFO( m_hPortalEnvironment ) ),
 RecvPropEHandle( RECVINFO( m_hSurroundingLiquidPortal ) ),
-RecvPropBool( RECVINFO( m_bSuppressingCrosshair ) ),
+RecvPropBool(RECVINFO(m_bCrosshairSuppressed)),
 END_RECV_TABLE()
 
 
@@ -305,6 +302,8 @@ void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flD
 C_Portal_Player::C_Portal_Player()
 : m_iv_angEyeAngles( "C_Portal_Player::m_iv_angEyeAngles" )
 {
+	m_bCrosshairSuppressed = false;
+
 	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
 
 	m_iIDEntIndex = 0;
@@ -837,7 +836,7 @@ int C_Portal_Player::DrawModel( int flags )
 
 	if( IsLocalPlayer() )
 	{
-		if ( !C_BasePlayer::ShouldDrawThisPlayer() )
+		if ( !C_BasePlayer::ShouldDrawLocalPlayer() )
 		{
 			if ( !g_pPortalRender->IsRenderingPortal() )
 				return 0;
@@ -1190,7 +1189,7 @@ float C_Portal_Player::GetFOV( void )
 	int min_fov = GetMinFOV();
 
 	// Don't let it go too low
-	flFOVOffset = MAX( min_fov, flFOVOffset );
+	flFOVOffset = max( min_fov, flFOVOffset );
 
 	return flFOVOffset;
 }
@@ -1429,7 +1428,7 @@ void C_Portal_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNe
 		{
 			origin = pRagdoll->GetAbsOrigin();
 #if !PORTAL_HIDE_PLAYER_RAGDOLL
-			origin.z += VEC_DEAD_VIEWHEIGHT_SCALED( this ).z; // look over ragdoll, not through
+			origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
 #endif //PORTAL_HIDE_PLAYER_RAGDOLL
 		}
 
@@ -1442,7 +1441,7 @@ void C_Portal_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNe
 
 		VectorNormalize( vForward );
 #if !PORTAL_HIDE_PLAYER_RAGDOLL
-		VectorMA( origin, -CHASE_CAM_DISTANCE_MAX, vForward, eyeOrigin );
+		VectorMA( origin, -CHASE_CAM_DISTANCE, vForward, eyeOrigin );
 #endif //PORTAL_HIDE_PLAYER_RAGDOLL
 
 		Vector WALL_MIN( -WALL_OFFSET, -WALL_OFFSET, -WALL_OFFSET );
@@ -1489,12 +1488,6 @@ void C_Portal_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNe
 	m_qEyeAngles_LastCalcView = qEyeAngleBackup;
 	m_ptEyePosition_LastCalcView = ptEyePositionBackup;
 	m_pPortalEnvironment_LastCalcView = pPortalBackup;
-
-#ifdef WIN32
-	// NVNT Inform haptics module of fov
-	if(IsLocalPlayer())
-		haptics->UpdatePlayerFOV(fov);
-#endif
 }
 
 void C_Portal_Player::SetLocalViewAngles( const QAngle &viewAngles )
@@ -1651,6 +1644,11 @@ void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& 
 
 		vm->CalcViewModelView( this, vInterpEyeOrigin, eyeAngles );
 	}
+}
+
+bool C_Portal_Player::IsSuppressingCrosshair()
+{
+	return m_bCrosshairSuppressed;
 }
 
 bool LocalPlayerIsCloseToPortal( void )

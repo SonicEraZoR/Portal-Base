@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -29,6 +29,9 @@
 #define PORTALGUN_PORTAL2_FIRED_LAST_GLOW "sprites/orangelight"
 #define PORTALGUN_PORTAL_MUZZLE_GLOW_SPRITE "sprites/portalgun_effects"
 #define PORTALGUN_PORTAL_TUBE_BEAM_SPRITE "sprites/portalgun_effects"
+
+#define	PORTALGUN_FASTEST_REFIRE_TIME		0.1f
+#define	PORTALGUN_FASTEST_DRY_REFIRE_TIME	0.2f
 
 enum
 {

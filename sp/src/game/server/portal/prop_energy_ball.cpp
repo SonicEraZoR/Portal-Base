@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines a combine ball and a combine ball launcher which have certain properties
 //			overwritten to make use of them in portal game play.

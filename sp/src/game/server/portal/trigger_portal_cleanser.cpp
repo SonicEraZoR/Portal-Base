@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A volume which bumps portal placement. Keeps a global list loaded in from the map
 //			and provides an interface with which prop_portal can get this list and avoid successfully
@@ -201,11 +201,6 @@ void CTriggerPortalCleanser::Touch( CBaseEntity *pOther )
 		if ( pBaseAnimating->NameMatches( "box" ) )
 		{
 			m_OnDissolveBox.FireOutput( pOther, this );
-		}
-
-		if ( FClassnameIs( pBaseAnimating, "updateitem2" ) )
-		{
-			pBaseAnimating->EmitSound( "UpdateItem.Fizzle" );
 		}
 
 		Vector vOldVel;

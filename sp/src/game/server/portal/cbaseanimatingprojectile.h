@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base class for simple projectiles
 //
@@ -25,7 +25,7 @@ class CBaseAnimatingProjectile : public CBaseAnimating
 public:
 	void Touch( CBaseEntity *pOther );
 
-	void Spawn(	char *pszModel,
+	void CBaseAnimatingProjectile::Spawn(	char *pszModel,
 											const Vector &vecOrigin,
 											const Vector &vecVelocity,
 											edict_t *pOwner,

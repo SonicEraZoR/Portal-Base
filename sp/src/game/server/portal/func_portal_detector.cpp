@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A volume in which no portal can be placed. Keeps a global list loaded in from the map
 //			and provides an interface with which prop_portal can get this list and avoid successfully

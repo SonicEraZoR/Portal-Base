@@ -1,18 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Game rules for Portal.
 //
 //=============================================================================//
-
-#ifdef PORTAL_MP
-
-
-
-#include "portal_mp_gamerules.h" //redirect to multiplayer gamerules in multiplayer builds
-
-
-
-#else
 
 #ifndef PORTAL_GAMERULES_H
 #define PORTAL_GAMERULES_H
@@ -26,10 +16,6 @@
 #ifdef CLIENT_DLL
 	#define CPortalGameRules C_PortalGameRules
 	#define CPortalGameRulesProxy C_PortalGameRulesProxy
-#endif
-
-#if defined ( CLIENT_DLL )
-#include "steam/steam_api.h"
 #endif
 
 
@@ -88,8 +74,6 @@ private:
 	virtual float			GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
 
 	virtual bool			ShouldBurningPropsEmitLight();
-
-	//bool ShouldRemoveRadio( void ); only used in portal arg I think so no need for this
 	
 public:
 
@@ -112,5 +96,6 @@ inline CPortalGameRules* PortalGameRules()
 	return static_cast<CPortalGameRules*>(g_pGameRules);
 }
 
+
+
 #endif // PORTAL_GAMERULES_H
-#endif

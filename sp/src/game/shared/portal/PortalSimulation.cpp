@@ -1,4 +1,4 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -2144,7 +2144,7 @@ void CPortalSimulator::CreatePolyhedrons( void )
 
 				CPolyhedron *PolyhedronArray[1024];
 				int iPolyhedronCount = 0;
-				if (pProp->GetSolid() != SOLID_NONE) // makes player not get stuck in non-solid static props
+				if (pProp->GetSolid() != SOLID_NONE)
 				{
 					iPolyhedronCount = g_StaticCollisionPolyhedronCache.GetStaticPropPolyhedrons(pProp, PolyhedronArray, 1024);
 				}
@@ -3115,8 +3115,7 @@ void CPSCollisionEntity::Spawn( void )
 	s_PortalSimulatorCollisionEntities[entindex()] = true;
 	VPhysicsSetObject( NULL );
 	AddFlag( FL_WORLDBRUSH );
-	AddEffects( EF_NODRAW | EF_NOSHADOW | EF_NORECEIVESHADOW );
-	IncrementInterpolationFrame();
+	AddEFlags( EF_NODRAW | EF_NOINTERP | EF_NOSHADOW | EF_NORECEIVESHADOW );
 }
 
 void CPSCollisionEntity::Activate( void )
