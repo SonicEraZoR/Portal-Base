@@ -23,7 +23,6 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
-#include <portal/IModSettingsPanel.h>
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -42,7 +41,6 @@ void MP3Player_Destroy();
 vgui::IInputInternal *g_InputInternal = NULL;
 
 #include <vgui_controls/Controls.h>
-#include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -158,8 +156,6 @@ static void VGui_OneTimeInit()
 		return;
 	initialized = true;
 
-	g_pVGuiLocalize->AddFile("resource/modsettings_%language%.txt");
-
 	vgui::Panel::AddPropertyConverter( "CHudTextureHandle", &textureHandleConverter );
 
 
@@ -201,10 +197,6 @@ void VGui_CreateGlobalPanels( void )
 {
 	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
 	VPANEL toolParent = enginevgui->GetPanel( PANEL_TOOLS );
-
-	VPANEL GameUiDll = enginevgui->GetPanel(PANEL_GAMEUIDLL);
-	modsettingspanel->Create(GameUiDll);
-
 #if defined( TRACK_BLOCKING_IO )
 	VPANEL gameDLLPanel = enginevgui->GetPanel( PANEL_GAMEDLL );
 #endif
@@ -233,7 +225,6 @@ void VGui_CreateGlobalPanels( void )
 void VGui_Shutdown()
 {
 	VGUI_DestroyClientDLLRootPanel();
-	modsettingspanel->Destroy();
 
 #ifndef _X360
 	MP3Player_Destroy();
