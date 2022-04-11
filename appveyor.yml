@@ -29,12 +29,14 @@ for:
 
   after_build:
     - 7z a hl2-with-ashpd-win.zip .\sp\game\hl2_with_ashpd\bin\server.* .\sp\game\hl2_with_ashpd\bin\client.*
+    - 7z a hl2ep1_with_ashpd-win.zip .\sp\game\hl2ep1_with_ashpd\bin\server.* .\sp\game\hl2ep1_with_ashpd\bin\client.*
     - 7z a hl2ep2_with_ashpd-win.zip .\sp\game\hl2ep2_with_ashpd\bin\server.* .\sp\game\hl2ep2_with_ashpd\bin\client.*
 
   test: off
 
   artifacts:
     - path: hl2-with-ashpd-win.zip
+    - path: hl2ep1-with-ashpd-win.zip
     - path: hl2ep2-with-ashpd-win.zip
 -
   matrix:
@@ -60,11 +62,13 @@ for:
   after_build:
     - |-
       cd $APPVEYOR_BUILD_FOLDER
-      tar -C sp/game/hl2_with_ashpd/bin --exclude=client_srv* -cvzf hl2-with-ashpd-linux.tar.gz .
+      tar -C sp/game/hl2_with_ashpd/bin --exclude=client_srv* -cvzf hl2-with-ashpd-linux.tar.gz 
+      tar -C sp/game/hl2ep1_with_ashpd/bin --exclude=client_srv* -cvzf hl2ep1-with-ashpd-linux.tar.gz .
       tar -C sp/game/hl2ep2_with_ashpd/bin --exclude=client_srv* -cvzf hl2ep2-with-ashpd-linux.tar.gz .
 
   test: off
 
   artifacts:
     - path: hl2-with-ashpd-linux.tar.gz
+    - path: hl2ep1-with-ashpd-linux.tar.gz
     - path: hl2ep2-with-ashpd-linux.tar.gz
