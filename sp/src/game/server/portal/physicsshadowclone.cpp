@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Clones a physics object (usually with a matrix transform applied)
 //
@@ -396,7 +396,7 @@ void CPhysicsShadowClone::SyncEntity( bool bPullChanges )
 	
 	if( vVelocity != pDest->GetAbsVelocity() )
 	{
-		//pDest->AddEffects( EF_NOINTERP );
+		//pDest->IncrementInterpolationFrame();
 		pDest->SetAbsVelocity( vec3_origin ); //the two step process helps, I don't know why, but it does
 		pDest->ApplyAbsVelocityImpulse( vVelocity );
 	}

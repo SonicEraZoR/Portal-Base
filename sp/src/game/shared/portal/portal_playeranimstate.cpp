@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2003, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -111,7 +111,7 @@ Activity CPortalPlayerAnimState::TranslateActivity( Activity actDesired )
 
 	if ( GetPortalPlayer()->GetActiveWeapon() )
 	{
-		translateActivity = GetPortalPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, false );
+		translateActivity = GetPortalPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, NULL );
 	}
 
 	return translateActivity;

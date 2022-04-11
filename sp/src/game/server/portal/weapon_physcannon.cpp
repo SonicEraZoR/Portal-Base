@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics cannon
 //
@@ -44,6 +44,8 @@
 #include "ai_interactions.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+// NVNT haptic utils
+#include "haptics/haptic_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -517,6 +519,9 @@ private:
 
 	IPhysicsMotionController *m_controller;
 
+	// NVNT player controlling this grab controller
+	CBasePlayer*	m_pControllingPlayer;
+
 	bool			m_bAllowObjectOverhead; // Can the player hold this object directly overhead? (Default is NO)
 
 	//set when a held entity is penetrating another through a portal. Needed for special fixes
@@ -571,6 +576,8 @@ CGrabController::CGrabController( void )
 	m_vecPreferredCarryAngles = vec3_angle;
 	m_bHasPreferredCarryAngles = false;
 	m_flDistanceOffset = 0;
+	// NVNT constructing m_pControllingPlayer to NULL
+	m_pControllingPlayer = NULL;
 }
 
 CGrabController::~CGrabController( void )
@@ -878,6 +885,9 @@ void CGrabController::AttachEntity( CBasePlayer *pPlayer, CBaseEntity *pEntity, 
 		pList[i]->SetMass( REDUCED_CARRY_MASS / flFactor );
 		pList[i]->SetDamping( NULL, &damping );
 	}
+
+	// NVNT setting m_pControllingPlayer to the player attached
+	m_pControllingPlayer = pPlayer;
 	
 	// Give extra mass to the phys object we're actually picking up
 	pPhys->SetMass( REDUCED_CARRY_MASS );
@@ -1166,7 +1176,10 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	}
 	
 	m_grabController.AttachEntity( pPlayer, pObject, pPhysics, false, vec3_origin, false );
-	
+#ifdef WIN32
+	// NVNT apply a downward force to simulate the mass of the held object.
+	HapticSetConstantForce(m_pPlayer,clamp(m_grabController.GetLoadWeight()*0.1,1,6)*Vector(0,-1,0));
+#endif	
 	m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 	m_pPlayer->SetUseEntity( this );
 }
@@ -1187,7 +1200,11 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 	}
 
 	m_grabController.DetachEntity( bClearVelocity );
-
+#ifdef WIN32
+	// NVNT if we have a player, issue a zero constant force message
+	if(m_pPlayer)
+		HapticSetConstantForce(m_pPlayer,Vector(0,0,0));
+#endif
 	if ( pObject != NULL )
 	{
 		if ( !ToPortalPlayer( m_pPlayer )->m_bSilentDropAndPickup )
@@ -2551,6 +2568,10 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 
 	if( pOwner )
 	{
+#ifdef WIN32
+		// NVNT set the players constant force to simulate holding mass
+		HapticSetConstantForce(pOwner,clamp(m_grabController.GetLoadWeight()*0.05,1,5)*Vector(0,-1,0));
+#endif
 		pOwner->EnableSprint( false );
 
 		float	loadWeight = ( 1.0f - GetLoadPercentage() );
@@ -3118,6 +3139,10 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 		{
 			pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
 		}
+#ifdef WIN32
+		// NVNT clear constant force
+		HapticSetConstantForce(pOwner,Vector(0,0,0));
+#endif
 	}
 
 	CBaseEntity *pObject = m_grabController.GetAttached();
@@ -4799,7 +4824,7 @@ CBaseEntity *GetPlayerHeldEntity( CBasePlayer *pPlayer )
 	return pObject;
 }
 
-CBasePlayer *GetPlayerHoldingEntity(CBaseEntity *pEntity)
+CBasePlayer *GetPlayerHoldingEntity( CBaseEntity *pEntity )
 {
 	for( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,39 +6,33 @@
 //
 //=============================================================================//
 #include "cbase.h"
+#include "ivmodemanager.h"
 #include "clientmode_hlnormal.h"
+#include "panelmetaclassmgr.h"
+#include "c_playerresource.h"
+#include "c_portal_player.h"
 #include "clientmode_portal.h"
-#include "vgui_int.h"
-#include "hud.h"
-#include <vgui/IInput.h>
-#include <vgui/IPanel.h>
-#include <vgui/ISurface.h>
-#include <vgui_controls/AnimationController.h>
-#include "iinput.h"
-#include "ienginevgui.h"
+#include "usermessages.h"
+#include "prediction.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern bool g_bRollingCredits;
-
-ConVar fov_desired("fov_desired", "75", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 75.0, true, 90.0);
-
-//-----------------------------------------------------------------------------
-// Globals
-//-----------------------------------------------------------------------------
-vgui::HScheme g_hVGuiCombineScheme = 0;
+// default FOV for HL2
+ConVar default_fov( "default_fov", "75", FCVAR_CHEAT );
+ConVar fov_desired( "fov_desired", "75", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 75.0, true, 90.0 );
 
 
-// Instance the singleton and expose the interface to it.
-IClientMode *GetClientModeNormal()
-{
-	static ClientModePortalNormal g_ClientModeNormal;
-	return &g_ClientModeNormal;
-}
+// The current client mode. Always ClientModeNormal in HL.
+IClientMode *g_pClientMode = NULL;
 
 //extern EHANDLE g_eKillTarget1;
 //extern EHANDLE g_eKillTarget2;
+
+vgui::HScheme g_hVGuiCombineScheme = 0;
+
+#define SCREEN_FILE		"scripts/vgui_screens.txt"
+
 //void MsgFunc_KillCam(bf_read &msg) 
 //{
 //	C_Portal_Player *pPlayer = C_Portal_Player::GetLocalPortalPlayer();
@@ -103,47 +97,122 @@ protected:
 		SetPaintBackgroundEnabled( false );
 	}
 
-	virtual void CreateDefaultPanels(void) { /* don't create any panels yet*/ };
+	virtual IViewPortPanel *CreatePanelByName( const char *szPanelName );
 };
 
-
-//-----------------------------------------------------------------------------
-// ClientModePortalNormal implementation
-//-----------------------------------------------------------------------------
-ClientModePortalNormal::ClientModePortalNormal()
+IViewPortPanel* CHudViewport::CreatePanelByName( const char *szPanelName )
 {
-	m_pViewport = new CHudViewport();
-	m_pViewport->Start(gameuifuncs, gameeventmanager);
+	/*IViewPortPanel* newpanel = NULL;
+
+	if ( Q_strcmp( PANEL_SCOREBOARD, szPanelName) == 0 )
+	{
+		newpanel = new CHL2MPClientScoreBoardDialog( this );
+		return newpanel;
+	}
+	else if ( Q_strcmp(PANEL_INFO, szPanelName) == 0 )
+	{
+		newpanel = new CHL2MPTextWindow( this );
+		return newpanel;
+	}*/
+
+	return BaseClass::CreatePanelByName( szPanelName ); 
+}
+
+
+class CHLModeManager : public IVModeManager
+{
+public:
+	CHLModeManager( void );
+	virtual		~CHLModeManager( void );
+
+	virtual void	Init( void );
+	virtual void	SwitchMode( bool commander, bool force );
+	virtual void	OverrideView( CViewSetup *pSetup );
+	virtual void	CreateMove( float flInputSampleTime, CUserCmd *cmd );
+	virtual void	LevelInit( const char *newmap );
+	virtual void	LevelShutdown( void );
+};
+
+CHLModeManager::CHLModeManager( void )
+{
+}
+
+CHLModeManager::~CHLModeManager( void )
+{
+}
+
+void CHLModeManager::Init( void )
+{
+	g_pClientMode = GetClientModeNormal();
+	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
+}
+
+void CHLModeManager::SwitchMode( bool commander, bool force )
+{
+}
+
+void CHLModeManager::OverrideView( CViewSetup *pSetup )
+{
+}
+
+void CHLModeManager::CreateMove( float flInputSampleTime, CUserCmd *cmd )
+{
+}
+
+void CHLModeManager::LevelInit( const char *newmap )
+{
+	g_pClientMode->LevelInit( newmap );
+
+	if ( g_nKillCamMode > OBS_MODE_NONE )
+	{
+		g_bForceCLPredictOff = false;
+	}
+
+	g_nKillCamMode		= OBS_MODE_NONE;
+	//g_nKillCamTarget1	= 0;
+	//g_nKillCamTarget2	= 0;
+}
+
+void CHLModeManager::LevelShutdown( void )
+{
+	g_pClientMode->LevelShutdown();
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+//-----------------------------------------------------------------------------
+ClientModePortalNormal::ClientModePortalNormal()
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: If you don't know what a destructor is by now, you are probably going to get fired
 //-----------------------------------------------------------------------------
 ClientModePortalNormal::~ClientModePortalNormal()
 {
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void ClientModePortalNormal::Init()
 {
 	BaseClass::Init();
 
-	// Load up the combine control panel scheme
-	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx(enginevgui->GetPanel(PANEL_CLIENTDLL), IsXbox() ? "resource/ClientScheme.res" : "resource/CombinePanelScheme.res", "CombineScheme");
-	if (!g_hVGuiCombineScheme)
-	{
-		Warning("Couldn't load combine panel scheme!\n");
-	}
+	//usermessages->HookMessage( "KillCam", MsgFunc_KillCam );
 }
 
-bool ClientModePortalNormal::ShouldDrawCrosshair(void)
+void ClientModePortalNormal::InitViewport()
 {
-	return (g_bRollingCredits == false);
+	m_pViewport = new CHudViewport();
+	m_pViewport->Start( gameuifuncs, gameeventmanager );
 }
+
+ClientModePortalNormal g_ClientModeNormal;
+
+IClientMode *GetClientModeNormal()
+{
+	return &g_ClientModeNormal;
+}
+
 
 ClientModePortalNormal* GetClientModePortalNormal()
 {
@@ -151,3 +220,8 @@ ClientModePortalNormal* GetClientModePortalNormal()
 
 	return static_cast< ClientModePortalNormal* >( GetClientModeNormal() );
 }
+
+
+static CHLModeManager g_HLModeManager;
+IVModeManager *modemanager = &g_HLModeManager;
+

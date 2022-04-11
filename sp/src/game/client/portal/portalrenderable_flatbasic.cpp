@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -454,8 +454,8 @@ void CPortalRenderable_FlatBasic::RenderPortalViewToBackBuffer( CViewRender *pVi
 
 	portalView.width = cameraView.width;
 	portalView.height = cameraView.height;
-	portalView.x = 0;
-	portalView.y = 0;
+	portalView.x = cameraView.x;
+	portalView.y = cameraView.y;
 	portalView.origin = ptPOVOrigin;
 	portalView.angles = qPOVAngles;
 	portalView.fov = cameraView.fov;
@@ -793,7 +793,9 @@ void CPortalRenderable_FlatBasic::DrawComplexPortalMesh( const IMaterial *pMater
 
 void CPortalRenderable_FlatBasic::DrawDepthDoublerMesh( float fForwardOffsetModifier )
 {
-	m_Materials.m_pDepthDoubleViewMatrixVar->SetMatrixValue( m_InternallyMaintainedData.m_DepthDoublerTextureView );
+	IMaterialVar *pDepthDoubleViewMatrixVar = s_FlatBasicPortalDrawingMaterials.m_Materials.m_PortalDepthDoubler->FindVar( "$alternateviewmatrix", NULL, false );
+	if ( pDepthDoubleViewMatrixVar )
+		pDepthDoubleViewMatrixVar->SetMatrixValue( m_InternallyMaintainedData.m_DepthDoublerTextureView );
 	DrawSimplePortalMesh( m_Materials.m_PortalDepthDoubler, fForwardOffsetModifier );
 }
 

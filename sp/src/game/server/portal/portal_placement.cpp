@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -859,7 +859,7 @@ bool FitPortalOnSurface( const CProp_Portal *pIgnorePortal, Vector &vOrigin, con
 				// Check if portal is aligned perfectly with intersection normals
 				float fPortalDot = sFitData[ piIntersectionIndex[ iIndex1 ] ].vIntersectionDirection.Dot( vRight );
 
-				if ( fPortalDot < 0.0001f && fPortalDot > -0.0001f || fPortalDot > 0.9999f || fPortalDot < -0.9999f )
+				if ( ( fPortalDot < 0.0001f && fPortalDot > -0.0001f ) || fPortalDot > 0.9999f || fPortalDot < -0.9999f )
 				{
 					float fBump1 = CalcDistanceToLine( pptCorner[ piIntersectionIndex[ iIndex1 ] ], 
 						sFitData[ piIntersectionIndex[ iIndex1 ] ].ptIntersectionPoint, 
