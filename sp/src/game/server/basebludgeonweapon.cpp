@@ -298,11 +298,6 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 	if ( !pOwner )
 		return;
 
-#ifdef PORTAL
-	CProp_Portal *pSwangThroughPortal = NULL;
-	float fPortalFraction = 2.0f;
-#endif
-
 	pOwner->RumbleEffect( RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART );
 
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
@@ -311,14 +306,7 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 	forward = pOwner->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT, GetRange() );
 
 	Vector swingEnd = swingStart + forward * GetRange();
-#ifdef PORTAL
-	Ray_t rayBullet;
-	rayBullet.Init(swingStart, swingEnd);
-	pSwangThroughPortal = UTIL_Portal_FirstAlongRay(rayBullet, fPortalFraction);
-	UTIL_Portal_TraceRay_Bullets(pSwangThroughPortal, rayBullet, MASK_SHOT, pOwner, COLLISION_GROUP_NONE, &traceHit);
-#else
 	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
-#endif
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	// Like bullets, bludgeon traces have to trace against triggers.
