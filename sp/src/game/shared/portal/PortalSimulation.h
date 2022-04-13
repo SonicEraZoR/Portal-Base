@@ -116,6 +116,7 @@ struct PS_PlacementData_t //stuff useful for geometric operations
 struct PS_SD_Static_World_Brushes_t
 {
 	CUtlVector<CPolyhedron *> Polyhedrons; //the building blocks of more complex collision
+	CUtlVector<CPolyhedron *> DisPolyhedrons; //the building blocks of more complex collision (displacement)
 	CPhysCollide *pCollideable;
 	CPhysCollide *pDisCollideable;
 #ifndef CLIENT_DLL
@@ -176,6 +177,7 @@ struct PS_SD_Static_Wall_Local_Tube_t //a minimal tube, an object must fit insid
 struct PS_SD_Static_Wall_Local_Brushes_t 
 {
 	CUtlVector<CPolyhedron *> Polyhedrons; //the building blocks of more complex collision
+	CUtlVector<CPolyhedron *> DisPolyhedrons; //the building blocks of more complex collision  (displacement)
 	CPhysCollide *pCollideable;
 	CPhysCollide *pDisCollideable;
 

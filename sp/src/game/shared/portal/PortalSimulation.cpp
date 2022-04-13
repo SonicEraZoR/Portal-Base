@@ -45,10 +45,6 @@ static ConVar sv_portal_collision_sim_bounds_x( "sv_portal_collision_sim_bounds_
 static ConVar sv_portal_collision_sim_bounds_y( "sv_portal_collision_sim_bounds_y", "200", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 static ConVar sv_portal_collision_sim_bounds_z( "sv_portal_collision_sim_bounds_z", "252", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 
-static ConVar sv_portal_collision_sim_dis_bounds_x("sv_portal_collision_sim_dis_bounds_x", "300", FCVAR_REPLICATED, "Size of box used to grab collision geometry OF DISPLACEMENTS ONLY around placed portals. These should be at the default size or larger only!"); // without increasing this i sometimes still fall through the floor near displacements
-static ConVar sv_portal_collision_sim_dis_bounds_y("sv_portal_collision_sim_dis_bounds_y", "300", FCVAR_REPLICATED, "Size of box used to grab collision geometry OF DISPLACEMENTS ONLY around placed portals. These should be at the default size or larger only!"); // without increasing this i sometimes still fall through the floor near displacements
-static ConVar sv_portal_collision_sim_dis_bounds_z("sv_portal_collision_sim_dis_bounds_z", "252", FCVAR_REPLICATED, "Size of box used to grab collision geometry OF DISPLACEMENTS ONLY around placed portals. These should be at the default size or larger only!");
-
 #define DEBUG_PORTAL_SIMULATION_CREATION_TIMES //define to output creation timings to developer 2
 #define DEBUG_PORTAL_COLLISION_ENVIRONMENTS //define this to allow for glview collision dumps of portal simulators
 
@@ -101,6 +97,7 @@ static int s_iPortalSimulatorGUID = 0; //used in standalone function that have n
 
 
 static void ConvertBrushListToClippedPolyhedronList( const int *pBrushes, int iBrushCount, const float *pOutwardFacingClipPlanes, int iClipPlaneCount, float fClipEpsilon, CUtlVector<CPolyhedron *> *pPolyhedronList );
+static void ConvertDisplacementListToClippedPolyhedronList(const float *pOutwardFacingClipPlanes, int iClipPlaneCount, float fClipEpsilon, CUtlVector<CPolyhedron *> *pPolyhedronList);
 static void ClipPolyhedrons( CPolyhedron * const *pExistingPolyhedrons, int iPolyhedronCount, const float *pOutwardFacingClipPlanes, int iClipPlaneCount, float fClipEpsilon, CUtlVector<CPolyhedron *> *pPolyhedronList );
 static inline CPolyhedron *TransformAndClipSinglePolyhedron( CPolyhedron *pExistingPolyhedron, const VMatrix &Transform, const float *pOutwardFacingClipPlanes, int iClipPlaneCount, float fCutEpsilon, bool bUseTempMemory );
 static int GetEntityPhysicsObjects( IPhysicsEnvironment *pEnvironment, CBaseEntity *pEntity, IPhysicsObject **pRetList, int iRetListArraySize );
@@ -1739,50 +1736,9 @@ void CPortalSimulator::CreateLocalCollision( void )
 	if( m_InternalData.Simulation.Static.World.Brushes.Polyhedrons.Count() != 0 )
 		m_InternalData.Simulation.Static.World.Brushes.pCollideable = ConvertPolyhedronsToCollideable( m_InternalData.Simulation.Static.World.Brushes.Polyhedrons.Base(), m_InternalData.Simulation.Static.World.Brushes.Polyhedrons.Count() );
 
-	Assert(m_InternalData.Simulation.Static.World.Brushes.pDisCollideable == NULL);
-	Vector vOBBForward = m_InternalData.Placement.vForward;
-	Vector vOBBRight = m_InternalData.Placement.vRight;
-	Vector vOBBUp = m_InternalData.Placement.vUp;
-
-	//scale the extents to usable sizes
-	float flScaleX = sv_portal_collision_sim_dis_bounds_x.GetFloat();
-	if (flScaleX < 200.0f)
-		flScaleX = 200.0f;
-	float flScaleY = sv_portal_collision_sim_dis_bounds_y.GetFloat();
-	if (flScaleY < 200.0f)
-		flScaleY = 200.0f;
-	float flScaleZ = sv_portal_collision_sim_dis_bounds_z.GetFloat();
-	if (flScaleZ < 252.0f)
-		flScaleZ = 252.0f;
-
-	vOBBForward *= flScaleX;
-	vOBBRight *= flScaleY;
-	vOBBUp *= flScaleZ;	// default size for scale z (252) is player (height + portal half height) * 2. Any smaller than this will allow for players to 
-	// reach unsimulated geometry before an end touch with teh portal.
-
-	Vector ptOBBOrigin = m_InternalData.Placement.ptCenter;
-	ptOBBOrigin -= vOBBRight / 2.0f;
-	ptOBBOrigin -= vOBBUp / 2.0f;
-
-	Vector vAABBMins, vAABBMaxs;
-	vAABBMins = vAABBMaxs = ptOBBOrigin;
-
-	for (int i = 1; i != 8; ++i)
-	{
-		Vector ptTest = ptOBBOrigin;
-		if (i & (1 << 0)) ptTest += vOBBForward;
-		if (i & (1 << 1)) ptTest += vOBBRight;
-		if (i & (1 << 2)) ptTest += vOBBUp;
-
-		if (ptTest.x < vAABBMins.x) vAABBMins.x = ptTest.x;
-		if (ptTest.y < vAABBMins.y) vAABBMins.y = ptTest.y;
-		if (ptTest.z < vAABBMins.z) vAABBMins.z = ptTest.z;
-		if (ptTest.x > vAABBMaxs.x) vAABBMaxs.x = ptTest.x;
-		if (ptTest.y > vAABBMaxs.y) vAABBMaxs.y = ptTest.y;
-		if (ptTest.z > vAABBMaxs.z) vAABBMaxs.z = ptTest.z;
-	}
-
-	m_InternalData.Simulation.Static.World.Brushes.pDisCollideable = enginetrace->GetCollidableFromDisplacementsInAABB(vAABBMins, vAABBMaxs); // with displacements we can apparently just get collidable in AABB with this method
+	Assert(m_InternalData.Simulation.Static.World.Brushes.pDisCollideable == NULL); //Be sure to find graceful fixes for asserts, performance is a big concern with portal simulation
+	if (m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Count() != 0)
+		m_InternalData.Simulation.Static.World.Brushes.pDisCollideable = ConvertPolyhedronsToCollideable(m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Base(), m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Count());
 
 	STOPDEBUGTIMER( worldBrushTimer );
 	DEBUGTIMERONLY( DevMsg( 2, "[PSDT:%d] %sWorld Brushes=%fms\n", GetPortalSimulatorGUID(), TABSPACING, worldBrushTimer.GetDuration().GetMillisecondsF() ); );
@@ -1823,51 +1779,11 @@ void CPortalSimulator::CreateLocalCollision( void )
 		Assert( m_InternalData.Simulation.Static.Wall.Local.Brushes.pCollideable == NULL ); //Be sure to find graceful fixes for asserts, performance is a big concern with portal simulation
 		if( m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons.Count() != 0 )
 			m_InternalData.Simulation.Static.Wall.Local.Brushes.pCollideable = ConvertPolyhedronsToCollideable( m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons.Base(), m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons.Count() );
+		
+		Assert(m_InternalData.Simulation.Static.Wall.Local.Brushes.pDisCollideable == NULL); //Be sure to find graceful fixes for asserts, performance is a big concern with portal simulation
+		if (m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Count() != 0)
+			m_InternalData.Simulation.Static.Wall.Local.Brushes.pDisCollideable = ConvertPolyhedronsToCollideable(m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Base(), m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Count());
 
-		Assert(m_InternalData.Simulation.Static.Wall.Local.Brushes.pDisCollideable == NULL);
-		Vector vOBBForward = m_InternalData.Placement.vForward;
-		Vector vOBBRight = m_InternalData.Placement.vRight;
-		Vector vOBBUp = m_InternalData.Placement.vUp;
-
-		//scale the extents to usable sizes
-		float flScaleX = sv_portal_collision_sim_dis_bounds_x.GetFloat();
-		if (flScaleX < 200.0f)
-			flScaleX = 200.0f;
-		float flScaleY = sv_portal_collision_sim_dis_bounds_y.GetFloat();
-		if (flScaleY < 200.0f)
-			flScaleY = 200.0f;
-		float flScaleZ = sv_portal_collision_sim_dis_bounds_z.GetFloat();
-		if (flScaleZ < 252.0f)
-			flScaleZ = 252.0f;
-
-		vOBBForward *= flScaleX;
-		vOBBRight *= flScaleY;
-		vOBBUp *= flScaleZ;	// default size for scale z (252) is player (height + portal half height) * 2. Any smaller than this will allow for players to 
-		// reach unsimulated geometry before an end touch with teh portal.
-
-		Vector ptOBBOrigin = m_InternalData.Placement.ptCenter;
-		ptOBBOrigin -= vOBBRight / 2.0f;
-		ptOBBOrigin -= vOBBUp / 2.0f;
-
-		Vector vAABBMins, vAABBMaxs;
-		vAABBMins = vAABBMaxs = ptOBBOrigin;
-
-		for (int i = 1; i != 8; ++i)
-		{
-			Vector ptTest = ptOBBOrigin;
-			if (i & (1 << 0)) ptTest += vOBBForward;
-			if (i & (1 << 1)) ptTest += vOBBRight;
-			if (i & (1 << 2)) ptTest += vOBBUp;
-
-			if (ptTest.x < vAABBMins.x) vAABBMins.x = ptTest.x;
-			if (ptTest.y < vAABBMins.y) vAABBMins.y = ptTest.y;
-			if (ptTest.z < vAABBMins.z) vAABBMins.z = ptTest.z;
-			if (ptTest.x > vAABBMaxs.x) vAABBMaxs.x = ptTest.x;
-			if (ptTest.y > vAABBMaxs.y) vAABBMaxs.y = ptTest.y;
-			if (ptTest.z > vAABBMaxs.z) vAABBMaxs.z = ptTest.z;
-		}
-
-		m_InternalData.Simulation.Static.Wall.Local.Brushes.pDisCollideable = enginetrace->GetCollidableFromDisplacementsInAABB(vAABBMins, vAABBMaxs); // with displacements we can apparently just get collidable in AABB with this method
 		STOPDEBUGTIMER( wallBrushTimer );
 		DEBUGTIMERONLY( DevMsg( 2, "[PSDT:%d] %sWall Brushes=%fms\n", GetPortalSimulatorGUID(), TABSPACING, wallBrushTimer.GetDuration().GetMillisecondsF() ); );
 	}
@@ -2194,6 +2110,16 @@ void CPortalSimulator::CreatePolyhedrons( void )
 				}
 			}
 		}
+
+		//displacements
+		{
+			Assert(m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Count() == 0);
+
+			//create locally clipped polyhedrons for the world
+			{
+				ConvertDisplacementListToClippedPolyhedronList(fWorldClipPlane_Reverse, 1, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons);
+			}
+		}
 	}
 
 
@@ -2202,6 +2128,7 @@ void CPortalSimulator::CreatePolyhedrons( void )
 	{
 		Assert( m_InternalData.Simulation.Static.Wall.Local.Tube.Polyhedrons.Count() == 0 );
 		Assert( m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons.Count() == 0 );
+		Assert(m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Count() == 0);
 
 		Vector vBackward = -m_InternalData.Placement.vForward;
 		Vector vLeft = -m_InternalData.Placement.vRight;
@@ -2288,6 +2215,9 @@ void CPortalSimulator::CreatePolyhedrons( void )
 		CUtlVector<CPolyhedron *> WallBrushPolyhedrons_ClippedToWall;
 		CPolyhedron **pWallClippedPolyhedrons = NULL;
 		int iWallClippedPolyhedronCount = 0;
+		CUtlVector<CPolyhedron *> WallDisplacementPolyhedrons_ClippedToWall;
+		CPolyhedron **pWallDisplacementClippedPolyhedrons = NULL;
+		int iWallDisplacementClippedPolyhedronCount = 0;
 		if( IsSimulatingVPhysics() ) //if not simulating vphysics, we skip making the entire wall, and just create the minimal tube instead
 		{
 			enginetrace->GetBrushesInAABB( vAABBMins, vAABBMaxs, &WallBrushes, MASK_SOLID_BRUSHONLY );
@@ -2295,6 +2225,8 @@ void CPortalSimulator::CreatePolyhedrons( void )
 			if( WallBrushes.Count() != 0 )
 				ConvertBrushListToClippedPolyhedronList( WallBrushes.Base(), WallBrushes.Count(), fPlanes, 1, PORTAL_POLYHEDRON_CUT_EPSILON, &WallBrushPolyhedrons_ClippedToWall );
 			
+			ConvertDisplacementListToClippedPolyhedronList(fPlanes, 1, PORTAL_POLYHEDRON_CUT_EPSILON, &WallDisplacementPolyhedrons_ClippedToWall);
+
 			if( WallBrushPolyhedrons_ClippedToWall.Count() != 0 )
 			{
 				for( int i = WallBrushPolyhedrons_ClippedToWall.Count(); --i >= 0; )
@@ -2317,6 +2249,31 @@ void CPortalSimulator::CreatePolyhedrons( void )
 				{
 					pWallClippedPolyhedrons = WallBrushPolyhedrons_ClippedToWall.Base();
 					iWallClippedPolyhedronCount = WallBrushPolyhedrons_ClippedToWall.Count();
+				}
+			}
+
+			if (WallDisplacementPolyhedrons_ClippedToWall.Count() != 0)
+			{
+				for (int i = WallDisplacementPolyhedrons_ClippedToWall.Count(); --i >= 0;)
+				{
+					CPolyhedron *pPolyhedron = ClipPolyhedron(WallDisplacementPolyhedrons_ClippedToWall[i], fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, true);
+					if (pPolyhedron)
+					{
+						//a chunk of this brush passes through the hole, not eligible to be removed from cutting
+						pPolyhedron->Release();
+					}
+					else
+					{
+						//no part of this brush interacts with the hole, no point in cutting the brush any later
+						m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.AddToTail(WallDisplacementPolyhedrons_ClippedToWall[i]);
+						WallDisplacementPolyhedrons_ClippedToWall.FastRemove(i);
+					}
+				}
+
+				if (WallDisplacementPolyhedrons_ClippedToWall.Count() != 0) //might have become 0 while removing uncut brushes
+				{
+					pWallDisplacementClippedPolyhedrons = WallDisplacementPolyhedrons_ClippedToWall.Base();
+					iWallDisplacementClippedPolyhedronCount = WallDisplacementPolyhedrons_ClippedToWall.Count();
 				}
 			}
 		}
@@ -2345,6 +2302,7 @@ void CPortalSimulator::CreatePolyhedrons( void )
 			
 
 			ClipPolyhedrons( pWallClippedPolyhedrons, iWallClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons );
+			ClipPolyhedrons(pWallDisplacementClippedPolyhedrons, iWallDisplacementClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons);
 		}
 
 		//lower wall
@@ -2368,6 +2326,7 @@ void CPortalSimulator::CreatePolyhedrons( void )
 			fPlanes[(5*4) + 3] = fFarRightPlaneDistance;
 
 			ClipPolyhedrons( pWallClippedPolyhedrons, iWallClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons );
+			ClipPolyhedrons(pWallDisplacementClippedPolyhedrons, iWallDisplacementClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons);
 		}
 
 		//left wall
@@ -2391,6 +2350,7 @@ void CPortalSimulator::CreatePolyhedrons( void )
 			fPlanes[(5*4) + 3] = m_InternalData.Placement.vRight.Dot( m_InternalData.Placement.ptCenter + (vLeft * (PORTAL_HOLE_HALF_WIDTH + PORTAL_WALL_MIN_THICKNESS)) );
 
 			ClipPolyhedrons( pWallClippedPolyhedrons, iWallClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons );
+			ClipPolyhedrons(pWallDisplacementClippedPolyhedrons, iWallDisplacementClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons);
 		}
 
 		//right wall
@@ -2414,12 +2374,18 @@ void CPortalSimulator::CreatePolyhedrons( void )
 			fPlanes[(5*4) + 3] = fFarRightPlaneDistance;
 
 			ClipPolyhedrons( pWallClippedPolyhedrons, iWallClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons );
+			ClipPolyhedrons(pWallDisplacementClippedPolyhedrons, iWallDisplacementClippedPolyhedronCount, fSidePlanesOnly, 4, PORTAL_POLYHEDRON_CUT_EPSILON, &m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons);
 		}
 
 		for( int i = WallBrushPolyhedrons_ClippedToWall.Count(); --i >= 0; )
 			WallBrushPolyhedrons_ClippedToWall[i]->Release();
 
 		WallBrushPolyhedrons_ClippedToWall.RemoveAll();
+
+		for (int i = WallDisplacementPolyhedrons_ClippedToWall.Count(); --i >= 0;)
+			WallDisplacementPolyhedrons_ClippedToWall[i]->Release();
+
+		WallDisplacementPolyhedrons_ClippedToWall.RemoveAll();
 	}
 
 	STOPDEBUGTIMER( functionTimer );
@@ -2450,6 +2416,14 @@ void CPortalSimulator::ClearPolyhedrons( void )
 		m_InternalData.Simulation.Static.World.Brushes.Polyhedrons.RemoveAll();
 	}
 
+	if (m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Count() != 0)
+	{
+		for (int i = m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.Count(); --i >= 0;)
+			m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons[i]->Release();
+
+		m_InternalData.Simulation.Static.World.Brushes.DisPolyhedrons.RemoveAll();
+	}
+
 	if( m_InternalData.Simulation.Static.World.StaticProps.Polyhedrons.Count() != 0 )
 	{
 		for( int i = m_InternalData.Simulation.Static.World.StaticProps.Polyhedrons.Count(); --i >= 0; )
@@ -2474,6 +2448,14 @@ void CPortalSimulator::ClearPolyhedrons( void )
 			m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons[i]->Release();
 
 		m_InternalData.Simulation.Static.Wall.Local.Brushes.Polyhedrons.RemoveAll();
+	}
+
+	if (m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Count() != 0)
+	{
+		for (int i = m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.Count(); --i >= 0;)
+			m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons[i]->Release();
+
+		m_InternalData.Simulation.Static.Wall.Local.Brushes.DisPolyhedrons.RemoveAll();
 	}
 
 	if( m_InternalData.Simulation.Static.Wall.Local.Tube.Polyhedrons.Count() != 0 )
@@ -2810,6 +2792,22 @@ static void ConvertBrushListToClippedPolyhedronList( const int *pBrushes, int iB
 		CPolyhedron *pPolyhedron = ClipPolyhedron( g_StaticCollisionPolyhedronCache.GetBrushPolyhedron( pBrushes[i] ), pOutwardFacingClipPlanes, iClipPlaneCount, fClipEpsilon );
 		if( pPolyhedron )
 			pPolyhedronList->AddToTail( pPolyhedron );
+	}
+}
+
+static void ConvertDisplacementListToClippedPolyhedronList(const float *pOutwardFacingClipPlanes, int iClipPlaneCount, float fClipEpsilon, CUtlVector<CPolyhedron *> *pPolyhedronList)
+{
+	if (pPolyhedronList == NULL)
+		return;
+
+	if (g_StaticCollisionPolyhedronCache.m_DisplacementInfo.iNumPolyhedrons == 0)
+		return;
+
+	for (int i = 0; i != g_StaticCollisionPolyhedronCache.m_DisplacementInfo.iNumPolyhedrons; ++i)
+	{
+		CPolyhedron *pPolyhedron = ClipPolyhedron(g_StaticCollisionPolyhedronCache.GetDisplacementPolyhedron(i), pOutwardFacingClipPlanes, iClipPlaneCount, fClipEpsilon);
+		if (pPolyhedron)
+			pPolyhedronList->AddToTail(pPolyhedron);
 	}
 }
 
