@@ -690,8 +690,13 @@ void UTIL_Portal_TraceRay( const CProp_Portal *pPortal, const Ray_t &ray, unsign
 
 		if (portalSimulator.m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable && bTraceDisplacements)
 		{
-			physcollision->TraceBox(ray, portalSimulator.m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable, vec3_origin, vec3_angle, pTrace);
-			bCopyBackBrushTraceData = true;
+			physcollision->TraceBox(ray, portalSimulator.m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable, vec3_origin, vec3_angle, &TempTrace);
+
+			if (TempTrace.fraction < pTrace->fraction) // we trace against displacements after we traced against brushes and replace original trace if we get shorter trace
+			{
+				*pTrace = TempTrace;
+				bCopyBackBrushTraceData = true;
+			}
 		}
 
 		if( bTraceHolyWall )
