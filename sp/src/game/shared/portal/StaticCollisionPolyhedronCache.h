@@ -27,6 +27,15 @@ public:
 
 	const CPolyhedron *GetBrushPolyhedron( int iBrushNumber );
 	int GetStaticPropPolyhedrons( ICollideable *pStaticProp, CPolyhedron **pOutputPolyhedronArray, int iOutputArraySize );
+	const CPolyhedron *GetDisplacementPolyhedron(int iDisplacementNumber);
+
+	struct DisplacementPolyhedronCacheInfo_t
+	{
+		int iStartIndex;
+		int iNumPolyhedrons;
+	};
+
+	DisplacementPolyhedronCacheInfo_t m_DisplacementInfo;
 
 private:
 	// See comments in LevelInitPreEntity for why these members are commented out
@@ -44,6 +53,7 @@ private:
 	CUtlVector<CPolyhedron *> m_StaticPropPolyhedrons;
 	CUtlMap<ICollideable *, StaticPropPolyhedronCacheInfo_t> m_CollideableIndicesMap;
 
+	CUtlVector<CPolyhedron *> m_DisplacementPolyhedrons;
 
 	void Clear( void );
 	void Update( void );
