@@ -45,9 +45,6 @@ static ConVar sv_portal_collision_sim_bounds_x( "sv_portal_collision_sim_bounds_
 static ConVar sv_portal_collision_sim_bounds_y( "sv_portal_collision_sim_bounds_y", "200", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 static ConVar sv_portal_collision_sim_bounds_z( "sv_portal_collision_sim_bounds_z", "252", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 
-#define DEBUG_PORTAL_SIMULATION_CREATION_TIMES //define to output creation timings to developer 2
-#define DEBUG_PORTAL_COLLISION_ENVIRONMENTS //define this to allow for glview collision dumps of portal simulators
-
 #if defined( DEBUG_PORTAL_COLLISION_ENVIRONMENTS ) || defined( DEBUG_PORTAL_SIMULATION_CREATION_TIMES )
 #	if !defined( PORTAL_SIMULATORS_EMBED_GUID )
 #		pragma message( __FILE__ "(" __LINE__AS_STRING ") : error custom: Portal simulators require a GUID to debug, enable the GUID in PortalSimulation.h ." )
