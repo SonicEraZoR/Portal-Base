@@ -27,7 +27,7 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 * There's portal gun bind in the settings
 
 ## Some things that don't work properly (yet, hopefully they will someday)
-* **There's no collision for displacements near portals**. Which means you will **fall through** displacements close to portals. Displacements are usually used to make bumpy ground or  hills, valleys, trenches, slopes etc. though they also can be flat and just used to blend two or more textures together. It's a pretty complicated issue to fix, so for now get your noclip ready. You can also just avoid displacements near portals by jumping over them for example because it's usually pretty easy to distinguish displacements from normal brush terrain
+* **There's no collision for displacements near portals**. Which means you will **fall through** displacements close to portals. Displacements are usually used to make bumpy ground or  hills, valleys, trenches, slopes etc. though they also can be flat and just used to blend two or more textures together. It's a pretty complicated issue to fix, so for now get your noclip ready. You can also just avoid displacements near portals by jumping over them for example because it's usually pretty easy to distinguish displacements from normal brush terrain since the brushes are **always** flat
 * There are some visual glitches with portal gun, some of them can be fixed by saving and loading
 * Sometimes the game will crash if you place your portals in certain places (like on the floor of the red barn in d1_canals_06) or if you push physics engine too far
 * Guns are still attached to NPC's hands when they're supposed to be hidden
