@@ -7,7 +7,7 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 
 ## Current Differences from original Portal
 * New "Mod Options" menu
-* You can fizzle portals by reloading portal gun
+* You can erase portals by reloading portal gun
 * Health regeneration is toggleable with "sv_regeneration_enable" or in "Mod Options" menu without annoying red tint
 * You can toggle between Half-Life 2 gamerules and Portal gamerules with "sv_use_portal_gamerules". As far as I know it controls if you receive fall damage or not, but it might also control something else, I'm not really sure
 * Fall damage is toggleable with "sv_receive_fall_damage" or in "Mod Options" menu (only for Half-Life 2 gamerules, Portal's gamerules always have fall damage disabled
