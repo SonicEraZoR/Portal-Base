@@ -42,46 +42,6 @@ extern CBaseEntity	*g_pLastSpawn;
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 
-
-// -------------------------------------------------------------------------------- //
-// Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
-// -------------------------------------------------------------------------------- //
-
-class CTEPlayerAnimEvent : public CBaseTempEntity
-{
-public:
-	DECLARE_CLASS( CTEPlayerAnimEvent, CBaseTempEntity );
-	DECLARE_SERVERCLASS();
-
-	CTEPlayerAnimEvent( const char *name ) : CBaseTempEntity( name )
-	{
-	}
-
-	CNetworkHandle( CBasePlayer, m_hPlayer );
-	CNetworkVar( int, m_iEvent );
-	CNetworkVar( int, m_nData );
-};
-
-IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
-SendPropEHandle( SENDINFO( m_hPlayer ) ),
-SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
-SendPropInt( SENDINFO( m_nData ), 32 ),
-END_SEND_TABLE()
-
-static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
-
-void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData )
-{
-	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
-
-	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
-	g_TEPlayerAnimEvent.m_iEvent = event;
-	g_TEPlayerAnimEvent.m_nData = nData;
-	g_TEPlayerAnimEvent.Create( filter, 0 );
-}
-
-
-
 //=================================================================================
 //
 // Ragdoll Entity
@@ -157,8 +117,6 @@ SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),
 SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
 
 
-SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
-SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
 SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
@@ -242,14 +200,6 @@ extern float IntervalDistance( float x, float x0, float x1 );
 
 CPortal_Player::CPortal_Player()
 {
-
-	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
-	//CreateExpresser();
-
-	UseClientSideAnimation();
-
-	m_angEyeAngles.Init();
-
 	m_iLastWeaponFireUsercmd = 0;
 
 	m_iSpawnInterpCounter = 0;
@@ -272,9 +222,6 @@ CPortal_Player::CPortal_Player()
 CPortal_Player::~CPortal_Player( void )
 {
 	ClearSceneEvents( NULL, true );
-
-	if ( m_PlayerAnimState )
-		m_PlayerAnimState->Release();
 
 	CPortalRagdoll *pRagdoll = dynamic_cast<CPortalRagdoll*>( m_hRagdoll.Get() );	
 	if( pRagdoll )
@@ -621,13 +568,6 @@ void CPortal_Player::PostThink( void )
 {
 	BaseClass::PostThink();
 
-	// Store the eye angles pitch so the client can compute its animation state correctly.
-	m_angEyeAngles = EyeAngles();
-
-	QAngle angles = GetLocalAngles();
-	angles[PITCH] = 0;
-	SetLocalAngles( angles );
-
 	// Regenerate heath after 3 seconds
 	if (IsAlive() && GetHealth() < GetMaxHealth() && sv_regeneration_enable.GetBool())
 	{
@@ -656,8 +596,6 @@ void CPortal_Player::PostThink( void )
 
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
-
-	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 
 	if ( IsAlive() && m_flExpressionLoopTime >= 0 && gpGlobals->curtime > m_flExpressionLoopTime )
 	{
@@ -927,91 +865,6 @@ bool CPortal_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, c
 	return true;
 }
 
-
-void CPortal_Player::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
-{
-	m_PlayerAnimState->DoAnimationEvent( event, nData );
-	TE_PlayerAnimEvent( this, event, nData );	// Send to any clients who can see this guy.
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Override setup bones so that is uses the render angles from
-//			the Portal animation state to setup the hitboxes.
-//-----------------------------------------------------------------------------
-void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
-{
-	VPROF_BUDGET( "CBaseAnimating::SetupBones", VPROF_BUDGETGROUP_SERVER_ANIM );
-
-	// Set the mdl cache semaphore.
-	MDLCACHE_CRITICAL_SECTION();
-
-	// Get the studio header.
-	Assert( GetModelPtr() );
-	CStudioHdr *pStudioHdr = GetModelPtr( );
-
-	Vector pos[MAXSTUDIOBONES];
-	Quaternion q[MAXSTUDIOBONES];
-
-	// Adjust hit boxes based on IK driven offset.
-	Vector adjOrigin = GetAbsOrigin() + Vector( 0, 0, m_flEstIkOffset );
-
-	// FIXME: pass this into Studio_BuildMatrices to skip transforms
-	CBoneBitList boneComputed;
-	if ( m_pIk )
-	{
-		m_iIKCounter++;
-		m_pIk->Init( pStudioHdr, GetAbsAngles(), adjOrigin, gpGlobals->curtime, m_iIKCounter, boneMask );
-		GetSkeleton( pStudioHdr, pos, q, boneMask );
-
-		m_pIk->UpdateTargets( pos, q, pBoneToWorld, boneComputed );
-		CalculateIKLocks( gpGlobals->curtime );
-		m_pIk->SolveDependencies( pos, q, pBoneToWorld, boneComputed );
-	}
-	else
-	{
-		GetSkeleton( pStudioHdr, pos, q, boneMask );
-	}
-
-	CBaseAnimating *pParent = dynamic_cast< CBaseAnimating* >( GetMoveParent() );
-	if ( pParent )
-	{
-		// We're doing bone merging, so do special stuff here.
-		CBoneCache *pParentCache = pParent->GetBoneCache();
-		if ( pParentCache )
-		{
-			BuildMatricesWithBoneMerge( 
-				pStudioHdr, 
-				m_PlayerAnimState->GetRenderAngles(),
-				adjOrigin, 
-				pos, 
-				q, 
-				pBoneToWorld, 
-				pParent, 
-				pParentCache );
-
-			return;
-		}
-	}
-
-	Studio_BuildMatrices( 
-		pStudioHdr, 
-		m_PlayerAnimState->GetRenderAngles(),
-		adjOrigin, 
-		pos, 
-		q, 
-		-1,
-		GetModelScale(), // Scaling
-		pBoneToWorld,
-		boneMask );
-}
-
-
-// Set the activity based on an event or current state
-void CPortal_Player::SetAnimation( PLAYER_ANIM playerAnim )
-{
-	return;
-}
-
 /*
 CAI_Expresser *CPortal_Player::CreateExpresser()
 {
@@ -1187,7 +1040,12 @@ void CPortal_Player::Teleport( const Vector *newPosition, const QAngle *newAngle
 	BaseClass::Teleport( newPosition, newAngles, newVelocity );
 	m_angEyeAngles = pl.v_angle;
 
-	m_PlayerAnimState->Teleport( newPosition, newAngles, this );
+	// teleportation player animstate code now lives here
+	QAngle absangles = GetAbsAngles();
+	m_pPlayerAnimState->m_angRender = absangles;
+	m_pPlayerAnimState->m_angRender.x = m_pPlayerAnimState->m_angRender.z = 0.0f;
+	// Snap the yaw pose parameter lerping variables to face new angles.
+	m_pPlayerAnimState->m_flCurrentFeetYaw = m_pPlayerAnimState->m_flGoalFeetYaw = m_pPlayerAnimState->m_flEyeYaw = EyeAngles()[YAW];
 }
 
 void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )

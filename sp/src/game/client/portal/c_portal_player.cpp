@@ -45,42 +45,6 @@
 
 ConVar cl_reorient_in_air("cl_reorient_in_air", "1", FCVAR_ARCHIVE, "Allows the player to only reorient from being upside down while in the air." ); 
 
-
-// -------------------------------------------------------------------------------- //
-// Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
-// -------------------------------------------------------------------------------- //
-
-class C_TEPlayerAnimEvent : public C_BaseTempEntity
-{
-public:
-	DECLARE_CLASS( C_TEPlayerAnimEvent, C_BaseTempEntity );
-	DECLARE_CLIENTCLASS();
-
-	virtual void PostDataUpdate( DataUpdateType_t updateType )
-	{
-		// Create the effect.
-		C_Portal_Player *pPlayer = dynamic_cast< C_Portal_Player* >( m_hPlayer.Get() );
-		if ( pPlayer && !pPlayer->IsDormant() )
-		{
-			pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get(), m_nData );
-		}	
-	}
-
-public:
-	CNetworkHandle( CBasePlayer, m_hPlayer );
-	CNetworkVar( int, m_iEvent );
-	CNetworkVar( int, m_nData );
-};
-
-IMPLEMENT_CLIENTCLASS_EVENT( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent, CTEPlayerAnimEvent );
-
-BEGIN_RECV_TABLE_NOBASE( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent )
-RecvPropEHandle( RECVINFO( m_hPlayer ) ),
-RecvPropInt( RECVINFO( m_iEvent ) ),
-RecvPropInt( RECVINFO( m_nData ) )
-END_RECV_TABLE()
-
-
 //=================================================================================
 //
 // Ragdoll Entity
@@ -272,8 +236,6 @@ void C_PortalRagdoll::OnDataChanged( DataUpdateType_t type )
 LINK_ENTITY_TO_CLASS( player, C_Portal_Player );
 
 IMPLEMENT_CLIENTCLASS_DT(C_Portal_Player, DT_Portal_Player, CPortal_Player)
-RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
-RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
 RecvPropInt( RECVINFO( m_iSpawnInterpCounter ) ),
 RecvPropInt( RECVINFO( m_iPlayerSoundType ) ),
@@ -305,8 +267,6 @@ void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flD
 C_Portal_Player::C_Portal_Player()
 : m_iv_angEyeAngles( "C_Portal_Player::m_iv_angEyeAngles" )
 {
-	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
-
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
 	m_flDeathCCWeight = 0.0f;
@@ -332,11 +292,6 @@ C_Portal_Player::C_Portal_Player()
 
 C_Portal_Player::~C_Portal_Player( void )
 {
-	if ( m_PlayerAnimState )
-	{
-		m_PlayerAnimState->Release();
-	}
-
 	g_pColorCorrectionMgr->RemoveColorCorrection( m_CCDeathHandle );
 }
 
@@ -795,37 +750,12 @@ void C_Portal_Player::FixTeleportationRoll( void )
 		g_bUpsideDown = false;
 }
 
-const QAngle& C_Portal_Player::GetRenderAngles()
-{
-	if ( IsRagdoll() )
-	{
-		return vec3_angle;
-	}
-	else
-	{
-		return m_PlayerAnimState->GetRenderAngles();
-	}
-}
-
 void C_Portal_Player::UpdateClientSideAnimation( void )
 {
 	UpdateLookAt();
 
-	// Update the animation data. It does the local check here so this works when using
-	// a third-person camera (and we don't have valid player angles).
-	if ( this == C_Portal_Player::GetLocalPortalPlayer() )
-		m_PlayerAnimState->Update( EyeAngles()[YAW], m_angEyeAngles[PITCH] );
-	else
-		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
-
 	BaseClass::UpdateClientSideAnimation();
 }
-
-void C_Portal_Player::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
-{
-	m_PlayerAnimState->DoAnimationEvent( event, nData );
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1137,8 +1067,6 @@ bool C_Portal_Player::DetectAndHandlePortalTeleportation( void )
 				//DevMsg( "FPT: %.2f %.2f %.2f\n", m_angEyeAngles.x, m_angEyeAngles.y, m_angEyeAngles.z );
 				SetLocalAngles( m_angEyeAngles );
 			}
-
-			m_PlayerAnimState->Teleport ( &ptNewPosition, &GetNetworkAngles(), this );
 
 			// Reorient last facing direction to fix pops in view model lag
 			for ( int i = 0; i < MAX_VIEWMODELS; i++ )

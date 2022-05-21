@@ -1279,6 +1279,9 @@ void C_BasePlayer::AddEntity( void )
 
 	// Add in lighting effects
 	CreateLightEffects();
+
+	//needed for player animation, This line will prevent the model of the player from rotating when looking up & firing
+	SetLocalAnglesDim(X_INDEX, 0);
 }
 
 extern float UTIL_WaterLevel( const Vector &position, float minz, float maxz );

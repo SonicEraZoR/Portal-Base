@@ -12,7 +12,6 @@
 class CPortal_Player;
 
 #include "player.h"
-#include "portal_playeranimstate.h"
 #include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
 #include "simtimer.h"
@@ -72,8 +71,6 @@ public:
 
 	Activity TranslateTeamActivity( Activity ActToTranslate );
 
-	virtual void SetAnimation( PLAYER_ANIM playerAnim );
-
 	//virtual CAI_Expresser* GetExpresser( void );
 
 	virtual void PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
@@ -124,8 +121,6 @@ public:
 
 	void NoteWeaponFired( void );
 
-	void ResetAnimation( void );
-
 	void SetPlayerModel( void );
 	
 	//void UpdateExpression ( void );
@@ -136,9 +131,6 @@ public:
 	void ForceDuckThisFrame( void );
 	void UnDuck ( void );
 	inline void ForceJumpThisFrame( void ) { ForceButtons( IN_JUMP ); }
-
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
-	void SetupBones( matrix3x4_t *pBoneToWorld, int boneMask );
 
 	// physics interactions
 	virtual void PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize );
@@ -183,10 +175,6 @@ private:
 	//virtual CAI_Expresser* CreateExpresser( void );
 
 	CSoundPatch		*m_pWooshSound;
-
-	CNetworkQAngle( m_angEyeAngles );
-
-	CPortalPlayerAnimState*   m_PlayerAnimState;
 
 	int m_iLastWeaponFireUsercmd;
 	CNetworkVar( int, m_iSpawnInterpCounter );

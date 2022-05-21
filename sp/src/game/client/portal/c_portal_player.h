@@ -9,7 +9,6 @@
 #define PORTAL_PLAYER_H
 #pragma once
 
-#include "portal_playeranimstate.h"
 #include "c_basehlplayer.h"
 #include "portal_player_shared.h"
 #include "c_prop_portal.h"
@@ -46,15 +45,11 @@ public:
 		return (C_Portal_Player*)C_BasePlayer::GetLocalPlayer();
 	}
 
-	virtual const QAngle& GetRenderAngles();
-
 	virtual void UpdateClientSideAnimation();
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
 
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
 
-	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
 	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 
 	// Used by prediction, sets the view angles for the player
@@ -124,10 +119,6 @@ private:
 	C_Portal_Player( const C_Portal_Player & );
 
 	void UpdatePortalEyeInterpolation( void );
-	
-	CPortalPlayerAnimState *m_PlayerAnimState;
-
-	QAngle	m_angEyeAngles;
 
 	virtual IRagdoll		*GetRepresentativeRagdoll() const;
 	EHANDLE	m_hRagdoll;
