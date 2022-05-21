@@ -437,6 +437,8 @@ $Project
 		$File	"simple_keys.cpp"
 		$File	"$SRCDIR\game\shared\simtimer.cpp"
 		$File	"$SRCDIR\game\shared\singleplay_gamerules.cpp"
+		$File	"$SRCDIR\game\shared\singleplayer_animstate.cpp"
+		$File	"$SRCDIR\game\shared\singleplayer_animstate.h"
 		$File	"$SRCDIR\game\shared\SoundEmitterSystem.cpp"
 		$File	"$SRCDIR\game\shared\soundenvelope.cpp"
 		$File	"$SRCDIR\public\SoundParametersInternal.cpp"
