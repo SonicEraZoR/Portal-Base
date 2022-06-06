@@ -322,6 +322,259 @@ bool C_Portal_Player::ShouldDraw(void)
 		return false;
 
 	return true;
+}
 
-	return BaseClass::ShouldDraw();
+int C_Portal_Player::DrawModel(int flags)
+{
+	if (!m_bReadyToDraw)
+		return 0;
+
+	if (IsLocalPlayer())
+	{
+		if (!C_BasePlayer::ShouldDrawThisPlayer())
+		{
+			if (!g_pPortalRender->IsRenderingPortal())
+				return 0;
+
+			if ((g_pPortalRender->GetViewRecursionLevel() == 1) && (m_iForceNoDrawInPortalSurface != -1)) //CPortalRender::s_iRenderingPortalView )
+				return 0;
+		}
+	}
+
+	return BaseClass::DrawModel(flags);
+}
+
+void C_Portal_Player::CalcView(Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov)
+{
+	//if( DetectAndHandlePortalTeleportation() )
+	//	DevMsg( "Teleported within OnDataChanged\n" );
+
+	m_iForceNoDrawInPortalSurface = -1;
+	bool bEyeTransform_Backup = m_bEyePositionIsTransformedByPortal;
+	m_bEyePositionIsTransformedByPortal = false; //assume it's not transformed until it provably is
+	m_vEyePosition = EyePosition();
+
+	QAngle qEyeAngleBackup = EyeAngles();
+	Vector ptEyePositionBackup = EyePosition();
+	//C_Prop_Portal *pPortalBackup = m_hPortalEnvironment.Get();
+
+	if (m_lifeState != LIFE_ALIVE)
+	{
+		if (g_nKillCamMode != 0)
+		{
+			return;
+		}
+
+		Vector origin = EyePosition();
+
+		IRagdoll* pRagdoll = GetRepresentativeRagdoll();
+
+		if (pRagdoll)
+		{
+			origin = pRagdoll->GetRagdollOrigin();
+#if !PORTAL_HIDE_PLAYER_RAGDOLL
+			origin.z += VEC_DEAD_VIEWHEIGHT_SCALED(this).z; // look over ragdoll, not through
+#endif //PORTAL_HIDE_PLAYER_RAGDOLL
+		}
+
+		BaseClass::CalcView(eyeOrigin, eyeAngles, zNear, zFar, fov);
+
+		eyeOrigin = origin;
+
+		Vector vForward;
+		AngleVectors(eyeAngles, &vForward);
+
+		VectorNormalize(vForward);
+#if !PORTAL_HIDE_PLAYER_RAGDOLL
+		VectorMA(origin, -CHASE_CAM_DISTANCE_MAX, vForward, eyeOrigin);
+#endif //PORTAL_HIDE_PLAYER_RAGDOLL
+
+		Vector WALL_MIN(-WALL_OFFSET, -WALL_OFFSET, -WALL_OFFSET);
+		Vector WALL_MAX(WALL_OFFSET, WALL_OFFSET, WALL_OFFSET);
+
+		trace_t trace; // clip against world
+		C_BaseEntity::PushEnableAbsRecomputations(false); // HACK don't recompute positions while doing RayTrace
+		UTIL_TraceHull(origin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace);
+		C_BaseEntity::PopEnableAbsRecomputations();
+
+		if (trace.fraction < 1.0)
+		{
+			eyeOrigin = trace.endpos;
+		}
+	}
+	else
+	{
+		IClientVehicle *pVehicle;
+		pVehicle = GetVehicle();
+
+		if (!pVehicle)
+		{
+			if (IsObserver())
+			{
+				CalcObserverView(eyeOrigin, eyeAngles, fov);
+			}
+			else
+			{
+				CalcPlayerView(eyeOrigin, eyeAngles, fov);
+				if (m_hPortalEnvironment.Get() != NULL)
+				{
+					//time for hax
+					m_bEyePositionIsTransformedByPortal = bEyeTransform_Backup;
+					CalcPortalView(eyeOrigin, eyeAngles);
+				}
+			}
+		}
+		else
+		{
+			CalcVehicleView(pVehicle, eyeOrigin, eyeAngles, zNear, zFar, fov);
+		}
+	}
+
+	//m_qEyeAngles_LastCalcView = qEyeAngleBackup;
+	//m_ptEyePosition_LastCalcView = ptEyePositionBackup;
+	//m_pPortalEnvironment_LastCalcView = pPortalBackup;
+
+#ifdef WIN32
+	// NVNT Inform haptics module of fov
+	if (IsLocalPlayer())
+		haptics->UpdatePlayerFOV(fov);
+#endif
+}
+
+void C_Portal_Player::CalcPortalView(Vector &eyeOrigin, QAngle &eyeAngles)
+{
+	//although we already ran CalcPlayerView which already did these copies, they also fudge these numbers in ways we don't like, so recopy
+	VectorCopy(EyePosition(), eyeOrigin);
+	VectorCopy(EyeAngles(), eyeAngles);
+
+	//Re-apply the screenshake (we just stomped it)
+	vieweffects->ApplyShake(eyeOrigin, eyeAngles, 1.0);
+
+	C_Prop_Portal *pPortal = m_hPortalEnvironment.Get();
+	assert(pPortal);
+
+	C_Prop_Portal *pRemotePortal = pPortal->m_hLinkedPortal;
+	if (!pRemotePortal)
+	{
+		return; //no hacks possible/necessary
+	}
+
+	Vector ptPortalCenter;
+	Vector vPortalForward;
+
+	ptPortalCenter = pPortal->GetNetworkOrigin();
+	pPortal->GetVectors(&vPortalForward, NULL, NULL);
+	float fPortalPlaneDist = vPortalForward.Dot(ptPortalCenter);
+
+	bool bOverrideSpecialEffects = false; //sometimes to get the best effect we need to kill other effects that are simply for cleanliness
+
+	float fEyeDist = vPortalForward.Dot(eyeOrigin) - fPortalPlaneDist;
+	bool bTransformEye = false;
+	if (fEyeDist < 0.0f) //eye behind portal
+	{
+		if (pPortal->m_PortalSimulator.EntityIsInPortalHole(this)) //player standing in portal
+		{
+			bTransformEye = true;
+		}
+		else if (vPortalForward.z < -0.01f) //there's a weird case where the player is ducking below a ceiling portal. As they unduck their eye moves beyond the portal before the code detects that they're in the portal hole.
+		{
+			Vector ptPlayerOrigin = GetAbsOrigin();
+			float fOriginDist = vPortalForward.Dot(ptPlayerOrigin) - fPortalPlaneDist;
+
+			if (fOriginDist > 0.0f)
+			{
+				float fInvTotalDist = 1.0f / (fOriginDist - fEyeDist); //fEyeDist is negative
+				Vector ptPlaneIntersection = (eyeOrigin * fOriginDist * fInvTotalDist) - (ptPlayerOrigin * fEyeDist * fInvTotalDist);
+				Assert(fabs(vPortalForward.Dot(ptPlaneIntersection) - fPortalPlaneDist) < 0.01f);
+
+				Vector vIntersectionTest = ptPlaneIntersection - ptPortalCenter;
+
+				Vector vPortalRight, vPortalUp;
+				pPortal->GetVectors(NULL, &vPortalRight, &vPortalUp);
+
+				if ((vIntersectionTest.Dot(vPortalRight) <= PORTAL_HALF_WIDTH) &&
+					(vIntersectionTest.Dot(vPortalUp) <= PORTAL_HALF_HEIGHT))
+				{
+					bTransformEye = true;
+				}
+			}
+		}
+	}
+
+	if (bTransformEye)
+	{
+		m_bEyePositionIsTransformedByPortal = true;
+
+		//DevMsg( 2, "transforming portal view from <%f %f %f> <%f %f %f>\n", eyeOrigin.x, eyeOrigin.y, eyeOrigin.z, eyeAngles.x, eyeAngles.y, eyeAngles.z );
+
+		VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+		UTIL_Portal_PointTransform(matThisToLinked, eyeOrigin, eyeOrigin);
+		UTIL_Portal_AngleTransform(matThisToLinked, eyeAngles, eyeAngles);
+
+		//DevMsg( 2, "transforming portal view to   <%f %f %f> <%f %f %f>\n", eyeOrigin.x, eyeOrigin.y, eyeOrigin.z, eyeAngles.x, eyeAngles.y, eyeAngles.z );
+
+		if (IsToolRecording())
+		{
+			static EntityTeleportedRecordingState_t state;
+
+			KeyValues *msg = new KeyValues("entity_teleported");
+			msg->SetPtr("state", &state);
+			state.m_bTeleported = false;
+			state.m_bViewOverride = true;
+			state.m_vecTo = eyeOrigin;
+			state.m_qaTo = eyeAngles;
+			MatrixInvert(matThisToLinked.As3x4(), state.m_teleportMatrix);
+
+			// Post a message back to all IToolSystems
+			Assert((int)GetToolHandle() != 0);
+			ToolFramework_PostToolMessage(GetToolHandle(), msg);
+
+			msg->deleteThis();
+		}
+
+		bOverrideSpecialEffects = true;
+	}
+	else
+	{
+		m_bEyePositionIsTransformedByPortal = false;
+	}
+
+	if (bOverrideSpecialEffects)
+	{
+		m_iForceNoDrawInPortalSurface = ((pRemotePortal->m_bIsPortal2) ? (2) : (1));
+		pRemotePortal->m_fStaticAmount = 0.0f;
+	}
+}
+
+extern float g_fMaxViewModelLag;
+void C_Portal_Player::CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles)
+{
+	// HACK: Manually adjusting the eye position that view model looking up and down are similar
+	// (solves view model "pop" on floor to floor transitions)
+	Vector vInterpEyeOrigin = eyeOrigin;
+
+	Vector vForward;
+	Vector vRight;
+	Vector vUp;
+	AngleVectors(eyeAngles, &vForward, &vRight, &vUp);
+
+	if (vForward.z < 0.0f)
+	{
+		float fT = vForward.z * vForward.z;
+		vInterpEyeOrigin += vRight * (fT * 4.7f) + vForward * (fT * 5.0f) + vUp * (fT * 4.0f);
+	}
+
+	if (UTIL_IntersectEntityExtentsWithPortal(this))
+		g_fMaxViewModelLag = 0.0f;
+	else
+		g_fMaxViewModelLag = 1.5f;
+
+	for (int i = 0; i < MAX_VIEWMODELS; i++)
+	{
+		CBaseViewModel *vm = GetViewModel(i);
+		if (!vm)
+			continue;
+
+		vm->CalcViewModelView(this, vInterpEyeOrigin, eyeAngles);
+	}
 }

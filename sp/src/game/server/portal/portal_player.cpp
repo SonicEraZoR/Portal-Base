@@ -66,6 +66,8 @@ ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | 
 const char *g_pszChellModel = "models/humans/group03/female_01.mdl";
 const char *g_pszPlayerModel = "models/player.mdl";
 
+extern int gEvilImpulse101;
+
 CPortal_Player::CPortal_Player()
 {
 	m_bHeldObjectOnOppositeSideOfPortal = false;
@@ -401,4 +403,103 @@ void CPortal_Player::ForceDuckThisFrame(void)
 		AddFlag(FL_DUCKING);
 		SetVCollisionState(GetAbsOrigin(), GetAbsVelocity(), VPHYS_CROUCH);
 	}
+}
+
+void CPortal_Player::CheatImpulseCommands(int iImpulse)
+{
+	switch (iImpulse)
+	{
+	case 101:
+	{
+		if (sv_cheats->GetBool())
+		{
+			gEvilImpulse101 = true;
+
+			CBasePlayer::EquipSuit();
+
+			// Give the player everything!
+			CBaseCombatCharacter::GiveAmmo(255, "Pistol");
+			CBaseCombatCharacter::GiveAmmo(255, "AR2");
+			CBaseCombatCharacter::GiveAmmo(5, "AR2AltFire");
+			CBaseCombatCharacter::GiveAmmo(255, "SMG1");
+			CBaseCombatCharacter::GiveAmmo(255, "Buckshot");
+			CBaseCombatCharacter::GiveAmmo(3, "smg1_grenade");
+			CBaseCombatCharacter::GiveAmmo(3, "rpg_round");
+			CBaseCombatCharacter::GiveAmmo(5, "grenade");
+			CBaseCombatCharacter::GiveAmmo(32, "357");
+			CBaseCombatCharacter::GiveAmmo(16, "XBowBolt");
+#ifdef HL2_EPISODIC
+			CBaseCombatCharacter::GiveAmmo(5, "Hopwire");
+#endif		
+			GiveNamedItem("weapon_smg1");
+			GiveNamedItem("weapon_frag");
+			GiveNamedItem("weapon_crowbar");
+			GiveNamedItem("weapon_pistol");
+			GiveNamedItem("weapon_ar2");
+			GiveNamedItem("weapon_shotgun");
+			GiveNamedItem("weapon_physcannon");
+			GiveNamedItem("weapon_bugbait");
+			GiveNamedItem("weapon_rpg");
+			GiveNamedItem("weapon_357");
+			GiveNamedItem("weapon_crossbow");
+#ifdef HL2_EPISODIC
+			// GiveNamedItem( "weapon_magnade" );
+#endif
+			if (GetHealth() < 100)
+			{
+				TakeHealth(25, DMG_GENERIC);
+			}
+			
+			CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+			if (!pPortalGun)
+			{
+				pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+			}
+
+			if (pPortalGun)
+			{
+				pPortalGun->SetCanFirePortal1();
+				pPortalGun->SetCanFirePortal2();
+			}
+
+			gEvilImpulse101 = false;
+		}
+	}
+	break;
+	case 102:
+	{
+		CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+		if (!pPortalGun)
+		{
+			pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+		}
+
+		if (pPortalGun)
+		{
+			pPortalGun->SetCanFirePortal1();
+			pPortalGun->SetCanFirePortal2();
+		}
+	}
+	break;
+
+	default:
+		BaseClass::CheatImpulseCommands(iImpulse);
+	}
+}
+
+void CPortal_Player::Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity)
+{
+	Vector oldOrigin = GetLocalOrigin();
+	QAngle oldAngles = GetLocalAngles();
+	BaseClass::Teleport(newPosition, newAngles, newVelocity);
+	m_angEyeAngles = pl.v_angle;
+
+	// teleportation player animstate code now lives here
+	QAngle absangles = GetAbsAngles();
+	m_pPlayerAnimState->m_angRender = absangles;
+	m_pPlayerAnimState->m_angRender.x = m_pPlayerAnimState->m_angRender.z = 0.0f;
+	// Snap the yaw pose parameter lerping variables to face new angles.
+	m_pPlayerAnimState->m_flCurrentFeetYaw = m_pPlayerAnimState->m_flGoalFeetYaw = m_pPlayerAnimState->m_flEyeYaw = EyeAngles()[YAW];
 }
