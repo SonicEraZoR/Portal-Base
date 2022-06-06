@@ -46,6 +46,7 @@ public:
 	virtual void Spawn(void);
 	
 	virtual void PostThink(void);
+	virtual void PreThink(void);
 
 	void SetPlayerModel(void);
 	bool ValidatePlayerModel(const char *pModel);

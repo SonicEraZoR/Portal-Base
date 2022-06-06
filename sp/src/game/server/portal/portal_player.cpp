@@ -63,7 +63,7 @@ END_DATADESC()
 ConVar sv_regeneration_wait_time("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED);
 ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
-const char *g_pszChellModel = "models/humans/group03/female_01.mdl";
+const char *g_pszChellModel = "models/player/chell.mdl";
 const char *g_pszPlayerModel = "models/player.mdl";
 
 extern int gEvilImpulse101;
@@ -502,4 +502,21 @@ void CPortal_Player::Teleport(const Vector *newPosition, const QAngle *newAngles
 	m_pPlayerAnimState->m_angRender.x = m_pPlayerAnimState->m_angRender.z = 0.0f;
 	// Snap the yaw pose parameter lerping variables to face new angles.
 	m_pPlayerAnimState->m_flCurrentFeetYaw = m_pPlayerAnimState->m_flGoalFeetYaw = m_pPlayerAnimState->m_flEyeYaw = EyeAngles()[YAW];
+}
+
+void CPortal_Player::PreThink(void)
+{
+	QAngle vOldAngles = GetLocalAngles();
+	QAngle vTempAngles = GetLocalAngles();
+
+	vTempAngles = EyeAngles();
+
+	if (vTempAngles[PITCH] > 180.0f)
+	{
+		vTempAngles[PITCH] -= 360.0f;
+	}
+
+	SetLocalAngles(vTempAngles);
+	BaseClass::PreThink();
+	SetLocalAngles(vOldAngles);
 }
