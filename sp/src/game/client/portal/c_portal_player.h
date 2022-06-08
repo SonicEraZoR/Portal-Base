@@ -56,22 +56,15 @@ public:
 
 	virtual bool ShouldDraw(void);
 
-	virtual int DrawModel(int flags);
-
-	virtual void CalcView(Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov);
-	void CalcPortalView(Vector &eyeOrigin, QAngle &eyeAngles);
-	virtual void CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles);
-
 	inline bool IsCloseToPortal(void) //it's usually a good idea to turn on draw hacks when this is true
 	{
-		return (m_hPortalEnvironment.Get() != NULL);
+		return ((PortalEyeInterpolation.m_bEyePositionIsInterpolating) || (m_hPortalEnvironment.Get() != NULL));
 	}
 
 	CHandle<C_Prop_Portal>	m_hPortalEnvironment; //a portal whose environment the player is currently in, should be invalid most of the time
 	CHandle<C_Func_LiquidPortal>	m_hSurroundingLiquidPortal; //a liquid portal whose volume the player is standing in
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
-	Vector	m_vEyePosition;
 	bool	m_bEyePositionIsTransformedByPortal; //when the eye and body positions are not on the same side of a portal
 
 	bool	m_bPitchReorientation;
@@ -90,7 +83,10 @@ private:
 	bool	m_bPortalledMessagePending; //Player portalled. It's easier to wait until we get a OnDataChanged() event or a CalcView() before we do anything about it. Otherwise bits and pieces can get undone
 	VMatrix m_PendingPortalMatrix;
 
-	int	m_iForceNoDrawInPortalSurface; //only valid for one frame, used to temp disable drawing of the player model in a surface because of freaky artifacts
+	struct PortalEyeInterpolation_t
+	{
+		bool	m_bEyePositionIsInterpolating; //flagged when the eye position would have popped between two distinct positions and we're smoothing it over
+	} PortalEyeInterpolation;
 };
 
 inline C_Portal_Player *ToPortalPlayer(CBaseEntity *pEntity)

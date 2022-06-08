@@ -72,10 +72,6 @@ public:
 
 	void SetStuckOnPortalCollisionObject(void) { m_bStuckOnPortalCollisionObject = true; }
 
-	void CheatImpulseCommands(int iImpulse);
-
-	virtual void Teleport(const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity);
-
 	CNetworkHandle(CProp_Portal, m_hPortalEnvironment); //if the player is in a portal environment, this is the associated portal
 	CNetworkHandle(CFunc_LiquidPortal, m_hSurroundingLiquidPortal); //if the player is standing in a liquid portal, this will point to it
 
