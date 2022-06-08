@@ -62,19 +62,14 @@ public:
 	void CalcPortalView(Vector &eyeOrigin, QAngle &eyeAngles);
 	virtual void CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles);
 
-	void OnPreDataChanged(DataUpdateType_t type);
-	void OnDataChanged(DataUpdateType_t type);
-
-	void AddEntity(void);
-
 	inline bool IsCloseToPortal(void) //it's usually a good idea to turn on draw hacks when this is true
 	{
 		return (m_hPortalEnvironment.Get() != NULL);
 	}
 
-	CHandle<C_Prop_Portal> m_hPortalEnvironment; //a portal whose environment the player is currently in, should be invalid most of the time
-	CHandle<C_Func_LiquidPortal> m_hSurroundingLiquidPortal; //a liquid portal whose volume the player is standing in
-	CInterpolatedVar< QAngle > m_iv_angEyeAngles;
+	CHandle<C_Prop_Portal>	m_hPortalEnvironment; //a portal whose environment the player is currently in, should be invalid most of the time
+	CHandle<C_Func_LiquidPortal>	m_hSurroundingLiquidPortal; //a liquid portal whose volume the player is standing in
+	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	Vector	m_vEyePosition;
 	bool	m_bEyePositionIsTransformedByPortal; //when the eye and body positions are not on the same side of a portal
@@ -84,8 +79,7 @@ public:
 
 	struct PreDataChanged_Backup_t
 	{
-		CHandle<C_Func_LiquidPortal> m_hSurroundingLiquidPortal;
-		QAngle m_qEyeAngles;
+		QAngle					m_qEyeAngles;
 	} PreDataChanged_Backup;
 	
 private:
