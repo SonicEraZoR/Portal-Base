@@ -358,7 +358,7 @@ void CProp_Portal::DelayedPlacementThink( void )
 		CPortal_Player *pFiringPlayer = dynamic_cast<CPortal_Player *>( pPortalGun->GetOwner() );
 		if( pFiringPlayer )
 		{
-			//pFiringPlayer->IncrementPortalsPlaced();
+			pFiringPlayer->IncrementPortalsPlaced();
 
 			// Placement successful, fire the output
 			m_OnPlacedSuccessfully.FireOutput( pPortalGun, this );
