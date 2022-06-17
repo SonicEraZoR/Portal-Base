@@ -72,7 +72,7 @@ public:
 	#ifdef GAME_DLL
 		DECLARE_DATADESC();
 	
-		void SendReloadSoundEvent( void );
+		//void SendReloadSoundEvent( void );
 
 		void Materialize( void );
 	#endif
