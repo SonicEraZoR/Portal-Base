@@ -51,6 +51,7 @@ public:
 	virtual bool			ShouldDraw( void );
 	virtual void			OnPreDataChanged( DataUpdateType_t type );
 	virtual void			OnDataChanged( DataUpdateType_t type );
+	virtual void			PreThink( void );
 	void					PlayerPortalled( C_Prop_Portal *pEnteredPortal );
 
 	virtual void	CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );

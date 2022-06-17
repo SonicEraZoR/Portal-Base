@@ -313,6 +313,32 @@ int C_Portal_Player::DrawModel( int flags )
 	return BaseClass::DrawModel(flags);
 }
 
+void C_Portal_Player::PreThink( void )
+{
+	QAngle vTempAngles = GetLocalAngles();
+
+	if ( IsLocalPlayer() )
+	{
+		vTempAngles[PITCH] = EyeAngles()[PITCH];
+	}
+	else
+	{
+		vTempAngles[PITCH] = m_angEyeAngles[PITCH];
+	}
+
+	if ( vTempAngles[YAW] < 0.0f )
+	{
+		vTempAngles[YAW] += 360.0f;
+	}
+
+	SetLocalAngles( vTempAngles );
+
+	BaseClass::PreThink();
+
+	//HandleSpeedChanges();
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
