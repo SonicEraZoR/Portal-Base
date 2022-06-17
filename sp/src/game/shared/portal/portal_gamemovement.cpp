@@ -12,12 +12,11 @@
 #include "portal_collideable_enumerator.h"
 #include "prop_portal_shared.h"
 #include "rumble_shared.h"
+#include "portal_player_shared.h"
 
 #if defined( CLIENT_DLL )
-	#include "c_portal_player.h"
 	#include "c_rumble.h"
 #else
-	#include "portal_player.h"
 	#include "env_player_surface_trigger.h"
 	#include "portal_gamestats.h"
 	#include "physicsshadowclone.h"

@@ -9,14 +9,8 @@
 #define PORTAL_PLAYER_H
 #pragma once
 
-#include "player.h"
-#include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
-#include "simtimer.h"
-#include "soundenvelope.h"
-#include "portal_player_shared.h"
 #include "prop_portal.h"
-#include "weapon_portalbase.h"
 #include "in_buttons.h"
 #include "func_liquidportal.h"
 

@@ -10,6 +10,7 @@
 #include "takedamageinfo.h"
 #include "ammodef.h"
 #include "portal_gamerules.h"
+#include "portal_player_shared.h"
 
 
 #ifdef CLIENT_DLL
@@ -23,13 +24,11 @@ extern IVModelInfo* modelinfo;
 
 	#include "vgui/ISurface.h"
 	#include "vgui_controls/Controls.h"
-	#include "c_portal_player.h"
 	#include "hud_crosshair.h"
 	#include "PortalRender.h"
 
 #else
 
-	#include "portal_player.h"
 	#include "vphysics/constraints.h"
 
 #endif

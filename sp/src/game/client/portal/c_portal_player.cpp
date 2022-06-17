@@ -5,20 +5,9 @@
 //===========================================================================//
 
 #include "cbase.h"
-#include "vcollide_parse.h"
 #include "c_portal_player.h"
-#include "view.h"
-#include "c_basetempentity.h"
-#include "takedamageinfo.h"
-#include "in_buttons.h"
-#include "iviewrender_beams.h"
-#include "r_efx.h"
-#include "dlight.h"
-#include "PortalRender.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
-#include "tier1/KeyValues.h"
-#include "ScreenSpaceEffects.h"
 #include "portal_shareddefs.h"
 #include "ivieweffects.h"		// for screenshake
 #include "prop_portal_shared.h"

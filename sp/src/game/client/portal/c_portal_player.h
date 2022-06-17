@@ -10,11 +10,7 @@
 #pragma once
 
 #include "c_basehlplayer.h"
-#include "portal_player_shared.h"
-#include "c_prop_portal.h"
-#include "weapon_portalbase.h"
 #include "c_func_liquidportal.h"
-#include "colorcorrectionmgr.h"
 
 //=============================================================================
 // >> Portal_Player

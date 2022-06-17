@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 
-#include "c_portal_player.h"
+#include "portal_player_shared.h"
 #include "c_te_effect_dispatch.h"
 #include "iviewrender_beams.h"
 #include "model_types.h"

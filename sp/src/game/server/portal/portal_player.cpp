@@ -6,33 +6,13 @@
 
 #include "cbase.h"
 #include "portal_player.h"
-#include "globalstate.h"
 #include "trains.h"
-#include "game.h"
-#include "portal_player_shared.h"
-#include "predicted_viewmodel.h"
-#include "in_buttons.h"
-#include "portal_gamerules.h"
 #include "weapon_portalgun.h"
 #include "portal/weapon_physcannon.h"
-#include "KeyValues.h"
-#include "team.h"
-#include "eventqueue.h"
-#include "weapon_portalbase.h"
-#include "engine/IEngineSound.h"
 #include "ai_basenpc.h"
-#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "prop_portal_shared.h"
-#include "player_pickup.h"	// for player pickup code
 #include "vphysics/player_controller.h"
-#include "datacache/imdlcache.h"
-#include "bone_setup.h"
-#include "portal_gamestats.h"
 #include "physicsshadowclone.h"
-#include "physics_prop_ragdoll.h"
-#include "soundenvelope.h"
-#include "ai_speech.h"		// For expressors, vcd playing
-#include "sceneentity.h"	// has the VCD precache function
 
 LINK_ENTITY_TO_CLASS( player, CPortal_Player );
 
