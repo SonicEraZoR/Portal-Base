@@ -94,6 +94,10 @@ public:
 	DECLARE_DATADESC();
 
 	void				SetAnimation(PLAYER_ANIM playerAnim);
+	
+	bool				ValidatePlayerModel(const char *pModel);
+
+	void				SetPlayerModel(void);
 
 	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
 

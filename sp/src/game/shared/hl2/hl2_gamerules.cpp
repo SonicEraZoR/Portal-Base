@@ -1892,3 +1892,34 @@ CAmmoDef *GetAmmoDef()
 
 #endif
 #endif
+
+void CHalfLife2::ClientSettingsChanged(CBasePlayer *pPlayer)
+{
+#ifndef CLIENT_DLL
+
+	CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player*>(UTIL_GetLocalPlayer());
+
+	if (pHL2Player == NULL)
+		return;
+
+	const char *pCurrentModel = modelinfo->GetModelName(pPlayer->GetModel());
+	const char *szModelName = engine->GetClientConVarValue(engine->IndexOfEdict(pPlayer->edict()), "cl_playermodel");
+
+	//If we're different.
+	if (stricmp(szModelName, pCurrentModel))
+	{
+		pHL2Player->SetPlayerModel();
+
+		const char *pszCurrentModelName = modelinfo->GetModelName(pHL2Player->GetModel());
+
+#ifdef _DEBUG // doesn't look great when this gets printed out, so i made this debug-only thing
+		char szReturnString[128];
+		Q_snprintf(szReturnString, sizeof(szReturnString), "Your player model is: %s\n", pszCurrentModelName);
+
+		ClientPrint(pHL2Player, HUD_PRINTTALK, szReturnString);
+#endif
+	}
+
+	BaseClass::ClientSettingsChanged(pPlayer);
+#endif
+}
