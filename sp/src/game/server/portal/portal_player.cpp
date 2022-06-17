@@ -214,10 +214,6 @@ END_DATADESC()
 ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED );
 ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
-const char *g_pszChellModel = "models/player/chell.mdl";
-const char *g_pszPlayerModel = "models/player.mdl";
-
-
 #define MAX_COMBINE_MODELS 4
 #define MODEL_CHANGE_INTERVAL 5.0f
 #define TEAM_CHANGE_INTERVAL 5.0f
@@ -299,10 +295,6 @@ void CPortal_Player::Precache( void )
 	PrecacheScriptSound( "PortalPlayer.FallRecover" );
 
 	PrecacheModel ( "sprites/glow01.vmt" );
-
-	//Precache Citizen models
-	PrecacheModel( g_pszPlayerModel );
-	PrecacheModel( g_pszChellModel );
 
 	PrecacheScriptSound( "NPC_Citizen.die" );
 }
@@ -472,60 +464,6 @@ void CPortal_Player::OnRestore( void )
 //
 //	return false;
 //}
-
-bool CPortal_Player::ValidatePlayerModel( const char *pModel )
-{
-	if ( !Q_stricmp( g_pszPlayerModel, pModel ) )
-	{
-		return true;
-	}
-
-	if ( !Q_stricmp( g_pszChellModel, pModel ) )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-void CPortal_Player::SetPlayerModel( void )
-{
-	const char *szModelName = NULL;
-	const char *pszCurrentModelName = modelinfo->GetModelName( GetModel());
-
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
-
-	if ( ValidatePlayerModel( szModelName ) == false )
-	{
-		char szReturnString[512];
-
-		if ( ValidatePlayerModel( pszCurrentModelName ) == false )
-		{
-			pszCurrentModelName = g_pszPlayerModel;
-		}
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", pszCurrentModelName );
-		engine->ClientCommand ( edict(), szReturnString );
-
-		szModelName = pszCurrentModelName;
-	}
-
-	int modelIndex = modelinfo->GetModelIndex( szModelName );
-
-	if ( modelIndex == -1 )
-	{
-		szModelName = g_pszPlayerModel;
-
-		char szReturnString[512];
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", szModelName );
-		engine->ClientCommand ( edict(), szReturnString );
-	}
-
-	SetModel( szModelName );
-	m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
-}
-
 
 bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 {

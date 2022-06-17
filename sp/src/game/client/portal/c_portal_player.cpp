@@ -293,8 +293,6 @@ END_PREDICTION_DATA()
 #define	_NORM_SPEED 190
 #define	_SPRINT_SPEED 320
 
-static ConVar cl_playermodel( "cl_playermodel", "none", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Default Player Model");
-
 extern bool g_bUpsideDown;
 
 //EHANDLE g_eKillTarget1;

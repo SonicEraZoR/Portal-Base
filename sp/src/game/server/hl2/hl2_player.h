@@ -92,6 +92,10 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
+	bool				ValidatePlayerModel(const char *pModel);
+
+	void				SetPlayerModel(void);
+
 	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
 
 	virtual void		Precache( void );
