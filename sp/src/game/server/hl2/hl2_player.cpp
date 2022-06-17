@@ -61,6 +61,10 @@
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
 
+// Max mass the player can lift with +use. 85 in Portal
+ConVar max_lift_mass("max_lift_mass", "35", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max mass the player can lift with +use, 85 in Portal");
+ConVar max_lift_size("max_lift_size", "128", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max size the player can lift with +use");
+
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
 // version of the player's hull, not the hitboxes for the player's model
@@ -3142,7 +3146,7 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 	
 	if ( bLimitMassAndSize == true )
 	{
-		if ( CBasePlayer::CanPickupObject( pObject, 35, 128 ) == false )
+		if ( CBasePlayer::CanPickupObject( pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat() ) == false )
 			 return;
 	}
 
