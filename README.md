@@ -19,7 +19,7 @@ This is the old Portal 1 source code ported to Source Engine 2013. I made this b
 * You won't get stuck in non-solid static props near portals
 * You can change the **maximum** delay between shooting a Portal and it opening with sv_portal_projectile_delay (default is 0.5 seconds), if set to a very high number behavior will be the same as in normal Portal
 * You can rapid click to shoot Portals faster, like in Portal 2
-* You can set either Chell playermodel or default Half-Life 2 playermodel with "*cl_playermodel "models/player/chell.mdl"*" or "*cl_playermodel "none"*" respectively or in "Mod Options" menu
+* You can set either Chell playermodel or default Half-Life 2 playermodel with "*cl_playermodel "models/player/chell.mdl"*" or "*cl_playermodel "none"*" respectively or in "Mod Options" menu (you will need to start a new game or load a map through console to see the change though)
 * There is HUD QuickInfo (aka crosshair) from Portal's beta. Toggleable with "beta_quickinfo 1|0" or in "Mod Options" menu (the code for it was taken from here and improved upon https://github.com/reepblue/project-beta/blob/master/src/game/client/project-beta/hud_quickinfo.cpp)
 * Crowbar swings through Portals
 * No crash when Magnusson Device hits the ground
