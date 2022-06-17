@@ -21,6 +21,10 @@ class CModSettingsPanel : public vgui::Frame
 	CModSettingsPanel(vgui::VPANEL parent); 	// Constructor
 	~CModSettingsPanel(){};				// Destructor
 
+public:
+	// Bring the frame to the front and requests focus, ensures it's not minimized
+	virtual void Activate();
+
 protected:
 	//VGUI overrides:
 	virtual void OnTick();
@@ -88,11 +92,6 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pReceiveFallDamage->SetCvarName("sv_receive_fall_damage");
 	m_pReceiveFallDamage->SizeToContents();
 	m_pChellModel = dynamic_cast<CheckButton*>( FindChildByName("ChellModel", true) );
-	ConVar *cl_playermodel = cvar->FindVar("cl_playermodel");
-	if (Q_strcmp(cl_playermodel->GetString(), "models/player/chell.mdl") == 0)
-		m_pChellModel->SetSelected(true);
-	else
-		m_pChellModel->SetSelected(false);
 
 	DevMsg("ModSettingsPanel has been constructed\n");
 }
@@ -137,7 +136,7 @@ IModSettingsPanel* modsettingspanel = (IModSettingsPanel*)&g_ModSettingsPanel;
 void CModSettingsPanel::OnTick()
 {
 	BaseClass::OnTick();
-	SetVisible(cl_showmodsettingspanel.GetBool()); // 1 BY DEFAULT
+	SetVisible(cl_showmodsettingspanel.GetBool()); // 0 BY DEFAULT
 }
 
 void CModSettingsPanel::OnCommand(const char* pcCommand)
@@ -153,7 +152,7 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
 		if (!m_pChellModel->IsDepressed())
-			engine->ClientCmd("cl_playermodel \"none\"");
+			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
 		else
 			engine->ClientCmd("cl_playermodel \"models/player/chell.mdl\"");
 	}
@@ -165,9 +164,20 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
 		if (!m_pChellModel->IsDepressed())
-			engine->ClientCmd("cl_playermodel \"none\"");
+			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
 		else
 			engine->ClientCmd("cl_playermodel \"models/player/chell.mdl\"");
 		cl_showmodsettingspanel.SetValue(0);
 	}	
+}
+
+void CModSettingsPanel::Activate()
+{
+	ConVar *cl_playermodel = cvar->FindVar("cl_playermodel");
+	if (Q_strcmp(cl_playermodel->GetString(), "models/player/chell.mdl") == 0)
+		m_pChellModel->SetSelected(true);
+	else
+		m_pChellModel->SetSelected(false);
+
+	BaseClass::Activate();
 }
