@@ -41,7 +41,6 @@
 			game+mod			|gameinfo_path|custom/*
 			game+mod			episodic/custom/*
 			game+mod			hl2/custom/*
-			game+mod			|all_source_engine_paths|../Portal/portal/custom/*
 
 			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
 			// as the first "mod" search path (after any user customizations).  This is also the one
@@ -61,6 +60,9 @@
 			game				|all_source_engine_paths|hl2/hl2_textures.vpk
 			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
 			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			
+			game+mod			|all_source_engine_paths|../Portal/portal/custom/*
+			
 			game				|all_source_engine_paths|../Portal/portal/portal_sound_vo_english.vpk
 			game				|all_source_engine_paths|../Portal/portal/portal_pak.vpk
 			platform			|all_source_engine_paths|platform/platform_misc.vpk
