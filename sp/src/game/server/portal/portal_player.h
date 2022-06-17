@@ -54,12 +54,8 @@ public:
 	virtual void Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
 	virtual void UpdatePortalViewAreaBits( unsigned char *pvs, int pvssize );
-	
-	bool	ValidatePlayerModel( const char *pModel );
 
 	void CheatImpulseCommands( int iImpulse );
-
-	void SetPlayerModel( void );
 
 	void ForceDuckThisFrame( void );
 

@@ -53,8 +53,6 @@ END_RECV_TABLE()
 BEGIN_PREDICTION_DATA( C_Portal_Player )
 END_PREDICTION_DATA()
 
-static ConVar cl_playermodel( "cl_playermodel", "none", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Default Player Model");
-
 extern bool g_bUpsideDown;
 
 C_Portal_Player::C_Portal_Player()
