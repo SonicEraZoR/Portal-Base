@@ -1607,12 +1607,28 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
 		( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
 	{
-		Vector force = vecDir * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
-		if ( force.z > 250.0f )
+#ifdef PORTAL // fix for player jumping up when they shoot themselves with a shotgun through portal
+		if ((info.GetDamageType() == (DMG_BULLET | DMG_BUCKSHOT)) && (attacker == this))
 		{
-			force.z = 250.0f;
+			Vector force = vecDir;// *-DamageForce(WorldAlignSize(), info.GetBaseDamage());
+			if (force.z > 250.0f)
+			{
+				force.z = 250.0f;
+			}
+			ApplyAbsVelocityImpulse(force);
 		}
-		ApplyAbsVelocityImpulse( force );
+		else
+		{
+#endif
+			Vector force = vecDir * -DamageForce(WorldAlignSize(), info.GetBaseDamage());
+			if (force.z > 250.0f)
+			{
+				force.z = 250.0f;
+			}
+			ApplyAbsVelocityImpulse(force);
+#ifdef PORTAL
+		}
+#endif
 	}
 
 	// fire global game event
