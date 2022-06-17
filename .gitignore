@@ -89,6 +89,10 @@ sp/game/hl2ep2_with_ashpd/voice_ban.dt
 sp/game/hl2ep2_with_ashpd/cfg/server_blacklist.txt
 sp/game/hl2ep2_with_ashpd/GameState.txt
 sp/game/hl2ep2_with_ashpd/stats.txt
+sp/game/hl2lostcoast_with_ashpd/voice_ban.dt
+sp/game/hl2lostcoast_with_ashpd/cfg/server_blacklist.txt
+sp/game/hl2lostcoast_with_ashpd/GameState.txt
+sp/game/hl2lostcoast_with_ashpd/stats.txt
 sp/src/utils/sapi51/*
 *.lib
 sp/src/utils/qc_eyes/Debug/QC_Eyes.res
