@@ -58,9 +58,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-const char *g_pszChellModel = "models/player/chell.mdl";
-const char *g_pszPlayerModel = "models/player.mdl";
-
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
 
@@ -446,10 +443,6 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.TrainUse" );
 	PrecacheScriptSound( "HL2Player.Use" );
 	PrecacheScriptSound( "HL2Player.BurnPain" );
-
-	//Precache Citizen models
-	PrecacheModel(g_pszPlayerModel);
-	PrecacheModel(g_pszChellModel);
 }
 
 //-----------------------------------------------------------------------------
@@ -4134,55 +4127,3 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	SetCycle(0);
 }
 
-bool CHL2_Player::ValidatePlayerModel(const char *pModel)
-{
-	if (!Q_stricmp(g_pszPlayerModel, pModel))
-	{
-		return true;
-	}
-
-	if (!Q_stricmp(g_pszChellModel, pModel))
-	{
-		return true;
-	}
-
-	return false;
-}
-
-void CHL2_Player::SetPlayerModel(void)
-{
-	const char *szModelName = NULL;
-	const char *pszCurrentModelName = modelinfo->GetModelName(GetModel());
-
-	szModelName = engine->GetClientConVarValue(engine->IndexOfEdict(edict()), "cl_playermodel");
-
-	if (ValidatePlayerModel(szModelName) == false)
-	{
-		char szReturnString[512];
-
-		if (ValidatePlayerModel(pszCurrentModelName) == false)
-		{
-			pszCurrentModelName = g_pszPlayerModel;
-		}
-
-		Q_snprintf(szReturnString, sizeof(szReturnString), "cl_playermodel %s\n", pszCurrentModelName);
-		engine->ClientCommand(edict(), szReturnString);
-
-		szModelName = pszCurrentModelName;
-	}
-
-	int modelIndex = modelinfo->GetModelIndex(szModelName);
-
-	if (modelIndex == -1)
-	{
-		szModelName = g_pszPlayerModel;
-
-		char szReturnString[512];
-
-		Q_snprintf(szReturnString, sizeof(szReturnString), "cl_playermodel %s\n", szModelName);
-		engine->ClientCommand(edict(), szReturnString);
-	}
-
-	SetModel(szModelName);
-	//m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
-}

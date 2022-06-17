@@ -59,8 +59,12 @@ public:
 
 	virtual void SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 	virtual void UpdatePortalViewAreaBits( unsigned char *pvs, int pvssize );
+	
+	bool	ValidatePlayerModel( const char *pModel );
 
 	void CheatImpulseCommands( int iImpulse );
+
+	void SetPlayerModel( void );
 
 	void ForceDuckThisFrame( void );
 
