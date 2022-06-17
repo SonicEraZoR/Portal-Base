@@ -53,6 +53,17 @@ public:
 
 	virtual void Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
+	virtual int	OnTakeDamage( const CTakeDamageInfo &inputInfo );
+	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
+
+	virtual void VPhysicsShadowUpdate( IPhysicsObject *pPhysics );
+
+	bool UseFoundEntity( CBaseEntity *pUseEntity );
+	CBaseEntity* FindUseEntityThroughPortal( void );
+
+	virtual void PlayerUse( void );
+
+	virtual void SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 	virtual void UpdatePortalViewAreaBits( unsigned char *pvs, int pvssize );
 
 	void CheatImpulseCommands( int iImpulse );
@@ -66,6 +77,8 @@ public:
 	void SetHeldObjectPortal( CProp_Portal *pPortal ) { m_pHeldObjectPortal = pPortal; }
 
 	void SetStuckOnPortalCollisionObject( void ) { m_bStuckOnPortalCollisionObject = true; }
+
+	void SetNeuroToxinDamageTime( float fCountdownSeconds ) { m_fNeuroToxinDamageTime = gpGlobals->curtime + fCountdownSeconds; }
 
 	void IncNumCamerasDetatched( void ) { ++m_iNumCamerasDetatched; }
 	int GetNumCamerasDetatched( void ) const { return m_iNumCamerasDetatched; }
@@ -88,6 +101,8 @@ private:
 	float m_fTimeLastHurt;
 	bool  m_bIsRegenerating;		// Is the player currently regaining health
 
+	float m_fNeuroToxinDamageTime;
+
 	int		m_iNumCamerasDetatched;
 
 	QAngle						m_qPrePortalledViewAngles;
@@ -101,6 +116,13 @@ public:
 	CNetworkHandle( CFunc_LiquidPortal, m_hSurroundingLiquidPortal ); //if the player is standing in a liquid portal, this will point to it
 
 	friend class CProp_Portal;
+
+
+#ifdef PORTAL_MP
+public:
+	virtual CBaseEntity* EntSelectSpawnPoint( void );
+	void PickTeam( void );
+#endif
 };
 
 inline CPortal_Player *ToPortalPlayer( CBaseEntity *pEntity )

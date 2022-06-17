@@ -324,6 +324,7 @@ protected:	// Jeep: Portal_Player needs access to this variable to overload Play
 	CSinglePlayerAnimState *m_pPlayerAnimState;
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
 	CNetworkQAngle(m_angEyeAngles);
+	float				m_flTimeUseSuspended; //needed by CPortal_Player::PlayerUse
 
 private:
 
@@ -358,8 +359,6 @@ private:
 	
 	float				m_flArmorReductionTime;
 	int					m_iArmorReductionFrom;
-
-	float				m_flTimeUseSuspended;
 
 	CSimpleSimTimer		m_LowerWeaponTimer;
 	CSimpleSimTimer		m_AutoaimTimer;

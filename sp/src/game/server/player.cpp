@@ -102,7 +102,7 @@ static ConVar sv_maxusrcmdprocessticks( "sv_maxusrcmdprocessticks", "24", FCVAR_
 
 static ConVar old_armor( "player_old_armor", "0" );
 
-static ConVar physicsshadowupdate_render( "physicsshadowupdate_render", "0" );
+ConVar physicsshadowupdate_render( "physicsshadowupdate_render", "0" ); // needs to be non-static for CPortal_Player::VPhysicsShadowUpdate
 bool IsInCommentaryMode( void );
 bool IsListeningToCommentary( void );
 
