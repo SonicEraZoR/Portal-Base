@@ -1910,9 +1910,9 @@ void CHalfLife2::ClientSettingsChanged(CBasePlayer *pPlayer)
 	{
 		pHL2Player->SetPlayerModel();
 
+#ifdef _DEBUG // doesn't look great when this gets printed out, so i made this debug-only thing
 		const char *pszCurrentModelName = modelinfo->GetModelName(pHL2Player->GetModel());
 
-#ifdef _DEBUG // doesn't look great when this gets printed out, so i made this debug-only thing
 		char szReturnString[128];
 		Q_snprintf(szReturnString, sizeof(szReturnString), "Your player model is: %s\n", pszCurrentModelName);
 
