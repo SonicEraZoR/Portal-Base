@@ -4,7 +4,7 @@
 //
 //=============================================================================//
 
-#include "weapon_portalbasecombatweapon.h"
+#include "basehlcombatweapon_shared.h"
 
 #ifndef C_BASEHLCOMBATWEAPON_H
 #define C_BASEHLCOMBATWEAPON_H
@@ -12,10 +12,10 @@
 #pragma once
 #endif
 
-class C_HLMachineGun : public C_BasePortalCombatWeapon
+class C_HLMachineGun : public C_BaseHLCombatWeapon
 {
 public:
-	DECLARE_CLASS(C_HLMachineGun, C_BasePortalCombatWeapon);
+	DECLARE_CLASS( C_HLMachineGun, C_BaseHLCombatWeapon );
 	DECLARE_CLIENTCLASS();
 };
 
@@ -26,10 +26,10 @@ public:
 	DECLARE_CLIENTCLASS();
 };
 
-class C_BaseHLBludgeonWeapon : public C_BasePortalCombatWeapon
+class C_BaseHLBludgeonWeapon : public C_BaseHLCombatWeapon
 {
 public:
-	DECLARE_CLASS(C_BaseHLBludgeonWeapon, C_BasePortalCombatWeapon);
+	DECLARE_CLASS( C_BaseHLBludgeonWeapon, C_BaseHLCombatWeapon );
 	DECLARE_CLIENTCLASS();
 };
 
