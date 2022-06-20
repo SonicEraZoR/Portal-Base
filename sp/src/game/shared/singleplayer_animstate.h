@@ -13,6 +13,7 @@
 #endif
 
 #include "cbase.h"
+#include "base_playeranimstate.h"
 
 #ifdef CLIENT_DLL
 #include "c_baseplayer.h"
@@ -20,7 +21,7 @@
 #include "player.h"
 #endif
 
-class CSinglePlayerAnimState
+class CSinglePlayerAnimState : public CBasePlayerAnimState
 {
 public:
 	enum
@@ -32,6 +33,11 @@ public:
 
 	CSinglePlayerAnimState(CBasePlayer *pPlayer);
 	void Init(CBasePlayer *pPlayer);
+
+	// those 3 methods aren't actually used anywhere I just added them as placeholders because they're pure virtual in the base class
+	Activity			CalcMainActivity() { return ACT_IDLE; }
+	int					CalcAimLayerSequence(float *flCycle, float *flAimSequenceWeight, bool bForceIdle) { return 0; }
+	float				GetCurrentMaxGroundSpeed() { return m_pPlayer->GetPlayerMaxSpeed(); }
 
 	Activity            BodyYawTranslateActivity(Activity activity);
 
