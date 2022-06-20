@@ -49,6 +49,8 @@ public:
 		return cone;
 	}
 	
+	virtual bool Lower(void);
+	virtual bool CanLower();
 	virtual void Precache ( void );
 
 	virtual void CreateSounds( void );

@@ -127,6 +127,8 @@ public:
 		return cone;
 	}
 	
+	virtual bool Lower(void);
+	virtual bool CanLower();
 	void Precache ( void );
 
 	virtual void OnRestore( void );
