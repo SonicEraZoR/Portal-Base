@@ -41,6 +41,7 @@ private:
 	CvarToggleCheckButton<ConVarRef> *m_pRegenerationEnable;
 	CvarToggleCheckButton<ConVarRef> *m_pReceiveFallDamage;
 	CheckButton *m_pChellModel;
+	ConVar *cl_playermodel;
 
 };
 
@@ -92,6 +93,7 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pReceiveFallDamage->SetCvarName("sv_receive_fall_damage");
 	m_pReceiveFallDamage->SizeToContents();
 	m_pChellModel = dynamic_cast<CheckButton*>( FindChildByName("ChellModel", true) );
+	cl_playermodel = cvar->FindVar("cl_playermodel");
 
 	DevMsg("ModSettingsPanel has been constructed\n");
 }
@@ -173,7 +175,6 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 
 void CModSettingsPanel::Activate()
 {
-	ConVar *cl_playermodel = cvar->FindVar("cl_playermodel");
 	if (Q_strcmp(cl_playermodel->GetString(), "models/player/chell.mdl") == 0)
 		m_pChellModel->SetSelected(true);
 	else
