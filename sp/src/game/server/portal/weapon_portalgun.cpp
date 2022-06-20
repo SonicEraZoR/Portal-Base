@@ -80,7 +80,7 @@ extern ConVar sv_portal_placement_debug;
 extern ConVar sv_portal_placement_never_fail;
 ConVar beta_quickinfo_show_portal_delay("beta_quickinfo_show_portal_delay", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 ConVar sv_portal_projectile_delay("sv_portal_projectile_delay", "0.5", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Maximum delay after firing and before portal is placed. If set to a very high number behaviour will be the same as in normal Portal.");
-
+ConVar allow_portalgun_lowering_anim("allow_portalgun_lowering_anim", "0", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED, "Allows lowering animation (animation when you look at npc's) to play)");
 
 void CWeaponPortalgun::Spawn( void )
 {

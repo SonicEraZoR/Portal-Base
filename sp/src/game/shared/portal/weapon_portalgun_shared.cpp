@@ -9,6 +9,7 @@
 #include "npcevent.h"
 #include "in_buttons.h"
 #include "rumble_shared.h"
+#include "portal_player_shared.h"
 
 #include "prop_portal_shared.h"
 
@@ -343,7 +344,34 @@ bool CWeaponPortalgun::Deploy( void )
 {
 	DoEffect( EFFECT_READY );
 
-	bool bReturn = BaseClass::Deploy();
+	ConVar* allow_portalgun_lowering_anim = cvar->FindVar("allow_portalgun_lowering_anim");
+
+	// moved this here from CBasePortalCombatWeapon so lowering animation can be overriden
+	// If we should be lowered, deploy in the lowered position
+	// We have to ask the player if the last time it checked, the weapon was lowered
+	if (GetOwner() && GetOwner()->IsPlayer())
+	{
+		CPortal_Player *pPlayer = assert_cast<CPortal_Player*>(GetOwner());
+		if (pPlayer->IsWeaponLowered() && allow_portalgun_lowering_anim->GetBool())
+		{
+			if (SelectWeightedSequence(ACT_VM_IDLE_LOWERED) != ACTIVITY_NOT_AVAILABLE)
+			{
+				if (DefaultDeploy((char*)GetViewModel(), (char*)GetWorldModel(), ACT_VM_IDLE_LOWERED, (char*)GetAnimPrefix()))
+				{
+					m_bLowered = true;
+
+					// Stomp the next attack time to fix the fact that the lower idles are long
+					pPlayer->SetNextAttack(gpGlobals->curtime + 1.0);
+					m_flNextPrimaryAttack = gpGlobals->curtime + 1.0;
+					m_flNextSecondaryAttack = gpGlobals->curtime + 1.0;
+					return true;
+				}
+			}
+		}
+	}
+
+	m_bLowered = false;
+	bool bReturn = CBaseCombatWeapon::Deploy(); //skip CBasePortalCombatWeapon, go stright to CBaseCombatWeapon
 
 	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime;
 
@@ -368,32 +396,40 @@ bool CWeaponPortalgun::Deploy( void )
 
 void CWeaponPortalgun::WeaponIdle( void )
 {
-	//See if we should idle high or low
-	if ( WeaponShouldBeLowered() )
+	ConVar* allow_portalgun_lowering_anim = cvar->FindVar("allow_portalgun_lowering_anim");
+	if (allow_portalgun_lowering_anim->GetBool())
 	{
-		// Move to lowered position if we're not there yet
-		if ( GetActivity() != ACT_VM_IDLE_LOWERED && GetActivity() != ACT_VM_IDLE_TO_LOWERED 
-			&& GetActivity() != ACT_TRANSITION )
+		//See if we should idle high or low
+		if (WeaponShouldBeLowered())
 		{
-			SendWeaponAnim( ACT_VM_IDLE_LOWERED );
+			// Move to lowered position if we're not there yet
+			if (GetActivity() != ACT_VM_IDLE_LOWERED && GetActivity() != ACT_VM_IDLE_TO_LOWERED
+				&& GetActivity() != ACT_TRANSITION)
+			{
+				SendWeaponAnim(ACT_VM_IDLE_LOWERED);
+			}
+			else if (HasWeaponIdleTimeElapsed())
+			{
+				// Keep idling low
+				SendWeaponAnim(ACT_VM_IDLE_LOWERED);
+			}
 		}
-		else if ( HasWeaponIdleTimeElapsed() )
+		else
 		{
-			// Keep idling low
-			SendWeaponAnim( ACT_VM_IDLE_LOWERED );
+			// See if we need to raise immediately
+			if (m_flRaiseTime < gpGlobals->curtime && GetActivity() == ACT_VM_IDLE_LOWERED)
+			{
+				SendWeaponAnim(ACT_VM_IDLE);
+			}
+			else if (HasWeaponIdleTimeElapsed())
+			{
+				SendWeaponAnim(ACT_VM_IDLE);
+			}
 		}
 	}
-	else
+	else if (HasWeaponIdleTimeElapsed())
 	{
-		// See if we need to raise immediately
-		if ( m_flRaiseTime < gpGlobals->curtime && GetActivity() == ACT_VM_IDLE_LOWERED ) 
-		{
-			SendWeaponAnim( ACT_VM_IDLE );
-		}
-		else if ( HasWeaponIdleTimeElapsed() ) 
-		{
-			SendWeaponAnim( ACT_VM_IDLE );
-		}
+		SendWeaponAnim(ACT_VM_IDLE);
 	}
 }
 
@@ -459,4 +495,26 @@ void CWeaponPortalgun::UpdateOnRemove(void)
 {
 	DestroyEffects();
 	BaseClass::UpdateOnRemove();
+}
+
+bool CWeaponPortalgun::CanLower()
+{
+	ConVar* allow_portalgun_lowering_anim = cvar->FindVar("allow_portalgun_lowering_anim");
+	if (allow_portalgun_lowering_anim->GetBool())
+		return BaseClass::CanLower();
+	else
+		return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Drops the weapon into a lowered pose
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CWeaponPortalgun::Lower(void)
+{
+	ConVar* allow_portalgun_lowering_anim = cvar->FindVar("allow_portalgun_lowering_anim");
+	if (allow_portalgun_lowering_anim->GetBool())
+		return BaseClass::Lower();
+	else
+		return false;
 }
