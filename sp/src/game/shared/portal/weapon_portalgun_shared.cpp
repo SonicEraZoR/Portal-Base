@@ -364,7 +364,7 @@ bool CWeaponPortalgun::Deploy( void )
 	}
 
 	m_bLowered = false;
-	bool bReturn = CBaseCombatWeapon::Deploy(); //skip CBasePortalCombatWeapon, go stright to CBaseCombatWeapon
+	bool bReturn = CBaseCombatWeapon::Deploy(); //skip CBasePortalCombatWeapon, go straight to CBaseCombatWeapon
 
 	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime;
 
