@@ -90,12 +90,11 @@ $definebone "forward" "head" 0 2.500004 0 -90.000003 -90.000003 0 0 0 0 0 0 0
 
 $sectionframes 30 160
 
-$poseparameter "body_pitch" -45 45 loop 360
+$poseparameter "body_pitch" 45 -45 loop 360
 $poseparameter "body_yaw" -45 45 loop 360
 $poseparameter "head_yaw" -29.28032 29.24085 loop 0
 $poseparameter "head_pitch" -20.75119 21.41426 loop 0
-$poseparameter "move_y" -1 1 loop 0
-$poseparameter "move_x" -1 1 loop 0
+$poseparameter "move_yaw" -180 180 wrap
 
 $ikchain "rhand" "wrist_R" knee 0 0 0
 $ikchain "lhand" "wrist_L" knee 0 0 0
@@ -1088,7 +1087,7 @@ $sequence "portal_aimmatrix" {
 	"a_portal_aimmatrix_down_center"
 	"a_portal_aimmatrix_down_left"
 	blend "body_yaw" 45 -45
-	blend "body_pitch" 45 -45
+	blend "body_pitch" -45 45
 	delta
 	fadein 0.2
 	fadeout 0.2
@@ -1107,7 +1106,7 @@ $sequence "run_aim_matrix" {
 	"a_run_aimmatrix_down_center"
 	"a_run_aimmatrix_down_left"
 	blend "body_yaw" 45 -45
-	blend "body_pitch" 45 -45
+	blend "body_pitch" -45 45
 	delta
 	fadein 0.2
 	fadeout 0.2
@@ -1126,7 +1125,7 @@ $sequence "portalgun_crouch_aim_matrix" {
 	"a_crouch_aimmatrix_down_center"
 	"a_crouch_aimmatrix_down_left"
 	blend "body_yaw" 45 -45
-	blend "body_pitch" 45 -45
+	blend "body_pitch" -45 45
 	delta
 	fadein 0.2
 	fadeout 0.2
@@ -1137,8 +1136,6 @@ $sequence "portalgun_crouch_aim_matrix" {
 $sequence "stand_fire_PORTALGUN" {
 	"a_stand_fire_PORTALGUN"
 	activity "ACT_MP_ATTACK_STAND_PRIMARYFIRE" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	delta
 	fadein 0.2
 	fadeout 0.2
@@ -1147,8 +1144,6 @@ $sequence "stand_fire_PORTALGUN" {
 $sequence "crouch_fire_PORTALGUN" {
 	"a_crouch_fire_PORTALGUN"
 	activity "ACT_MP_ATTACK_CROUCH_PRIMARYFIRE" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	delta
 	fadein 0.2
 	fadeout 0.2
@@ -1157,8 +1152,6 @@ $sequence "crouch_fire_PORTALGUN" {
 $sequence "idle_PORTALGUN" {
 	"a_idle_PORTALGUN"
 	activity "ACT_MP_STAND_PRIMARY" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	fadein 0.2
 	fadeout 0.2
 	addlayer "run_aim_matrix"
@@ -1167,8 +1160,6 @@ $sequence "idle_PORTALGUN" {
 $sequence "Idle" {
 	"a_idle"
 	activity "ACT_MP_STAND_IDLE" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	fadein 0.2
 	fadeout 0.2
 }
@@ -1176,8 +1167,6 @@ $sequence "Idle" {
 $sequence "idleCROUCH_PORTALGUN" {
 	"a_CROUCHidle_PORTALGUN"
 	activity "ACT_MP_CROUCH_PRIMARY" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	fadein 0.2
 	fadeout 0.2
 	addlayer "portalgun_crouch_aim_matrix"
@@ -1186,76 +1175,42 @@ $sequence "idleCROUCH_PORTALGUN" {
 $sequence "CrouchIdle" {
 	"a_CrouchIdle"
 	activity "ACT_MP_CROUCH_IDLE" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
 	fadein 0.2
 	fadeout 0.2
 }
 
 $sequence "Run_PORTALGUN" {
-	"a_runSW_PORTALGUN"
-	"a_runS_PORTALGUN"
-	"a_runSE_PORTALGUN"
-	"a_runW_PORTALGUN"
-	"a_runCenter_PORTALGUN"
-	"a_runE_PORTALGUN"
-	"a_runNW_PORTALGUN"
-	"a_runN_PORTALGUN"
-	"a_runNE_PORTALGUN"
+	"a_runS_PORTALGUN" "a_runSE_PORTALGUN" "a_runE_PORTALGUN" "a_runNE_PORTALGUN" "a_runN_PORTALGUN" "a_runNW_PORTALGUN" "a_runW_PORTALGUN" "a_runSW_PORTALGUN" "a_runS_PORTALGUN"
 	activity "ACT_MP_RUN_PRIMARY" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
+	blendwidth 9
+	blend move_yaw -180 180
 	fadein 0.2
 	fadeout 0.2
 }
 
 $sequence "Run" {
-	"a_runSW"
-	"a_runS"
-	"a_runSE"
-	"a_runW"
-	"a_runCenter"
-	"a_runE"
-	"a_runNW"
-	"a_runN"
-	"a_runNE"
+	"a_runS" "a_runSE" "a_runE" "a_runNE" "a_runN" "a_runNW" "a_runW" "a_runSW" "a_runS"
 	activity "ACT_MP_RUN" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
+	blendwidth 9
+	blend move_yaw -180 180
 	fadein 0.2
 	fadeout 0.2
 }
 
 $sequence "Crouch_walk_PORTALGUN" {
-	"a_crouchSW_PORTALGUN"
-	"a_crouchS_PORTALGUN"
-	"a_crouchSE_PORTALGUN"
-	"a_crouchW_PORTALGUN"
-	"a_crouchCenter_PORTALGUN"
-	"a_crouchE_PORTALGUN"
-	"a_crouchNW_PORTALGUN"
-	"a_crouchN_PORTALGUN"
-	"a_crouchNE_PORTALGUN"
+	"a_crouchS_PORTALGUN" "a_crouchSE_PORTALGUN" "a_crouchE_PORTALGUN" "a_crouchNE_PORTALGUN" "a_crouchN_PORTALGUN" "a_crouchNW_PORTALGUN" "a_crouchW_PORTALGUN" "a_crouchSW_PORTALGUN" "a_crouchS_PORTALGUN"
 	activity "ACT_MP_CROUCHWALK_PRIMARY" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
+	blendwidth 9
+	blend move_yaw -180 180
 	fadein 0.2
 	fadeout 0.2
 }
 
 $sequence "CrouchWalk" {
-	"a_crouchSW"
-	"a_crouchS"
-	"a_crouchSE"
-	"a_crouchW"
-	"a_crouchCenter"
-	"a_crouchE"
-	"a_crouchNW"
-	"a_crouchN"
-	"a_crouchNE"
+	"a_crouchS" "a_crouchSE" "a_crouchE" "a_crouchNE" "a_crouchN" "a_crouchNW" "a_crouchW" "a_crouchSW" "a_crouchS"
 	activity "ACT_MP_CROUCHWALK" 1
-	blend "move_y" -1 1
-	blend "move_x" -1 1
+	blendwidth 9
+	blend move_yaw -180 180
 	fadein 0.2
 	fadeout 0.2
 }
@@ -1285,3 +1240,6 @@ $sequence "standing_jump" {
 	ikrule "lhand" release contact 0 fakeorigin 0 0 0 fakerotate 0 0 0 floor 0 height 0 radius 0 range 0 0 25 25 target 1 usesequence 
 	walkframe 16
 }
+
+//needs to be included to fix player snapping 180 degrees when looking up and down, those animations don't actually work on Chell's, only portal gun ones work
+$includemodel "player/female_anims.mdl"
