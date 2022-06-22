@@ -59,6 +59,7 @@
 #include "tier0/memdbgon.h"
 
 const char *g_pszChellModel = "models/player/chell.mdl";
+const char *g_pszGordonModel = "models/gordon/gordon.mdl";
 const char *g_pszPlayerModel = "models/player.mdl";
 
 extern ConVar weapon_showproficiency;
@@ -450,6 +451,7 @@ void CHL2_Player::Precache( void )
 	//Precache Citizen models
 	PrecacheModel(g_pszPlayerModel);
 	PrecacheModel(g_pszChellModel);
+	PrecacheModel(g_pszGordonModel);
 }
 
 //-----------------------------------------------------------------------------
@@ -4142,6 +4144,11 @@ bool CHL2_Player::ValidatePlayerModel(const char *pModel)
 	}
 
 	if (!Q_stricmp(g_pszChellModel, pModel))
+	{
+		return true;
+	}
+
+	if (!Q_stricmp(g_pszGordonModel, pModel))
 	{
 		return true;
 	}
