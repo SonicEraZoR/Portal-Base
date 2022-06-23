@@ -1,0 +1,26 @@
+EyeRefract
+{
+$Iris "eyes/green_iris_bright" 
+$AmbientOcclTexture "eyes/survivor_eye_ao" 
+$Envmap "Engine/eye-reflection-cubemap-" 
+$CorneaTexture "Engine/eye-cornea" 
+$EyeballRadius "0.5" 
+$AmbientOcclColor "[.4 .4 .4]" Default 0.33, 0.33, 0.33
+$Dilation ".5" 
+$ParallaxStrength "0.25" 
+$CorneaBumpStrength ".5" 
+$Glossiness 0.5
+$halflambert 1
+$nodecal 1
+$ambientocclusion 1
+
+$RaytraceSphere 1 
+$SphereTexkillCombo 0 
+
+	// DX8 ps.1.1 fallbacks, original HL2 eyes
+	"Eyes_dx8"
+	{
+		"$basetexture" "models/humans/eyeball_l"
+		"$iris" "models/police/pupil_l"
+	}
+}

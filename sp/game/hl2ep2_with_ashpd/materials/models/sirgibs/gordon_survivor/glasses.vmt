@@ -1,0 +1,10 @@
+"vertexlitgeneric"
+{
+	"$baseTexture" "models\sirgibs\gordon_survivor\glasses"
+	"$phong" "1"
+	"$phongexponent" "10"
+	"$phongboost" "1"	
+	"$phongfresnelranges"	"[0.1 0.5 1]"
+	"$halflambert" "1"
+	"$basemapalphaphongmask" "1"
+}

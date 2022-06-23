@@ -1,0 +1,12 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/SirGibs/gordon_survivor/gordon_cylmap2_enh"
+	"$bumpmap"     "Models/SirGibs/gordon_survivor/gordon_cylmap2_normal"
+	
+    "$phong" "1"
+	//"$phongexponent" "33"
+	"$phongexponenttexture" "models\SirGibs\gordon_survivor\gordon_cylmap2_exp"	
+	"$phongboost" "1.25"	
+	"$phongfresnelranges"	"[0.1 0.5 1]"		
+	"$halflambert" 1
+}
