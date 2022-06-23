@@ -486,6 +486,12 @@ void CHL2_Player::EquipSuit( bool bPlayEffects )
 	{
 		StartAdmireGlovesAnimation();
 	}
+
+	// setting suit skin
+	if (!Q_stricmp(g_pszGordonModel, GetModelName().ToCStr()))
+	{
+		SetBodygroup(2, 1);
+	}
 }
 
 void CHL2_Player::RemoveSuit( void )
@@ -4191,6 +4197,11 @@ void CHL2_Player::SetPlayerModel(void)
 	}
 
 	SetModel(szModelName);
+	// setting correct body group for gordon model
+	if (!Q_stricmp(g_pszGordonModel, szModelName))
+	{
+		SetBodygroup(2, 3);
+	}
 	//m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
 }
 
