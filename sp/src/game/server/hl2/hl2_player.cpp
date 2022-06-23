@@ -59,7 +59,7 @@
 #include "tier0/memdbgon.h"
 
 const char *g_pszChellModel = "models/player/chell.mdl";
-const char *g_pszGordonModel = "models/gordon/gordon.mdl";
+const char *g_pszGordonModel = "models/sirgibs/ragdolls/gordon_survivor_player.mdl";
 const char *g_pszPlayerModel = "models/player.mdl";
 
 extern ConVar weapon_showproficiency;
