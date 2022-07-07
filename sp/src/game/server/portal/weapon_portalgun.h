@@ -141,6 +141,7 @@ private:
 	CWeaponPortalgun( const CWeaponPortalgun & );
 
 	float	m_flSoonestPrimaryAttack;
+	float	m_flSoonestSecondaryAttack;
 };
 
 

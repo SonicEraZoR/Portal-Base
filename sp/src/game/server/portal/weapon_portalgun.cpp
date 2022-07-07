@@ -922,7 +922,7 @@ void CWeaponPortalgun::ItemPostFrame(void)
 		m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
 	}
 
-	if (((pOwner->m_nButtons & IN_ATTACK2) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime)) // we use the same delay as primary attack that's why m_flSoonestPrimaryAttack is used
+	if (((pOwner->m_nButtons & IN_ATTACK2) == false) && (m_flSoonestSecondaryAttack < gpGlobals->curtime))
 	{
 		m_flNextSecondaryAttack = gpGlobals->curtime - 0.1f;
 	}
