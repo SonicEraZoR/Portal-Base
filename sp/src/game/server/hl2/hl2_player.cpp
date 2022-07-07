@@ -4200,7 +4200,16 @@ void CHL2_Player::SetPlayerModel(void)
 	// setting correct body group for gordon model
 	if (!Q_stricmp(g_pszGordonModel, szModelName))
 	{
-		SetBodygroup(2, 3);
+		if (IsSuitEquipped())
+		{
+			// setting suit skin
+			SetBodygroup(2, 1);
+		}
+		else
+		{
+			// or citizen skin
+			SetBodygroup(2, 3);
+		}
 	}
 	//m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
 }
