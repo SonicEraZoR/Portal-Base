@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "basecombatweapon_shared.h"
+#include "basehlcombatweapon_shared.h"
 #include "weapon_parse.h"
 
 #if defined( CLIENT_DLL )
@@ -60,7 +60,9 @@ typedef enum
 
 } PortalWeaponID;
 
-class CWeaponPortalBase : public CBaseCombatWeapon
+//made this inherit from CBaseHLCombatWeapon so portal gun can also have viewmodel bob
+//and also just in general so CWeaponPortalBase and CBasePortalCombatWeapon override CBaseHLCombatWeapon insted of replacing it
+class CWeaponPortalBase : public CBaseHLCombatWeapon
 {
 public:
 	DECLARE_CLASS( CWeaponPortalBase, CBaseCombatWeapon );
