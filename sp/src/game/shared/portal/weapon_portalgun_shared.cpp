@@ -57,6 +57,7 @@ CWeaponPortalgun::CWeaponPortalgun( void )
 
 #ifdef GAME_DLL
 	m_flSoonestPrimaryAttack = gpGlobals->curtime;
+	m_flSoonestSecondaryAttack = gpGlobals->curtime;
 #endif // GAME_DLL
 
 }
@@ -134,6 +135,7 @@ void CWeaponPortalgun::DryFire( void )
 	
 #ifdef GAME_DLL
 	m_flSoonestPrimaryAttack = gpGlobals->curtime + PORTALGUN_FASTEST_DRY_REFIRE_TIME;
+	m_flSoonestSecondaryAttack = gpGlobals->curtime + PORTALGUN_FASTEST_DRY_REFIRE_TIME;
 #endif
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 }
@@ -259,6 +261,7 @@ void CWeaponPortalgun::SecondaryAttack( void )
 	}
 
 #ifndef CLIENT_DLL
+	m_flSoonestSecondaryAttack = gpGlobals->curtime + PORTALGUN_FASTEST_REFIRE_TIME;
 	inputdata_t inputdata;
 	inputdata.pActivator = this;
 	inputdata.pCaller = this;
