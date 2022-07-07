@@ -11,7 +11,6 @@
 #endif
 
 #include "basehlcombatweapon_shared.h"
-#include "weapon_parse.h"
 
 #if defined( CLIENT_DLL )
 	#define CWeaponPortalBase C_WeaponPortalBase
