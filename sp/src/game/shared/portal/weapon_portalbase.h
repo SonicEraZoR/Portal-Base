@@ -114,7 +114,7 @@ public:
 
 	#endif
 
-	float		m_flPrevAnimTime;
+	//float		m_flPrevAnimTime;
 	float  m_flNextResetCheckTime;
 
 	Vector	GetOriginalSpawnOrigin( void ) { return m_vOriginalSpawnOrigin;	}
