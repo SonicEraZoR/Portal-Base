@@ -302,6 +302,17 @@ int C_Portal_Player::DrawModel( int flags )
 	return BaseClass::DrawModel(flags);
 }
 
+void C_Portal_Player::DoImpactEffect( trace_t &tr, int nDamageType )
+{
+	if ( GetActiveWeapon() )
+	{
+		GetActiveWeapon()->DoImpactEffect( tr, nDamageType );
+		return;
+	}
+
+	BaseClass::DoImpactEffect( tr, nDamageType );
+}
+
 void C_Portal_Player::PreThink( void )
 {
 	QAngle vTempAngles = GetLocalAngles();
@@ -416,7 +427,7 @@ void C_Portal_Player::OnDataChanged( DataUpdateType_t type )
 		}		
 	}
 
-	//DetectAndHandlePortalTeleportation();
+	DetectAndHandlePortalTeleportation();
 
 	if ( type == DATA_UPDATE_CREATED )
 	{
@@ -426,9 +437,59 @@ void C_Portal_Player::OnDataChanged( DataUpdateType_t type )
 	UpdateVisibility();
 }
 
+//CalcView() gets called between OnPreDataChanged() and OnDataChanged(), and these changes need to be known about in both before CalcView() gets called, and if CalcView() doesn't get called
+bool C_Portal_Player::DetectAndHandlePortalTeleportation( void )
+{
+	if( m_bPortalledMessagePending )
+	{
+		m_bPortalledMessagePending = false;
+
+		//C_Prop_Portal *pOldPortal = PreDataChanged_Backup.m_hPortalEnvironment.Get();
+		//Assert( pOldPortal );
+		//if( pOldPortal )
+		{
+			Vector ptNewPosition = GetNetworkOrigin();
+
+			UTIL_Portal_PointTransform( m_PendingPortalMatrix, m_vEyePosition, m_vEyePosition );
+
+			UTIL_Portal_AngleTransform( m_PendingPortalMatrix, m_qEyeAngles_LastCalcView, m_angEyeAngles );
+			m_angEyeAngles.x = AngleNormalize( m_angEyeAngles.x );
+			m_angEyeAngles.y = AngleNormalize( m_angEyeAngles.y );
+			m_angEyeAngles.z = AngleNormalize( m_angEyeAngles.z );
+			m_iv_angEyeAngles.Reset(); //copies from m_angEyeAngles
+
+			if( engine->IsPlayingDemo() )
+			{				
+				pl.v_angle = m_angEyeAngles;		
+				engine->SetViewAngles( pl.v_angle );
+			}
+
+			engine->ResetDemoInterpolation();
+			if( IsLocalPlayer() ) 
+			{
+				//DevMsg( "FPT: %.2f %.2f %.2f\n", m_angEyeAngles.x, m_angEyeAngles.y, m_angEyeAngles.z );
+				SetLocalAngles( m_angEyeAngles );
+			}
+
+			// Reorient last facing direction to fix pops in view model lag
+			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			{
+				CBaseViewModel *vm = GetViewModel( i );
+				if ( !vm )
+					continue;
+
+				UTIL_Portal_VectorTransform( m_PendingPortalMatrix, vm->m_vecLastFacing, vm->m_vecLastFacing );
+			}
+		}
+		m_bPortalledMessagePending = false;
+	}
+
+	return false;
+}
+
 void C_Portal_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
-	//DetectAndHandlePortalTeleportation();
+	DetectAndHandlePortalTeleportation();
 	//if( DetectAndHandlePortalTeleportation() )
 	//	DevMsg( "Teleported within OnDataChanged\n" );
 
@@ -513,7 +574,7 @@ void C_Portal_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNe
 		}
 	}
 
-	//m_qEyeAngles_LastCalcView = qEyeAngleBackup;
+	m_qEyeAngles_LastCalcView = qEyeAngleBackup;
 	//m_ptEyePosition_LastCalcView = ptEyePositionBackup;
 	//m_pPortalEnvironment_LastCalcView = pPortalBackup;
 

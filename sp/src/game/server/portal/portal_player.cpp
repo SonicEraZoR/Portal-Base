@@ -519,6 +519,18 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	}
 }
 
+void CPortal_Player::ShutdownUseEntity( void )
+{
+	ShutdownPickupController( m_hUseEntity );
+}
+
+const Vector& CPortal_Player::WorldSpaceCenter( ) const
+{
+	m_vWorldSpaceCenterHolder = GetAbsOrigin();
+	m_vWorldSpaceCenterHolder.z += ( (IsDucked()) ? (VEC_DUCK_HULL_MAX_SCALED( this ).z) : (VEC_HULL_MAX_SCALED( this ).z) ) * 0.5f;
+	return m_vWorldSpaceCenterHolder;
+}
+
 void CPortal_Player::Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity )
 {
 	Vector oldOrigin = GetLocalOrigin();
@@ -966,6 +978,29 @@ void CPortal_Player::PlayerUse( void )
 	}
 }
 
+void CPortal_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
+{
+	if( m_bFixEyeAnglesFromPortalling )
+	{
+		//the idea here is to handle the notion that the player has portalled, but they sent us an angle update before receiving that message.
+		//If we don't handle this here, we end up sending back their old angles which makes them hiccup their angles for a frame
+		float fOldAngleDiff = fabs( AngleDistance( ucmd->viewangles.x, m_qPrePortalledViewAngles.x ) );
+		fOldAngleDiff += fabs( AngleDistance( ucmd->viewangles.y, m_qPrePortalledViewAngles.y ) );
+		fOldAngleDiff += fabs( AngleDistance( ucmd->viewangles.z, m_qPrePortalledViewAngles.z ) );
+
+		float fCurrentAngleDiff = fabs( AngleDistance( ucmd->viewangles.x, pl.v_angle.x ) );
+		fCurrentAngleDiff += fabs( AngleDistance( ucmd->viewangles.y, pl.v_angle.y ) );
+		fCurrentAngleDiff += fabs( AngleDistance( ucmd->viewangles.z, pl.v_angle.z ) );
+
+		if( fCurrentAngleDiff > fOldAngleDiff )
+			ucmd->viewangles = TransformAnglesToWorldSpace( ucmd->viewangles, m_matLastPortalled.As3x4() );
+
+		m_bFixEyeAnglesFromPortalling = false;
+	}
+
+	BaseClass::PlayerRunCommand( ucmd, moveHelper );
+}
+
 void CPortal_Player::CheatImpulseCommands( int iImpulse )
 {
 	switch ( iImpulse )
@@ -1126,6 +1161,12 @@ void CPortal_Player::ForceDuckThisFrame( void )
 		AddFlag( FL_DUCKING );
 		SetVCollisionState( GetAbsOrigin(), GetAbsVelocity(), VPHYS_CROUCH );
 	}
+}
+
+void CPortal_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis )
+{
+	m_bHeldObjectOnOppositeSideOfPortal = false;
+	BaseClass::ForceDropOfCarriedPhysObjects( pOnlyIfHoldingThis );
 }
 
 //-----------------------------------------------------------------------------

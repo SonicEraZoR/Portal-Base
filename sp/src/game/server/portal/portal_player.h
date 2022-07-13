@@ -47,8 +47,13 @@ public:
 
 	virtual void Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 
+	virtual void PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
+
 	virtual int	OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
+	virtual void ShutdownUseEntity( void );
+
+	virtual const Vector&	WorldSpaceCenter( ) const;
 
 	virtual void VPhysicsShadowUpdate( IPhysicsObject *pPhysics );
 
@@ -63,6 +68,7 @@ public:
 	void CheatImpulseCommands( int iImpulse );
 
 	void ForceDuckThisFrame( void );
+	virtual void ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis );
 
 	void ToggleHeldObjectOnOppositeSideOfPortal( void ) { m_bHeldObjectOnOppositeSideOfPortal = !m_bHeldObjectOnOppositeSideOfPortal; }
 	void SetHeldObjectOnOppositeSideOfPortal( bool p_bHeldObjectOnOppositeSideOfPortal ) { m_bHeldObjectOnOppositeSideOfPortal = p_bHeldObjectOnOppositeSideOfPortal; }
@@ -102,6 +108,10 @@ private:
 	QAngle						m_qPrePortalledViewAngles;
 	bool						m_bFixEyeAnglesFromPortalling;
 	VMatrix						m_matLastPortalled;
+
+	mutable Vector m_vWorldSpaceCenterHolder; //WorldSpaceCenter() returns a reference, need an actual value somewhere
+
+
 
 public:
 

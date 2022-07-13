@@ -47,7 +47,10 @@ public:
 	virtual bool			ShouldDraw( void );
 	virtual void			OnPreDataChanged( DataUpdateType_t type );
 	virtual void			OnDataChanged( DataUpdateType_t type );
+	bool					DetectAndHandlePortalTeleportation( void ); //detects if the player has portalled and fixes views
 	virtual void			PreThink( void );
+	virtual void			DoImpactEffect( trace_t &tr, int nDamageType );
+
 	void					PlayerPortalled( C_Prop_Portal *pEnteredPortal );
 
 	virtual void	CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
@@ -73,6 +76,8 @@ private:
 	CProp_Portal *m_pHeldObjectPortal;
 
 	int	m_iForceNoDrawInPortalSurface; //only valid for one frame, used to temp disable drawing of the player model in a surface because of freaky artifacts
+
+	QAngle	m_qEyeAngles_LastCalcView; //we've got some VERY persistent single frame errors while teleporting, this will be updated every frame in CalcView() and will serve as a central source for fixed angles
 
 	bool	m_bPortalledMessagePending; //Player portalled. It's easier to wait until we get a OnDataChanged() event or a CalcView() before we do anything about it. Otherwise bits and pieces can get undone
 	VMatrix m_PendingPortalMatrix;
