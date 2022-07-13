@@ -181,15 +181,56 @@ int CWeaponPortalBase::DrawModel( int flags )
 
 bool CWeaponPortalBase::ShouldDraw( void )
 {
-	if ( !GetOwner() || GetOwner() != C_BasePlayer::GetLocalPlayer() )
-		return true;
-
-	if ( !IsActiveByLocalPlayer() )
+	if (m_iWorldModelIndex == 0)
 		return false;
 
-	//if ( GetOwner() && GetOwner() == C_BasePlayer::GetLocalPlayer() && materials->GetRenderTarget() == 0 )
-	//	return false;
+	// FIXME: All weapons with owners are set to transmit in CBaseCombatWeapon::UpdateTransmitState,
+	// even if they have EF_NODRAW set, so we have to check this here. Ideally they would never
+	// transmit except for the weapons owned by the local player.
+	if (IsEffectActive(EF_NODRAW))
+		return false;
 
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	// weapon has no owner, always draw it
+	if (!pOwner)
+		return true;
+
+	bool bIsActive = (m_iState == WEAPON_IS_ACTIVE);
+
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+
+	// carried by local player?
+	if (pOwner == pLocalPlayer)
+	{
+		// Only ever show the active weapon
+		if (!bIsActive)
+			return false;
+
+		if (!pOwner->ShouldDraw())
+		{
+			// Our owner is invisible.
+			// This also tests whether the player is zoomed in, in which case you don't want to draw the weapon.
+			return false;
+		}
+
+		// 3rd person mode?
+		//if ( !ShouldDrawLocalPlayerViewModel() ) we always draw 3rd person weapon model like in third person mode, so we can see it through portals
+		return true;
+
+		// don't draw active weapon if not in some kind of 3rd person mode, the viewmodel will do that
+		return false;
+	}
+
+	// If it's a player, then only show active weapons
+	if (pOwner->IsPlayer())
+	{
+		// Show it if it's active...
+		return bIsActive;
+	}
+
+	// FIXME: We may want to only show active weapons on NPCs
+	// These are carried by AIs; always show them
 	return true;
 }
 
