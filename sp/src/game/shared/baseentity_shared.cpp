@@ -29,6 +29,9 @@
 	#include "player_pickup.h"
 	#include "waterbullet.h"
 	#include "func_break.h"
+#ifdef PORTAL
+	#include "physicsshadowclone.h"
+#endif
 
 #ifdef HL2MP
 	#include "te_hl2mp_shotgun_shot.h"
@@ -202,7 +205,11 @@ void CBaseEntity::SetEffects( int nEffects )
 #if !defined( CLIENT_DLL )
 #ifdef HL2_EPISODIC
 		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
+#ifdef PORTAL
+		if (!IsPlayer() && !dynamic_cast<CPhysicsShadowClone*>(this)->GetClonedEntity()->IsPlayer())
+#else
+		if (!IsPlayer())
+#endif
 		{
 			if ( (nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) && !(m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT)) )
 			{
