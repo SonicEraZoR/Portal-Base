@@ -95,7 +95,9 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pReceiveFallDamage->SetCvarName("sv_receive_fall_damage");
 	m_pReceiveFallDamage->SizeToContents();
 	m_pChellModel = dynamic_cast<CheckButton*>( FindChildByName("ChellModel", true) );
+	m_pChellModel->SizeToContents();
 	m_pBadGordonModel = dynamic_cast<CheckButton*>(FindChildByName("BadGordonModel", true));
+	m_pBadGordonModel->SizeToContents();
 	cl_playermodel = cvar->FindVar("cl_playermodel");
 
 	DevMsg("ModSettingsPanel has been constructed\n");
