@@ -967,9 +967,7 @@ bool C_Portal_Player::ShouldDraw( void )
 	if ( IsRagdoll() )
 		return false;
 
-	return true;
-
-	return BaseClass::ShouldDraw();
+	return C_BaseAnimating::ShouldDraw(); //skip C_BasePlayer to C_BaseAnimating
 }
 
 const QAngle& C_Portal_Player::EyeAngles()
