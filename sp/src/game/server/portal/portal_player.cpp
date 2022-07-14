@@ -245,6 +245,11 @@ void CPortal_Player::PostThink( void )
 {
 	BaseClass::PostThink();
 
+	// this needs to be here and not in CHL2_Player because otherwise it won't work on player's shadowclone
+	QAngle angles = GetLocalAngles();
+	angles[PITCH] = 0;
+	SetLocalAngles( angles );
+
 	// Regenerate heath after 3 seconds
 	if (IsAlive() && GetHealth() < GetMaxHealth() && sv_regeneration_enable.GetBool())
 	{

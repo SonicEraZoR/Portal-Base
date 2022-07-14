@@ -923,9 +923,11 @@ void CHL2_Player::PostThink( void )
 
 	m_angEyeAngles = EyeAngles();
 
+#ifndef PORTAL //this needs to be in CPortal_Player and not in CHL2_Player because otherwise it won't work on player's shadowclone
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
 	SetLocalAngles(angles);
+#endif
 
 	m_pPlayerAnimState->Update();
 
