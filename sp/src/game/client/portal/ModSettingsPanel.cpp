@@ -43,6 +43,7 @@ private:
 	CvarToggleCheckButton<ConVarRef> *m_pReceiveFallDamage;
 	CheckButton *m_pChellModel;
 	CheckButton *m_pBadGordonModel;
+	CvarToggleCheckButton<ConVarRef> *m_pLoweringAnim;
 	ConVar *cl_playermodel;
 
 };
@@ -98,6 +99,9 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pChellModel->SizeToContents();
 	m_pBadGordonModel = dynamic_cast<CheckButton*>(FindChildByName("BadGordonModel", true));
 	m_pBadGordonModel->SizeToContents();
+	m_pLoweringAnim = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>(FindChildByName("LoweringAnim", true));
+	m_pLoweringAnim->SetCvarName("allow_portalgun_lowering_anim");
+	m_pLoweringAnim->SizeToContents();
 	cl_playermodel = cvar->FindVar("cl_playermodel");
 
 	DevMsg("ModSettingsPanel has been constructed\n");
@@ -158,6 +162,7 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pBetaQuickInfoOlderGunToggle->ApplyChanges();
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
+		m_pLoweringAnim->ApplyChanges();
 
 		if (!m_pBadGordonModel->IsDepressed())
 		{
@@ -180,6 +185,7 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pBetaQuickInfoOlderGunToggle->ApplyChanges();
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
+		m_pLoweringAnim->ApplyChanges();
 
 		if (!m_pBadGordonModel->IsDepressed())
 		{
