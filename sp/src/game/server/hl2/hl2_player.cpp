@@ -65,6 +65,10 @@ const char *g_pszPlayerModel = "models/player.mdl";
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
 
+// Max mass the player can lift with +use when holding portal gun
+ConVar max_lift_mass_portalgun("max_lift_mass_portalgun", "85", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max mass the player can lift with +use when holding portal gun");
+ConVar max_lift_size_portalgun("max_lift_size_portalgun", "128", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max size the player can lift with +use when holding portal gun");
+
 // Max mass the player can lift with +use. 85 in Portal
 ConVar max_lift_mass("max_lift_mass", "35", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max mass the player can lift with +use, 85 in Portal");
 ConVar max_lift_size("max_lift_size", "128", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max size the player can lift with +use");
@@ -3163,8 +3167,16 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 	
 	if ( bLimitMassAndSize == true )
 	{
-		if ( CBasePlayer::CanPickupObject( pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat() ) == false )
-			 return;
+		if (FClassnameIs(GetActiveWeapon(), "weapon_portalgun"))
+		{
+			if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass_portalgun.GetFloat(), max_lift_size_portalgun.GetFloat()))
+				return;
+		}
+		else
+		{
+			if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat()))
+				return;
+		}
 	}
 
 	// Can't be picked up if NPCs are on me
