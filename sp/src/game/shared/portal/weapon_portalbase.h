@@ -59,7 +59,9 @@ typedef enum
 
 } PortalWeaponID;
 
-class CWeaponPortalBase : public CBaseCombatWeapon
+//made this inherit from CBaseHLCombatWeapon so portal gun can also have viewmodel bob
+//and also just in general so CWeaponPortalBase and CBasePortalCombatWeapon override CBaseHLCombatWeapon insted of replacing it
+class CWeaponPortalBase : public CBaseHLCombatWeapon
 {
 public:
 	DECLARE_CLASS( CWeaponPortalBase, CBaseCombatWeapon );
@@ -103,6 +105,8 @@ public:
 		virtual void	GetRenderBounds( Vector& theMins, Vector& theMaxs );
 
 		virtual bool	OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
+
+		virtual int		CalcOverrideModelIndex() OVERRIDE; //override of an ovveride i guess?
 
 	#else
 

@@ -6,169 +6,39 @@
 
 #include "cbase.h"
 #include "portal_player.h"
-#include "globalstate.h"
 #include "trains.h"
-#include "game.h"
-#include "portal_player_shared.h"
-#include "predicted_viewmodel.h"
-#include "in_buttons.h"
-#include "portal_gamerules.h"
 #include "weapon_portalgun.h"
 #include "portal/weapon_physcannon.h"
-#include "KeyValues.h"
-#include "team.h"
-#include "eventqueue.h"
-#include "weapon_portalbase.h"
-#include "engine/IEngineSound.h"
 #include "ai_basenpc.h"
-#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "prop_portal_shared.h"
-#include "player_pickup.h"	// for player pickup code
 #include "vphysics/player_controller.h"
-#include "datacache/imdlcache.h"
-#include "bone_setup.h"
-#include "portal_gamestats.h"
 #include "physicsshadowclone.h"
-#include "physics_prop_ragdoll.h"
-#include "soundenvelope.h"
-#include "ai_speech.h"		// For expressors, vcd playing
-#include "sceneentity.h"	// has the VCD precache function
-
-// Max mass the player can lift with +use
-#define PORTAL_PLAYER_MAX_LIFT_MASS 85
-#define PORTAL_PLAYER_MAX_LIFT_SIZE 128
-
-extern CBaseEntity	*g_pLastSpawn;
-
-extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
-
-
-// -------------------------------------------------------------------------------- //
-// Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
-// -------------------------------------------------------------------------------- //
-
-class CTEPlayerAnimEvent : public CBaseTempEntity
-{
-public:
-	DECLARE_CLASS( CTEPlayerAnimEvent, CBaseTempEntity );
-	DECLARE_SERVERCLASS();
-
-	CTEPlayerAnimEvent( const char *name ) : CBaseTempEntity( name )
-	{
-	}
-
-	CNetworkHandle( CBasePlayer, m_hPlayer );
-	CNetworkVar( int, m_iEvent );
-	CNetworkVar( int, m_nData );
-};
-
-IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
-SendPropEHandle( SENDINFO( m_hPlayer ) ),
-SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
-SendPropInt( SENDINFO( m_nData ), 32 ),
-END_SEND_TABLE()
-
-static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
-
-void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData )
-{
-	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
-
-	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
-	g_TEPlayerAnimEvent.m_iEvent = event;
-	g_TEPlayerAnimEvent.m_nData = nData;
-	g_TEPlayerAnimEvent.Create( filter, 0 );
-}
-
-
-
-//=================================================================================
-//
-// Ragdoll Entity
-//
-class CPortalRagdoll : public CBaseAnimatingOverlay, public CDefaultPlayerPickupVPhysics
-{
-public:
-
-	DECLARE_CLASS( CPortalRagdoll, CBaseAnimatingOverlay );
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
-
-	CPortalRagdoll()
-	{
-		m_hPlayer.Set( NULL );
-		m_vecRagdollOrigin.Init();
-		m_vecRagdollVelocity.Init();
-	}
-
-	// Transmit ragdolls to everyone.
-	virtual int UpdateTransmitState()
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
-
-	// In case the client has the player entity, we transmit the player index.
-	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
-	// so they can create a ragdoll in the right place.
-	CNetworkHandle( CBaseEntity, m_hPlayer );	// networked entity handle 
-	CNetworkVector( m_vecRagdollVelocity );
-	CNetworkVector( m_vecRagdollOrigin );
-};
-
-LINK_ENTITY_TO_CLASS( portal_ragdoll, CPortalRagdoll );
-
-IMPLEMENT_SERVERCLASS_ST_NOBASE( CPortalRagdoll, DT_PortalRagdoll )
-SendPropVector( SENDINFO(m_vecRagdollOrigin), -1,  SPROP_COORD ),
-SendPropEHandle( SENDINFO( m_hPlayer ) ),
-SendPropModelIndex( SENDINFO( m_nModelIndex ) ),
-SendPropInt		( SENDINFO(m_nForceBone), 8, 0 ),
-SendPropVector	( SENDINFO(m_vecForce), -1, SPROP_NOSCALE ),
-SendPropVector( SENDINFO( m_vecRagdollVelocity ) ),
-END_SEND_TABLE()
-
-
-BEGIN_DATADESC( CPortalRagdoll )
-
-	DEFINE_FIELD( m_vecRagdollOrigin, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecRagdollVelocity, FIELD_VECTOR ),
-
-END_DATADESC()
-
-
-
-
 
 LINK_ENTITY_TO_CLASS( player, CPortal_Player );
 
 IMPLEMENT_SERVERCLASS_ST(CPortal_Player, DT_Portal_Player)
-SendPropExclude( "DT_BaseAnimating", "m_flPlaybackRate" ),	
-SendPropExclude( "DT_BaseAnimating", "m_nSequence" ),
-SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
-SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
-SendPropExclude( "DT_BaseEntity", "m_angRotation" ),
-SendPropExclude( "DT_BaseAnimatingOverlay", "overlay_vars" ),
-SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
-SendPropExclude( "DT_BaseFlex", "m_flexWeight" ),
-SendPropExclude( "DT_BaseFlex", "m_blinktoggle" ),
+// These SendPropExcludes prevent animation from working with a singleplayer animstate implementation
+//SendPropExclude( "DT_BaseAnimating", "m_flPlaybackRate" ),	
+//SendPropExclude( "DT_BaseAnimating", "m_nSequence" ),
+//SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
+//SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
+//SendPropExclude( "DT_BaseEntity", "m_angRotation" ),
+//SendPropExclude( "DT_BaseAnimatingOverlay", "overlay_vars" ),
+//SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
+//SendPropExclude( "DT_BaseFlex", "m_flexWeight" ),
+//SendPropExclude( "DT_BaseFlex", "m_blinktoggle" ),
+//
+//// portal_playeranimstate and clientside animation takes care of these on the client
+//SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
+//SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
 
-// portal_playeranimstate and clientside animation takes care of these on the client
-SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	
-SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
-
-
-SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
-SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
-SendPropEHandle( SENDINFO( m_hRagdoll ) ),
-SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
-SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
 SendPropBool( SENDINFO( m_bHeldObjectOnOppositeSideOfPortal) ),
 SendPropEHandle( SENDINFO( m_pHeldObjectPortal ) ),
 SendPropBool( SENDINFO( m_bPitchReorientation ) ),
 SendPropEHandle( SENDINFO( m_hPortalEnvironment ) ),
 SendPropEHandle( SENDINFO( m_hSurroundingLiquidPortal ) ),
 SendPropBool( SENDINFO( m_bSuppressingCrosshair ) ),
-SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
+//SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 
 END_SEND_TABLE()
 
@@ -178,49 +48,20 @@ BEGIN_DATADESC( CPortal_Player )
 
 	DEFINE_FIELD( m_bHeldObjectOnOppositeSideOfPortal, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_pHeldObjectPortal, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_bIntersectingPortalPlane, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bStuckOnPortalCollisionObject, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fTimeLastHurt, FIELD_TIME ),
-	DEFINE_FIELD( m_StatsThisLevel.iNumPortalsPlaced, FIELD_INTEGER ),
-	DEFINE_FIELD( m_StatsThisLevel.iNumStepsTaken, FIELD_INTEGER ),
-	DEFINE_FIELD( m_StatsThisLevel.fNumSecondsTaken, FIELD_FLOAT ),
-	DEFINE_FIELD( m_fTimeLastNumSecondsUpdate, FIELD_TIME ),
-	DEFINE_FIELD( m_iNumCamerasDetatched, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bPitchReorientation, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bIsRegenerating, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_fNeuroToxinDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_hPortalEnvironment, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flExpressionLoopTime, FIELD_TIME ),
-	DEFINE_FIELD( m_iszExpressionScene, FIELD_STRING ),
-	DEFINE_FIELD( m_hExpressionSceneEnt, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_vecTotalBulletForce, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bSilentDropAndPickup, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_hRagdoll, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_angEyeAngles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_iPlayerSoundType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_qPrePortalledViewAngles, FIELD_VECTOR ),
-	DEFINE_FIELD( m_bFixEyeAnglesFromPortalling, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_matLastPortalled, FIELD_VMATRIX_WORLDSPACE ),
-	DEFINE_FIELD( m_vWorldSpaceCenterHolder, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hSurroundingLiquidPortal, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bSuppressingCrosshair, FIELD_BOOLEAN ),
-	//DEFINE_FIELD ( m_PlayerAnimState, CPortalPlayerAnimState ),
-	//DEFINE_FIELD ( m_StatsThisLevel, PortalPlayerStatistics_t ),
-
-	DEFINE_EMBEDDEDBYREF( m_pExpresser ),
 
 END_DATADESC()
 
 ConVar sv_regeneration_wait_time ("sv_regeneration_wait_time", "1.0", FCVAR_REPLICATED );
 ConVar sv_regeneration_enable("sv_regeneration_enable", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 
-#define MAX_COMBINE_MODELS 4
-#define MODEL_CHANGE_INTERVAL 5.0f
-#define TEAM_CHANGE_INTERVAL 5.0f
-
 #define PORTALPLAYER_PHYSDAMAGE_SCALE 4.0f
 
 extern ConVar sv_turbophysics;
+extern ConVar physicsshadowupdate_render;
 
 //----------------------------------------------------
 // Player Physics Shadow
@@ -230,58 +71,18 @@ extern ConVar sv_turbophysics;
 #define VPHYS_MAX_DISTSQR		(VPHYS_MAX_DISTANCE*VPHYS_MAX_DISTANCE)
 #define VPHYS_MAX_VELSQR		(VPHYS_MAX_VEL*VPHYS_MAX_VEL)
 
-
-extern float IntervalDistance( float x, float x0, float x1 );
-
-//disable 'this' : used in base member initializer list
-#pragma warning( disable : 4355 )
-
 CPortal_Player::CPortal_Player()
 {
-
-	m_PlayerAnimState = CreatePortalPlayerAnimState( this );
-	//CreateExpresser();
-
-	UseClientSideAnimation();
-
-	m_angEyeAngles.Init();
-
-	m_iLastWeaponFireUsercmd = 0;
-
-	m_iSpawnInterpCounter = 0;
-
 	m_bHeldObjectOnOppositeSideOfPortal = false;
 	m_pHeldObjectPortal = 0;
-
 	m_bIntersectingPortalPlane = false;
-
 	m_bPitchReorientation = false;
-
 	m_bSilentDropAndPickup = false;
-
-	m_iszExpressionScene = NULL_STRING;
-	m_hExpressionSceneEnt = NULL;
-	m_flExpressionLoopTime = 0.0f;
 	m_bSuppressingCrosshair = false;
 }
 
 CPortal_Player::~CPortal_Player( void )
 {
-	ClearSceneEvents( NULL, true );
-
-	if ( m_PlayerAnimState )
-		m_PlayerAnimState->Release();
-
-	CPortalRagdoll *pRagdoll = dynamic_cast<CPortalRagdoll*>( m_hRagdoll.Get() );	
-	if( pRagdoll )
-	{
-		UTIL_Remove( pRagdoll );
-	}
-}
-
-void CPortal_Player::UpdateOnRemove( void )
-{
-	BaseClass::UpdateOnRemove();
 }
 
 void CPortal_Player::Precache( void )
@@ -296,7 +97,7 @@ void CPortal_Player::Precache( void )
 
 	PrecacheModel ( "sprites/glow01.vmt" );
 
-	PrecacheScriptSound( "NPC_Citizen.die" );
+	//PrecacheScriptSound( "NPC_Citizen.die" );
 }
 
 void CPortal_Player::CreateSounds()
@@ -324,65 +125,6 @@ void CPortal_Player::StopLoopingSounds()
 
 	BaseClass::StopLoopingSounds();
 }
-
-void CPortal_Player::GiveAllItems( void )
-{
-	EquipSuit();
-
-	CBasePlayer::GiveAmmo( 255,	"Pistol");
-	CBasePlayer::GiveAmmo( 32,	"357" );
-
-	CBasePlayer::GiveAmmo( 255,	"AR2" );
-	CBasePlayer::GiveAmmo( 3,	"AR2AltFire" );
-	CBasePlayer::GiveAmmo( 255,	"SMG1");
-	CBasePlayer::GiveAmmo( 3,	"smg1_grenade");
-
-	CBasePlayer::GiveAmmo( 255,	"Buckshot");
-	CBasePlayer::GiveAmmo( 16,	"XBowBolt" );
-
-	CBasePlayer::GiveAmmo( 3,	"rpg_round");
-	CBasePlayer::GiveAmmo( 6,	"grenade" );
-
-	GiveNamedItem( "weapon_crowbar" );
-	GiveNamedItem( "weapon_physcannon" );
-
-	GiveNamedItem( "weapon_pistol" );
-	GiveNamedItem( "weapon_357" );
-
-	GiveNamedItem( "weapon_smg1" );
-	GiveNamedItem( "weapon_ar2" );
-
-	GiveNamedItem( "weapon_shotgun" );
-	GiveNamedItem( "weapon_crossbow" );
-
-	GiveNamedItem( "weapon_rpg" );
-	GiveNamedItem( "weapon_frag" );
-
-	GiveNamedItem( "weapon_bugbait" );
-
-	//GiveNamedItem( "weapon_physcannon" );
-	CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>( GiveNamedItem( "weapon_portalgun" ) );
-
-	if ( !pPortalGun )
-	{
-		pPortalGun = static_cast<CWeaponPortalgun*>( Weapon_OwnsThisType( "weapon_portalgun" ) );
-	}
-
-	if ( pPortalGun )
-	{
-		pPortalGun->SetCanFirePortal1();
-		pPortalGun->SetCanFirePortal2();
-	}
-}
-
-void CPortal_Player::GiveDefaultItems( void )
-{
-	castable_string_t st( "suit_no_sprint" );
-	GlobalEntity_SetState( st, GLOBAL_OFF );
-	//inputdata_t in;
-	//InputDisableFlashlight( in ); disables flashlight in portal
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets  specific defaults.
@@ -413,7 +155,7 @@ void CPortal_Player::Spawn(void)
 
 	RemoveFlag( FL_FROZEN );
 
-	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
+	//m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
 
 	m_Local.m_bDucked = false;
 
@@ -422,54 +164,6 @@ void CPortal_Player::Spawn(void)
 #ifdef PORTAL_MP
 	PickTeam();
 #endif
-}
-
-void CPortal_Player::Activate( void )
-{
-	BaseClass::Activate();
-	m_fTimeLastNumSecondsUpdate = gpGlobals->curtime;
-}
-
-void CPortal_Player::NotifySystemEvent(CBaseEntity *pNotify, notify_system_event_t eventType, const notify_system_event_params_t &params )
-{
-	/*
-	// On teleport, we send event for tracking fling achievements
-	if ( eventType == NOTIFY_EVENT_TELEPORT )
-	{
-		CProp_Portal *pEnteredPortal = dynamic_cast<CProp_Portal*>( pNotify );
-		IGameEvent *event = gameeventmanager->CreateEvent( "portal_player_portaled" );
-		if ( event )
-		{
-			event->SetInt( "userid", GetUserID() );
-			event->SetBool( "portal2", pEnteredPortal->m_bIsPortal2 );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-	*/
-	BaseClass::NotifySystemEvent( pNotify, eventType, params );
-}
-
-void CPortal_Player::OnRestore( void )
-{
-	BaseClass::OnRestore();
-	if ( m_pExpresser )
-	{
-		m_pExpresser->SetOuter ( this );
-	}
-}
-
-//bool CPortal_Player::StartObserverMode( int mode )
-//{
-//	//Do nothing.
-//
-//	return false;
-//}
-
-bool CPortal_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
-{
-	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
-
-	return bRet;
 }
 
 /*
@@ -544,14 +238,6 @@ void CPortal_Player::PreThink( void )
 
 	BaseClass::PreThink();
 
-	if( (m_afButtonPressed & IN_JUMP) )
-	{
-		Jump();	
-	}
-
-	//Reset bullet force accumulator, only lasts one frame
-	m_vecTotalBulletForce = vec3_origin;
-
 	SetLocalAngles( vOldAngles );
 }
 
@@ -559,9 +245,7 @@ void CPortal_Player::PostThink( void )
 {
 	BaseClass::PostThink();
 
-	// Store the eye angles pitch so the client can compute its animation state correctly.
-	m_angEyeAngles = EyeAngles();
-
+	// this needs to be here and not in CHL2_Player because otherwise it won't work on player's shadowclone
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
@@ -595,18 +279,16 @@ void CPortal_Player::PostThink( void )
 	UpdatePortalPlaneSounds();
 	UpdateWooshSounds();
 
-	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
-
-	if ( IsAlive() && m_flExpressionLoopTime >= 0 && gpGlobals->curtime > m_flExpressionLoopTime )
-	{
+	//if ( IsAlive() && m_flExpressionLoopTime >= 0 && gpGlobals->curtime > m_flExpressionLoopTime )
+	//{
 		// Random expressions need to be cleared, because they don't loop. So if we
 		// pick the same one again, we want to restart it.
 		//ClearExpression();
-		m_iszExpressionScene = NULL_STRING;
+		//m_iszExpressionScene = NULL_STRING;
 		//UpdateExpression();
-	}
+	//}
 
-	UpdateSecondsTaken();
+	//UpdateSecondsTaken();
 
 	// Try to fix the player if they're stuck
 	if ( m_bStuckOnPortalCollisionObject )
@@ -616,99 +298,6 @@ void CPortal_Player::PostThink( void )
 		Teleport( &vNewPos, NULL, &vForward );
 		m_bStuckOnPortalCollisionObject = false;
 	}
-}
-
-void CPortal_Player::PlayerDeathThink(void)
-{
-	float flForward;
-
-	SetNextThink( gpGlobals->curtime + 0.1f );
-
-	if (GetFlags() & FL_ONGROUND)
-	{
-		flForward = GetAbsVelocity().Length() - 20;
-		if (flForward <= 0)
-		{
-			SetAbsVelocity( vec3_origin );
-		}
-		else
-		{
-			Vector vecNewVelocity = GetAbsVelocity();
-			VectorNormalize( vecNewVelocity );
-			vecNewVelocity *= flForward;
-			SetAbsVelocity( vecNewVelocity );
-		}
-	}
-
-	if ( HasWeapons() )
-	{
-		// we drop the guns here because weapons that have an area effect and can kill their user
-		// will sometimes crash coming back from CBasePlayer::Killed() if they kill their owner because the
-		// player class sometimes is freed. It's safer to manipulate the weapons once we know
-		// we aren't calling into any of their code anymore through the player pointer.
-		PackDeadPlayerItems();
-	}
-
-	if (GetModelIndex() && (!IsSequenceFinished()) && (m_lifeState == LIFE_DYING))
-	{
-		StudioFrameAdvance( );
-
-		m_iRespawnFrames++;
-		if ( m_iRespawnFrames < 60 )  // animations should be no longer than this
-			return;
-	}
-
-	if (m_lifeState == LIFE_DYING)
-		m_lifeState = LIFE_DEAD;
-
-	StopAnimation();
-
-	IncrementInterpolationFrame();
-	m_flPlaybackRate = 0.0;
-
-	int fAnyButtonDown = (m_nButtons & ~IN_SCORE);
-
-	// Strip out the duck key from this check if it's toggled
-	if ( (fAnyButtonDown & IN_DUCK) && GetToggledDuckState())
-	{
-		fAnyButtonDown &= ~IN_DUCK;
-	}
-
-	// wait for all buttons released
-	if ( m_lifeState == LIFE_DEAD )
-	{
-		if ( fAnyButtonDown || gpGlobals->curtime < m_flDeathTime + DEATH_ANIMATION_TIME )
-			return;
-
-		if ( g_pGameRules->FPlayerCanRespawn( this ) )
-		{
-			m_lifeState = LIFE_RESPAWNABLE;
-		}
-
-		return;
-	}
-
-	// if the player has been dead for one second longer than allowed by forcerespawn, 
-	// forcerespawn isn't on. Send the player off to an intermission camera until they 
-	// choose to respawn.
-	if ( g_pGameRules->IsMultiplayer() && ( gpGlobals->curtime > (m_flDeathTime + DEATH_ANIMATION_TIME) ) && !IsObserver() )
-	{
-		// go to dead camera. 
-		StartObserverMode( m_iObserverLastMode );
-	}
-
-	// wait for any button down,  or mp_forcerespawn is set and the respawn time is up
-	if (!fAnyButtonDown 
-		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
-		return;
-
-	m_nButtons = 0;
-	m_iRespawnFrames = 0;
-
-	//Msg( "Respawn\n");
-
-	respawn( this, !IsObserver() );// don't copy a corpse if we're in deathcam.
-	SetNextThink( TICK_NEVER_THINK );
 }
 
 void CPortal_Player::UpdatePortalPlaneSounds( void )
@@ -810,177 +399,6 @@ void CPortal_Player::UpdateWooshSounds( void )
 		//		controller.SoundChangePitch( m_pWooshSound, fWooshVolume + 0.5f, 0.1f );
 	}
 }
-
-void CPortal_Player::FireBullets ( const FireBulletsInfo_t &info )
-{
-	NoteWeaponFired();
-
-	BaseClass::FireBullets( info );
-}
-
-void CPortal_Player::NoteWeaponFired( void )
-{
-	Assert( m_pCurrentCommand );
-	if( m_pCurrentCommand )
-	{
-		m_iLastWeaponFireUsercmd = m_pCurrentCommand->command_number;
-	}
-}
-
-extern ConVar sv_maxunlag;
-
-bool CPortal_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
-{
-	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
-		return false;
-
-	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
-	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
-		return false;
-
-	const Vector &vMyOrigin = GetAbsOrigin();
-	const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
-
-	// get max distance player could have moved within max lag compensation time, 
-	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
-	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
-
-	// If the player is within this distance, lag compensate them in case they're running past us.
-	if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
-		return true;
-
-	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
-	Vector vForward;
-	AngleVectors( pCmd->viewangles, &vForward );
-
-	Vector vDiff = vHisOrigin - vMyOrigin;
-	VectorNormalize( vDiff );
-
-	float flCosAngle = 0.707107f;	// 45 degree angle
-	if ( vForward.Dot( vDiff ) < flCosAngle )
-		return false;
-
-	return true;
-}
-
-
-void CPortal_Player::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
-{
-	m_PlayerAnimState->DoAnimationEvent( event, nData );
-	TE_PlayerAnimEvent( this, event, nData );	// Send to any clients who can see this guy.
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Override setup bones so that is uses the render angles from
-//			the Portal animation state to setup the hitboxes.
-//-----------------------------------------------------------------------------
-void CPortal_Player::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
-{
-	VPROF_BUDGET( "CBaseAnimating::SetupBones", VPROF_BUDGETGROUP_SERVER_ANIM );
-
-	// Set the mdl cache semaphore.
-	MDLCACHE_CRITICAL_SECTION();
-
-	// Get the studio header.
-	Assert( GetModelPtr() );
-	CStudioHdr *pStudioHdr = GetModelPtr( );
-
-	Vector pos[MAXSTUDIOBONES];
-	Quaternion q[MAXSTUDIOBONES];
-
-	// Adjust hit boxes based on IK driven offset.
-	Vector adjOrigin = GetAbsOrigin() + Vector( 0, 0, m_flEstIkOffset );
-
-	// FIXME: pass this into Studio_BuildMatrices to skip transforms
-	CBoneBitList boneComputed;
-	if ( m_pIk )
-	{
-		m_iIKCounter++;
-		m_pIk->Init( pStudioHdr, GetAbsAngles(), adjOrigin, gpGlobals->curtime, m_iIKCounter, boneMask );
-		GetSkeleton( pStudioHdr, pos, q, boneMask );
-
-		m_pIk->UpdateTargets( pos, q, pBoneToWorld, boneComputed );
-		CalculateIKLocks( gpGlobals->curtime );
-		m_pIk->SolveDependencies( pos, q, pBoneToWorld, boneComputed );
-	}
-	else
-	{
-		GetSkeleton( pStudioHdr, pos, q, boneMask );
-	}
-
-	CBaseAnimating *pParent = dynamic_cast< CBaseAnimating* >( GetMoveParent() );
-	if ( pParent )
-	{
-		// We're doing bone merging, so do special stuff here.
-		CBoneCache *pParentCache = pParent->GetBoneCache();
-		if ( pParentCache )
-		{
-			BuildMatricesWithBoneMerge( 
-				pStudioHdr, 
-				m_PlayerAnimState->GetRenderAngles(),
-				adjOrigin, 
-				pos, 
-				q, 
-				pBoneToWorld, 
-				pParent, 
-				pParentCache );
-
-			return;
-		}
-	}
-
-	Studio_BuildMatrices( 
-		pStudioHdr, 
-		m_PlayerAnimState->GetRenderAngles(),
-		adjOrigin, 
-		pos, 
-		q, 
-		-1,
-		GetModelScale(), // Scaling
-		pBoneToWorld,
-		boneMask );
-}
-
-
-// Set the activity based on an event or current state
-void CPortal_Player::SetAnimation( PLAYER_ANIM playerAnim )
-{
-	return;
-}
-
-/*
-CAI_Expresser *CPortal_Player::CreateExpresser()
-{
-	Assert( !m_pExpresser );
-
-	if ( m_pExpresser )
-	{
-		delete m_pExpresser;
-	}
-
-	m_pExpresser = new CAI_Expresser(this);
-	if ( !m_pExpresser)
-	{
-		return NULL;
-	}
-	m_pExpresser->Connect(this);
-
-	return m_pExpresser;
-}
-
-//-----------------------------------------------------------------------------
-
-CAI_Expresser *CPortal_Player::GetExpresser() 
-{ 
-	if ( m_pExpresser )
-	{
-		m_pExpresser->Connect(this);
-	}
-	return m_pExpresser; 
-}
-*/
 
 extern int	gEvilImpulse101;
 extern bool UTIL_ItemCanBeTouchedByPlayer(CBaseEntity *pItem, CBasePlayer *pPlayer);
@@ -1125,7 +543,12 @@ void CPortal_Player::Teleport( const Vector *newPosition, const QAngle *newAngle
 	BaseClass::Teleport( newPosition, newAngles, newVelocity );
 	m_angEyeAngles = pl.v_angle;
 
-	m_PlayerAnimState->Teleport( newPosition, newAngles, this );
+	// teleportation player animstate code now lives here
+	QAngle absangles = GetAbsAngles();
+	m_pPlayerAnimState->m_angRender = absangles;
+	m_pPlayerAnimState->m_angRender.x = m_pPlayerAnimState->m_angRender.z = 0.0f;
+	// Snap the yaw pose parameter lerping variables to face new angles.
+	m_pPlayerAnimState->m_flCurrentFeetYaw = m_pPlayerAnimState->m_flGoalFeetYaw = m_pPlayerAnimState->m_flEyeYaw = EyeAngles()[YAW];
 }
 
 void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
@@ -1157,7 +580,21 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 				// apply velocity to the player in order to separate these objects
 				m_touchedPhysObject = true;
 			}
+
+			// if it's an NPC, tell them that the player is intersecting them
+			CAI_BaseNPC *pNPC = list[i]->MyNPCPointer();
+			if ( pNPC )
+			{
+				pNPC->PlayerPenetratingVPhysics();
+			}
 		}
+	}
+
+	bool bCheckStuck = false;
+	if ( m_afPhysicsFlags & PFLAG_GAMEPHYSICS_ROTPUSH )
+	{
+		bCheckStuck = true;
+		m_afPhysicsFlags &= ~PFLAG_GAMEPHYSICS_ROTPUSH;
 	}
 
 	if ( m_pPhysicsController->IsInContact() || (m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) )
@@ -1170,7 +607,7 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		m_touchedPhysObject = true;
 	}
 
-	if ( GetMoveType() == MOVETYPE_NOCLIP )
+	if ( GetMoveType() == MOVETYPE_NOCLIP || pl.deadflag )
 	{
 		m_oldOrigin = GetAbsOrigin();
 		return;
@@ -1189,8 +626,15 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	Vector newVelocity;
 	pPhysics->GetPosition( &newPosition, 0 );
 	m_pPhysicsController->GetShadowVelocity( &newVelocity );
+	// assume vphysics gave us back a position without penetration
+	Vector lastValidPosition = newPosition;
 
-
+	if ( physicsshadowupdate_render.GetBool() )
+	{
+		NDebugOverlay::Box( GetAbsOrigin(), WorldAlignMins(), WorldAlignMaxs(), 255, 0, 0, 24, 15.0f );
+		NDebugOverlay::Box( newPosition, WorldAlignMins(), WorldAlignMaxs(), 0,0,255, 24, 15.0f);
+		//	NDebugOverlay::Box( newPosition, WorldAlignMins(), WorldAlignMaxs(), 0,0,255, 24, .01f);
+	}
 
 	Vector tmp = GetAbsOrigin() - newPosition;
 	if ( !m_touchedPhysObject && !(GetFlags() & FL_ONGROUND) )
@@ -1209,12 +653,35 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		maxVelErrorSqr *= 0.25;
 	}
 
+	// player's physics was frozen, try moving to the game's simulated position if possible
+	if ( m_pPhysicsController->WasFrozen() )
+	{
+		m_bPhysicsWasFrozen = true;
+		// check my position (physics object could have simulated into my position
+		// physics is not very far away, check my position
+		trace_t trace;
+		UTIL_TraceEntity( this, GetAbsOrigin(), GetAbsOrigin(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+		if ( !trace.startsolid )
+			return;
+
+		// The physics shadow position is probably not in solid, try to move from there to the desired position
+		UTIL_TraceEntity( this, newPosition, GetAbsOrigin(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+		if ( !trace.startsolid )
+		{
+			// found a valid position between the two?  take it.
+			SetAbsOrigin( trace.endpos );
+			UpdateVPhysicsPosition(trace.endpos, vec3_origin, 0);
+			return;
+		}
+
+	}
+
 	if ( dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || (pPhysGround && !m_touchedPhysObject) )
 	{
 		if ( m_touchedPhysObject || pPhysGround )
 		{
 			// BUGBUG: Rewrite this code using fixed timestep
-			if ( deltaV >= maxVelErrorSqr )
+			if ( deltaV >= maxVelErrorSqr && !m_bPhysicsWasFrozen )
 			{
 				Vector dir = GetAbsVelocity();
 				float len = VectorNormalize(dir);
@@ -1255,6 +722,7 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		}
 		else
 		{
+			bCheckStuck = true;
 			trace_t trace;
 
 			Ray_t ray;
@@ -1307,20 +775,29 @@ void CPortal_Player::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 			// is current position ok?
 			if ( trace.allsolid || trace.startsolid )
 			{
-				// stuck????!?!?
-				//Msg("Stuck on %s\n", trace.m_pEnt->GetClassname());
+				// no use the final stuck check to move back to old if this stuck fix didn't work
+				bCheckStuck = true;
+				lastValidPosition = m_oldOrigin;
 				SetAbsOrigin( newPosition );
-				UTIL_TraceEntity( this, GetAbsOrigin(), GetAbsOrigin(),
-					MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
-				if ( trace.allsolid || trace.startsolid )
-				{
-					//Msg("Double Stuck\n");
-					SetAbsOrigin( m_oldOrigin );
-				}
 			}
 		}
 	}
+
+	if ( bCheckStuck )
+	{
+		trace_t trace;
+		UTIL_TraceEntity( this, GetAbsOrigin(), GetAbsOrigin(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+
+		// current position is not ok, fixup
+		if ( trace.allsolid || trace.startsolid )
+		{
+			// STUCK!?!?!
+			//Warning( "Checkstuck failed.  Stuck on %s!!\n", trace.m_pEnt->GetClassname() );
+			SetAbsOrigin( lastValidPosition );
+		}
+	}
 	m_oldOrigin = GetAbsOrigin();
+	m_bPhysicsWasFrozen = false;
 }
 
 bool CPortal_Player::UseFoundEntity( CBaseEntity *pUseEntity )
@@ -1386,46 +863,6 @@ bool CPortal_Player::UseFoundEntity( CBaseEntity *pUseEntity )
 	return usedSomething;
 }
 
-//bool CPortal_Player::StartReplayMode( float fDelay, float fDuration, int iEntity )
-//{
-//	if ( !BaseClass::StartReplayMode( fDelay, fDuration, 1 ) )
-//		return false;
-//
-//	CSingleUserRecipientFilter filter( this );
-//	filter.MakeReliable();
-//
-//	UserMessageBegin( filter, "KillCam" );
-//
-//	EHANDLE hPlayer = this;
-//
-//	if ( m_hObserverTarget.Get() )
-//	{
-//		WRITE_EHANDLE( m_hObserverTarget );	// first target
-//		WRITE_EHANDLE( hPlayer );	//second target
-//	}
-//	else
-//	{
-//		WRITE_EHANDLE( hPlayer );	// first target
-//		WRITE_EHANDLE( 0 );			//second target
-//	}
-//	MessageEnd();
-//
-//	return true;
-//}
-//
-//void CPortal_Player::StopReplayMode()
-//{
-//	BaseClass::StopReplayMode();
-//
-//	CSingleUserRecipientFilter filter( this );
-//	filter.MakeReliable();
-//
-//	UserMessageBegin( filter, "KillCam" );
-//	WRITE_EHANDLE( 0 );
-//	WRITE_EHANDLE( 0 );
-//	MessageEnd();
-//}
-
 void CPortal_Player::PlayerUse( void )
 {
 	// Was use pressed or released?
@@ -1466,6 +903,13 @@ void CPortal_Player::PlayerUse( void )
 		{
 			return;
 		}
+	}
+
+	if( m_flTimeUseSuspended > gpGlobals->curtime )
+	{
+		// Something has temporarily stopped us being able to USE things.
+		// Obviously, this should be used very carefully.(sjb)
+		return;
 	}
 
 	CBaseEntity *pUseEntity = FindUseEntity();
@@ -1562,18 +1006,6 @@ void CPortal_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 	BaseClass::PlayerRunCommand( ucmd, moveHelper );
 }
 
-
-bool CPortal_Player::ClientCommand( const CCommand &args )
-{
-	if ( FStrEq( args[0], "spectate" ) )
-	{
-		// do nothing.
-		return true;
-	}
-
-	return BaseClass::ClientCommand( args );
-}
-
 void CPortal_Player::CheatImpulseCommands( int iImpulse )
 {
 	switch ( iImpulse )
@@ -1582,13 +1014,74 @@ void CPortal_Player::CheatImpulseCommands( int iImpulse )
 	{
 		if (sv_cheats->GetBool())
 		{
-			GiveAllItems();
+			gEvilImpulse101 = true;
+
+			CBasePlayer::EquipSuit();
+
+			// Give the player everything!
+			CBaseCombatCharacter::GiveAmmo(255, "Pistol");
+			CBaseCombatCharacter::GiveAmmo(255, "AR2");
+			CBaseCombatCharacter::GiveAmmo(5, "AR2AltFire");
+			CBaseCombatCharacter::GiveAmmo(255, "SMG1");
+			CBaseCombatCharacter::GiveAmmo(255, "Buckshot");
+			CBaseCombatCharacter::GiveAmmo(3, "smg1_grenade");
+			CBaseCombatCharacter::GiveAmmo(3, "rpg_round");
+			CBaseCombatCharacter::GiveAmmo(5, "grenade");
+			CBaseCombatCharacter::GiveAmmo(32, "357");
+			CBaseCombatCharacter::GiveAmmo(16, "XBowBolt");
+#ifdef HL2_EPISODIC
+			CBaseCombatCharacter::GiveAmmo(5, "Hopwire");
+#endif		
+			GiveNamedItem("weapon_smg1");
+			GiveNamedItem("weapon_frag");
+			GiveNamedItem("weapon_crowbar");
+			GiveNamedItem("weapon_pistol");
+			GiveNamedItem("weapon_ar2");
+			GiveNamedItem("weapon_shotgun");
+			GiveNamedItem("weapon_physcannon");
+			GiveNamedItem("weapon_bugbait");
+			GiveNamedItem("weapon_rpg");
+			GiveNamedItem("weapon_357");
+			GiveNamedItem("weapon_crossbow");
+#ifdef HL2_EPISODIC
+			// GiveNamedItem( "weapon_magnade" );
+#endif
+			if (GetHealth() < 100)
+			{
+				TakeHealth(25, DMG_GENERIC);
+			}
+			
+			CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+			if (!pPortalGun)
+			{
+				pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+			}
+
+			if (pPortalGun)
+			{
+				pPortalGun->SetCanFirePortal1();
+				pPortalGun->SetCanFirePortal2();
+			}
+
+			gEvilImpulse101 = false;
 		}
 	}
 	break;
 	case 102:
 	{
-		GivePortalGun();
+		CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
+
+		if (!pPortalGun)
+		{
+			pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+		}
+
+		if (pPortalGun)
+		{
+			pPortalGun->SetCanFirePortal1();
+			pPortalGun->SetCanFirePortal2();
+		}
 	}
 	break;
 
@@ -1597,183 +1090,15 @@ void CPortal_Player::CheatImpulseCommands( int iImpulse )
 	}
 }
 
-void CPortal_Player::CreateViewModel( int index /*=0*/ )
-{
-	BaseClass::CreateViewModel( index );
-	return;
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-
-	if ( GetViewModel( index ) )
-		return;
-
-	CPredictedViewModel *vm = ( CPredictedViewModel * )CreateEntityByName( "predicted_viewmodel" );
-	if ( vm )
-	{
-		vm->SetAbsOrigin( GetAbsOrigin() );
-		vm->SetOwner( this );
-		vm->SetIndex( index );
-		DispatchSpawn( vm );
-		vm->FollowEntity( this, false );
-		m_hViewModel.Set( index, vm );
-	}
-}
-
-bool CPortal_Player::BecomeRagdollOnClient( const Vector &force )
-{
-	return true;//BaseClass::BecomeRagdollOnClient( force );
-}
-
-void CPortal_Player::CreateRagdollEntity( const CTakeDamageInfo &info )
-{
-	if ( m_hRagdoll )
-	{
-		UTIL_RemoveImmediate( m_hRagdoll );
-		m_hRagdoll = NULL;
-	}
-
-#if PORTAL_HIDE_PLAYER_RAGDOLL
-	AddSolidFlags( FSOLID_NOT_SOLID );
-	AddEffects( EF_NODRAW | EF_NOSHADOW );
-	AddEFlags( EFL_NO_DISSOLVE );
-#endif // PORTAL_HIDE_PLAYER_RAGDOLL
-	CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-	pRagdoll->m_takedamage = DAMAGE_NO;
-	m_hRagdoll = pRagdoll;
-
-/*
-	// If we already have a ragdoll destroy it.
-	CPortalRagdoll *pRagdoll = dynamic_cast<CPortalRagdoll*>( m_hRagdoll.Get() );
-	if( pRagdoll )
-	{
-		UTIL_Remove( pRagdoll );
-		pRagdoll = NULL;
-	}
-	Assert( pRagdoll == NULL );
-
-	// Create a ragdoll.
-	pRagdoll = dynamic_cast<CPortalRagdoll*>( CreateEntityByName( "portal_ragdoll" ) );
-	if ( pRagdoll )
-	{
-		
-
-		pRagdoll->m_hPlayer = this;
-		pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
-		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
-		pRagdoll->m_nModelIndex = m_nModelIndex;
-		pRagdoll->m_nForceBone = m_nForceBone;
-		pRagdoll->CopyAnimationDataFrom( this );
-		pRagdoll->SetOwnerEntity( this );
-		pRagdoll->m_flAnimTime = gpGlobals->curtime;
-		pRagdoll->m_flPlaybackRate = 0.0;
-		pRagdoll->SetCycle( 0 );
-		pRagdoll->ResetSequence( 0 );
-
-		float fSequenceDuration = SequenceDuration( GetSequence() );
-		float fPreviousCycle = clamp(GetCycle()-( 0.1 * ( 1 / fSequenceDuration ) ),0.f,1.f);
-		float fCurCycle = GetCycle();
-		matrix3x4_t pBoneToWorld[MAXSTUDIOBONES], pBoneToWorldNext[MAXSTUDIOBONES];
-		SetupBones( pBoneToWorldNext, BONE_USED_BY_ANYTHING );
-		SetCycle( fPreviousCycle );
-		SetupBones( pBoneToWorld, BONE_USED_BY_ANYTHING );
-		SetCycle( fCurCycle );
-
-		pRagdoll->InitRagdoll( info.GetDamageForce(), m_nForceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, 0.1f, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-		pRagdoll->SetMoveType( MOVETYPE_VPHYSICS );
-		pRagdoll->SetSolid( SOLID_VPHYSICS );
-		if ( IsDissolving() )
-		{
-			pRagdoll->TransferDissolveFrom( this );
-		}
-
-		Vector mins, maxs;
-		mins = CollisionProp()->OBBMins();
-		maxs = CollisionProp()->OBBMaxs();
-		pRagdoll->CollisionProp()->SetCollisionBounds( mins, maxs );
-		pRagdoll->SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS );
-	}
-
-	// Turn off the player.
-	AddSolidFlags( FSOLID_NOT_SOLID );
-	AddEffects( EF_NODRAW | EF_NOSHADOW );
-	SetMoveType( MOVETYPE_NONE );
-
-	// Save ragdoll handle.
-	m_hRagdoll = pRagdoll;
-*/
-}
-
-void CPortal_Player::Jump( void )
-{
-	g_PortalGameStats.Event_PlayerJump( GetAbsOrigin(), GetAbsVelocity() );
-	BaseClass::Jump();
-}
-
-void CPortal_Player::Event_Killed( const CTakeDamageInfo &info )
-{
-	//update damage info with our accumulated physics force
-	CTakeDamageInfo subinfo = info;
-	subinfo.SetDamageForce( m_vecTotalBulletForce );
-
-	// show killer in death cam mode
-	// chopped down version of SetObserverTarget without the team check
-	//if( info.GetAttacker() )
-	//{
-	//	// set new target
-	//	m_hObserverTarget.Set( info.GetAttacker() ); 
-	//}
-	//else
-	//	m_hObserverTarget.Set( NULL );
-
-	//UpdateExpression();
-
-	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
-	// because we still want to transmit to the clients in our PVS.
-	CreateRagdollEntity( info );
-
-	BaseClass::Event_Killed( subinfo );
-
-#if PORTAL_HIDE_PLAYER_RAGDOLL
-	// Fizzle all portals so they don't see the player disappear
-	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
-	CProp_Portal **pPortals = CProp_Portal_Shared::AllPortals.Base();
-	for( int i = 0; i != iPortalCount; ++i )
-	{
-		CProp_Portal *pTempPortal = pPortals[i];
-
-		if( pTempPortal && pTempPortal->m_bActivated )
-		{
-			pTempPortal->Fizzle();
-		}
-	}
-#endif // PORTAL_HIDE_PLAYER_RAGDOLL
-
-	if ( (info.GetDamageType() & DMG_DISSOLVE) && !(m_hRagdoll.Get()->GetEFlags() & EFL_NO_DISSOLVE) )
-	{
-		if ( m_hRagdoll )
-		{
-			m_hRagdoll->GetBaseAnimating()->Dissolve( NULL, gpGlobals->curtime, false, ENTITY_DISSOLVE_NORMAL );
-		}
-	}
-
-	m_lifeState = LIFE_DYING;
-	StopZooming();
-
-	if ( GetObserverTarget() )
-	{
-		//StartReplayMode( 3, 3, GetObserverTarget()->entindex() );
-		//StartObserverMode( OBS_MODE_DEATHCAM );
-	}
-}
-
 int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo inputInfoCopy( inputInfo );
 
-	// If you shoot yourself, make it hurt but push you less
+	// If you shoot yourself, make it hurt
 	if ( inputInfoCopy.GetAttacker() == this && inputInfoCopy.GetDamageType() == DMG_BULLET )
 	{
 		inputInfoCopy.ScaleDamage( 5.0f );
-		inputInfoCopy.ScaleDamageForce( 0.05f );
+		//inputInfoCopy.ScaleDamageForce( 0.05f ); // I don't think there's a need for less push force
 	}
 
 	CBaseEntity *pAttacker = inputInfoCopy.GetAttacker();
@@ -1807,15 +1132,15 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			inputInfoCopy.SetDamage( inputInfoCopy.GetDamage() * 0.5f );
 		}
 
-		if ( inputInfoCopy.GetDamage() >= 10.0f )
-		{
-			EmitSound( "PortalPlayer.BonkYelp" );
-		}
+		//if ( inputInfoCopy.GetDamage() >= 10.0f )
+		//{
+		//	EmitSound( "PortalPlayer.BonkYelp" );
+		//}
 	}
-	else if ( ( inputInfoCopy.GetDamageType() & DMG_SHOCK ) || ( inputInfoCopy.GetDamageType() & DMG_BURN ) )
-	{
-		EmitSound( "PortalPortal.PainYelp" );
-	}
+	//else if ( ( inputInfoCopy.GetDamageType() & DMG_SHOCK ) || ( inputInfoCopy.GetDamageType() & DMG_BURN ) )
+	//{
+	//	EmitSound( "PortalPortal.PainYelp" );
+	//}
 
 	int ret = BaseClass::OnTakeDamage( inputInfoCopy );
 
@@ -1831,69 +1156,6 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	return ret;
 }
 
-int CPortal_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
-{
-	// set damage type sustained
-	m_bitsDamageType |= info.GetDamageType();
-
-	if ( !CBaseCombatCharacter::OnTakeDamage_Alive( info ) )
-		return 0;
-
-	CBaseEntity * attacker = info.GetAttacker();
-
-	if ( !attacker )
-		return 0;
-
-	Vector vecDir = vec3_origin;
-	if ( info.GetInflictor() )
-	{
-		vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0, 0, 10 ) - WorldSpaceCenter();
-		VectorNormalize( vecDir );
-	}
-
-	if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
-		( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
-	{
-		Vector force = vecDir;// * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
-		if ( force.z > 250.0f )
-		{
-			force.z = 250.0f;
-		}
-		ApplyAbsVelocityImpulse( force );
-	}
-
-	// fire global game event
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
-	if ( event )
-	{
-		event->SetInt("userid", GetUserID() );
-		event->SetInt("health", MAX(0, m_iHealth) );
-		event->SetInt("priority", 5 );	// HLTV event priority, not transmitted
-
-		if ( attacker->IsPlayer() )
-		{
-			CBasePlayer *player = ToBasePlayer( attacker );
-			event->SetInt("attacker", player->GetUserID() ); // hurt by other player
-		}
-		else
-		{
-			event->SetInt("attacker", 0 ); // hurt by "world"
-		}
-
-		gameeventmanager->FireEvent( event );
-	}
-
-	// Insert a combat sound so that nearby NPCs hear battle
-	if ( attacker->IsNPC() )
-	{
-		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 512, 0.5, this );//<<TODO>>//magic number
-	}
-
-	return 1;
-}
-
-
 void CPortal_Player::ForceDuckThisFrame( void )
 {
 	if( m_Local.m_bDucked != true )
@@ -1906,100 +1168,11 @@ void CPortal_Player::ForceDuckThisFrame( void )
 	}
 }
 
-void CPortal_Player::UnDuck( void )
-{
-	if( m_Local.m_bDucked != false )
-	{
-		m_Local.m_bDucked = false;
-		UnforceButtons( IN_DUCK );
-		RemoveFlag( FL_DUCKING );
-		SetVCollisionState( GetAbsOrigin(), GetAbsVelocity(), VPHYS_WALK );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Overload for portal-- Our player can lift his own mass.
-// Input  : *pObject - The object to lift
-//			bLimitMassAndSize - check for mass/size limits
-//-----------------------------------------------------------------------------
-void CPortal_Player::PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize )
-{
-	// can't pick up what you're standing on
-	if ( GetGroundEntity() == pObject )
-		return;
-
-	if ( bLimitMassAndSize == true )
-	{
-		if ( CBasePlayer::CanPickupObject( pObject, PORTAL_PLAYER_MAX_LIFT_MASS, PORTAL_PLAYER_MAX_LIFT_SIZE ) == false )
-			return;
-	}
-
-	// Can't be picked up if NPCs are on me
-	if ( pObject->HasNPCsOnIt() )
-		return;
-
-	PlayerPickupObject( this, pObject );
-}
-
 void CPortal_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis )
 {
 	m_bHeldObjectOnOppositeSideOfPortal = false;
 	BaseClass::ForceDropOfCarriedPhysObjects( pOnlyIfHoldingThis );
 }
-
-void CPortal_Player::IncrementPortalsPlaced( void )
-{
-	m_StatsThisLevel.iNumPortalsPlaced++;
-
-	if ( m_iBonusChallenge == PORTAL_CHALLENGE_PORTALS )
-		SetBonusProgress( static_cast<int>( m_StatsThisLevel.iNumPortalsPlaced ) );
-}
-
-void CPortal_Player::IncrementStepsTaken( void )
-{
-	m_StatsThisLevel.iNumStepsTaken++;
-
-	if ( m_iBonusChallenge == PORTAL_CHALLENGE_STEPS )
-		SetBonusProgress( static_cast<int>( m_StatsThisLevel.iNumStepsTaken ) );
-}
-
-void CPortal_Player::UpdateSecondsTaken( void )
-{
-	float fSecondsSinceLastUpdate = ( gpGlobals->curtime - m_fTimeLastNumSecondsUpdate );
-	m_StatsThisLevel.fNumSecondsTaken += fSecondsSinceLastUpdate;
-	m_fTimeLastNumSecondsUpdate = gpGlobals->curtime;
-
-	if ( m_iBonusChallenge == PORTAL_CHALLENGE_TIME )
-		SetBonusProgress( static_cast<int>( m_StatsThisLevel.fNumSecondsTaken ) );
-
-	if ( m_fNeuroToxinDamageTime > 0.0f )
-	{
-		float fTimeRemaining = m_fNeuroToxinDamageTime - gpGlobals->curtime;
-
-		if ( fTimeRemaining < 0.0f )
-		{
-			CTakeDamageInfo info;
-			info.SetDamage( gpGlobals->frametime * 50.0f );
-			info.SetDamageType( DMG_NERVEGAS );
-			TakeDamage( info );
-			fTimeRemaining = 0.0f;
-		}
-
-		PauseBonusProgress( false );
-		SetBonusProgress( static_cast<int>( fTimeRemaining ) );
-	}
-}
-
-void CPortal_Player::ResetThisLevelStats( void )
-{
-	m_StatsThisLevel.iNumPortalsPlaced = 0;
-	m_StatsThisLevel.iNumStepsTaken = 0;
-	m_StatsThisLevel.fNumSecondsTaken = 0.0f;
-
-	if ( m_iBonusChallenge != PORTAL_CHALLENGE_NONE )
-		SetBonusProgress( 0 );
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Update the area bits variable which is networked down to the client to determine
@@ -2300,21 +1473,21 @@ CON_COMMAND( startadmiregloves, "Starts the admire gloves animation." )
 		pPlayer->StartAdmireGlovesAnimation();
 }
 
-CON_COMMAND( displayportalplayerstats, "Displays current level stats for portals placed, steps taken, and seconds taken." )
-{
-	CPortal_Player *pPlayer = (CPortal_Player *)UTIL_GetCommandClient();
-	if( pPlayer == NULL )
-		pPlayer = GetPortalPlayer( 1 ); //last ditch effort
-
-	if( pPlayer )
-	{
-		int iMinutes = static_cast<int>( pPlayer->NumSecondsTaken() / 60.0f );
-		int iSeconds = static_cast<int>( pPlayer->NumSecondsTaken() ) % 60;
-
-		CFmtStr msg;
-		NDebugOverlay::ScreenText( 0.5f, 0.5f, msg.sprintf( "Portals Placed: %d\nSteps Taken: %d\nTime: %d:%d", pPlayer->NumPortalsPlaced(), pPlayer->NumStepsTaken(), iMinutes, iSeconds ), 255, 255, 255, 150, 5.0f );
-	}
-}
+//CON_COMMAND( displayportalplayerstats, "Displays current level stats for portals placed, steps taken, and seconds taken." )
+//{
+//	CPortal_Player *pPlayer = (CPortal_Player *)UTIL_GetCommandClient();
+//	if( pPlayer == NULL )
+//		pPlayer = GetPortalPlayer( 1 ); //last ditch effort
+//
+//	if( pPlayer )
+//	{
+//		int iMinutes = static_cast<int>( pPlayer->NumSecondsTaken() / 60.0f );
+//		int iSeconds = static_cast<int>( pPlayer->NumSecondsTaken() ) % 60;
+//
+//		CFmtStr msg;
+//		NDebugOverlay::ScreenText( 0.5f, 0.5f, msg.sprintf( "Portals Placed: %d\nSteps Taken: %d\nTime: %d:%d", pPlayer->NumPortalsPlaced(), pPlayer->NumStepsTaken(), iMinutes, iSeconds ), 255, 255, 255, 150, 5.0f );
+//	}
+//}
 
 CON_COMMAND( startneurotoxins, "Starts the nerve gas timer." )
 {
@@ -2329,21 +1502,4 @@ CON_COMMAND( startneurotoxins, "Starts the nerve gas timer." )
 
 	if( pPlayer )
 		pPlayer->SetNeuroToxinDamageTime( fCoundownTime );
-}
-
-void CPortal_Player::GivePortalGun(void)
-{
-	//GiveNamedItem( "weapon_physcannon" );
-	CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
-
-	if (!pPortalGun)
-	{
-		pPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
-	}
-
-	if (pPortalGun)
-	{
-		pPortalGun->SetCanFirePortal1();
-		pPortalGun->SetCanFirePortal2();
-	}
 }

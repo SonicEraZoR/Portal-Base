@@ -1,0 +1,12 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" 	"Models/SirGibs/gordon_survivor/hevsuit_sheet_ep2"
+	"$bumpmap" "Models/SirGibs/gordon_survivor/hevsuit_normal"
+	"$selfillum" "1"
+// -- From here down is new stuff which will only be applied if $phong is set to 1 --
+	"$phong" "1"
+	"$phongexponent" "3"
+	"$phongboost"	"2"
+	"$phongfresnelranges"	"[0.25 0.5 1]"
+
+}

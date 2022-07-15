@@ -9,27 +9,10 @@
 #define PORTAL_PLAYER_H
 #pragma once
 
-class CPortal_Player;
-
-#include "player.h"
-#include "portal_playeranimstate.h"
-#include "hl2_playerlocaldata.h"
 #include "hl2_player.h"
-#include "simtimer.h"
-#include "soundenvelope.h"
-#include "portal_player_shared.h"
 #include "prop_portal.h"
-#include "weapon_portalbase.h"
 #include "in_buttons.h"
 #include "func_liquidportal.h"
-//#include "ai_speech.h"			// For expresser host
-
-struct PortalPlayerStatistics_t
-{
-	int iNumPortalsPlaced;
-	int iNumStepsTaken;
-	float fNumSecondsTaken;
-};
 
 //=============================================================================
 // >> Portal_Player
@@ -55,37 +38,18 @@ public:
 	virtual void CreateSounds( void );
 	virtual void StopLoopingSounds( void );
 	virtual void Spawn( void );
-	virtual void OnRestore( void );
-	virtual void Activate( void );
-
-	virtual void NotifySystemEvent( CBaseEntity *pNotify, notify_system_event_t eventType, const notify_system_event_params_t &params );
 
 	virtual void PostThink( void );
 	virtual void PreThink( void );
-	virtual void PlayerDeathThink( void );
 
 	void UpdatePortalPlaneSounds( void );
 	void UpdateWooshSounds( void );
 
-	Activity TranslateActivity( Activity ActToTranslate, bool *pRequired = NULL );
 	virtual void Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
-
-	Activity TranslateTeamActivity( Activity ActToTranslate );
-
-	virtual void SetAnimation( PLAYER_ANIM playerAnim );
-
-	//virtual CAI_Expresser* GetExpresser( void );
 
 	virtual void PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
-	virtual bool ClientCommand( const CCommand &args );
-	virtual void CreateViewModel( int viewmodelindex = 0 );
-	virtual bool BecomeRagdollOnClient( const Vector &force );
 	virtual int	OnTakeDamage( const CTakeDamageInfo &inputInfo );
-	virtual int	OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
-	virtual void FireBullets ( const FireBulletsInfo_t &info );
-	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0);
 	virtual bool BumpWeapon( CBaseCombatWeapon *pWeapon );
 	virtual void ShutdownUseEntity( void );
 
@@ -93,52 +57,17 @@ public:
 
 	virtual void VPhysicsShadowUpdate( IPhysicsObject *pPhysics );
 
-	//virtual bool StartReplayMode( float fDelay, float fDuration, int iEntity  );
-	//virtual void StopReplayMode();
- 	virtual void Event_Killed( const CTakeDamageInfo &info );
-	virtual void Jump( void );
-
 	bool UseFoundEntity( CBaseEntity *pUseEntity );
-	CBaseEntity* FindUseEntity( void );
 	CBaseEntity* FindUseEntityThroughPortal( void );
 
 	virtual void PlayerUse( void );
-	//virtual bool StartObserverMode( int mode );
-	virtual void GetStepSoundVelocities( float *velwalk, float *velrun );
-	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
-	virtual void UpdateOnRemove( void );
 
 	virtual void SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 	virtual void UpdatePortalViewAreaBits( unsigned char *pvs, int pvssize );
 
-	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles.Get(); }
-
-	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
-
 	void CheatImpulseCommands( int iImpulse );
-	void CreateRagdollEntity( const CTakeDamageInfo &info );
-	void GiveAllItems( void );
-	void GiveDefaultItems( void );
-
-	void NoteWeaponFired( void );
-
-	void ResetAnimation( void );
-
-	
-	//void UpdateExpression ( void );
-	//void ClearExpression ( void );
-	
-	int	  GetPlayerModelType( void ) { return m_iPlayerSoundType; }
 
 	void ForceDuckThisFrame( void );
-	void UnDuck ( void );
-	inline void ForceJumpThisFrame( void ) { ForceButtons( IN_JUMP ); }
-
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
-	void SetupBones( matrix3x4_t *pBoneToWorld, int boneMask );
-
-	// physics interactions
-	virtual void PickupObject(CBaseEntity *pObject, bool bLimitMassAndSize );
 	virtual void ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis );
 
 	void ToggleHeldObjectOnOppositeSideOfPortal( void ) { m_bHeldObjectOnOppositeSideOfPortal = !m_bHeldObjectOnOppositeSideOfPortal; }
@@ -149,45 +78,18 @@ public:
 
 	void SetStuckOnPortalCollisionObject( void ) { m_bStuckOnPortalCollisionObject = true; }
 
-	CWeaponPortalBase* GetActivePortalWeapon() const;
-
-	void IncrementPortalsPlaced( void );
-	void IncrementStepsTaken( void );
-	void UpdateSecondsTaken( void );
-	void ResetThisLevelStats( void );
-	int NumPortalsPlaced( void ) const { return m_StatsThisLevel.iNumPortalsPlaced; }
-	int NumStepsTaken( void ) const { return m_StatsThisLevel.iNumStepsTaken; }
-	float NumSecondsTaken( void ) const { return m_StatsThisLevel.fNumSecondsTaken; }
-
 	void SetNeuroToxinDamageTime( float fCountdownSeconds ) { m_fNeuroToxinDamageTime = gpGlobals->curtime + fCountdownSeconds; }
 
 	void IncNumCamerasDetatched( void ) { ++m_iNumCamerasDetatched; }
 	int GetNumCamerasDetatched( void ) const { return m_iNumCamerasDetatched; }
 
-	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
-
 	bool m_bSilentDropAndPickup;
-
-	// Tracks our ragdoll entity.
-	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle
 
 	void SuppressCrosshair( bool bState ) { m_bSuppressingCrosshair = bState; }
 	
-	void GivePortalGun(void);
-		
 private:
-
-	//virtual CAI_Expresser* CreateExpresser( void );
-
 	CSoundPatch		*m_pWooshSound;
 
-	CNetworkQAngle( m_angEyeAngles );
-
-	CPortalPlayerAnimState*   m_PlayerAnimState;
-
-	int m_iLastWeaponFireUsercmd;
-	CNetworkVar( int, m_iSpawnInterpCounter );
-	CNetworkVar( int, m_iPlayerSoundType );
 	CNetworkVar( bool, m_bSuppressingCrosshair );
 
 	CNetworkVar( bool, m_bHeldObjectOnOppositeSideOfPortal );
@@ -201,20 +103,11 @@ private:
 
 	float m_fNeuroToxinDamageTime;
 
-	PortalPlayerStatistics_t m_StatsThisLevel;
-	float m_fTimeLastNumSecondsUpdate;
-
 	int		m_iNumCamerasDetatched;
 
 	QAngle						m_qPrePortalledViewAngles;
 	bool						m_bFixEyeAnglesFromPortalling;
 	VMatrix						m_matLastPortalled;
-	CAI_Expresser				*m_pExpresser;
-	string_t					m_iszExpressionScene;
-	EHANDLE						m_hExpressionSceneEnt;
-	float						m_flExpressionLoopTime;
-
-	
 
 	mutable Vector m_vWorldSpaceCenterHolder; //WorldSpaceCenter() returns a reference, need an actual value somewhere
 

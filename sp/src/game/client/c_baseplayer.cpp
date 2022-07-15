@@ -1279,6 +1279,11 @@ void C_BasePlayer::AddEntity( void )
 
 	// Add in lighting effects
 	CreateLightEffects();
+
+#ifndef PORTAL //this needs to be in C_Portal_Player and not in C_BasePlayer because otherwise it won't work on player's shadowclone
+	//needed for player animation, This line will prevent the model of the player from rotating when looking up & firing
+	SetLocalAnglesDim(X_INDEX, 0);
+#endif
 }
 
 extern float UTIL_WaterLevel( const Vector &position, float minz, float maxz );

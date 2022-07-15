@@ -10,6 +10,7 @@
 #include "takedamageinfo.h"
 #include "ammodef.h"
 #include "portal_gamerules.h"
+#include "portal_player_shared.h"
 
 
 #ifdef CLIENT_DLL
@@ -23,13 +24,11 @@ extern IVModelInfo* modelinfo;
 
 	#include "vgui/ISurface.h"
 	#include "vgui_controls/Controls.h"
-	#include "c_portal_player.h"
 	#include "hud_crosshair.h"
 	#include "PortalRender.h"
 
 #else
 
-	#include "portal_player.h"
 	#include "vphysics/constraints.h"
 
 #endif
@@ -141,6 +140,12 @@ CPortal_Player* CWeaponPortalBase::GetPortalPlayerOwner() const
 	
 void CWeaponPortalBase::OnDataChanged( DataUpdateType_t type )
 {
+	int overrideModelIndex = CalcOverrideModelIndex();
+	if (overrideModelIndex != -1 && overrideModelIndex != GetModelIndex())
+	{
+		SetModelIndex(overrideModelIndex);
+	}
+
 	BaseClass::OnDataChanged( type );
 
 	if ( GetPredictable() && !ShouldPredict() )
@@ -299,22 +304,23 @@ void CWeaponPortalBase::DrawCrosshair()
 
 void CWeaponPortalBase::DoAnimationEvents( CStudioHdr *pStudioHdr )
 {
-	// HACK: Because this model renders view and world models in the same frame 
-	// it's using the wrong studio model when checking the sequences.
-	C_BasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
-	if ( pPlayer && pPlayer->GetActiveWeapon() == this )
-	{
-		C_BaseViewModel *pViewModel = pPlayer->GetViewModel();
-		if ( pViewModel )
-		{
-			pStudioHdr = pViewModel->GetModelPtr();
-		}
-	}
+	//// HACK: Because this model renders view and world models in the same frame 
+	//// it's using the wrong studio model when checking the sequences.
+	//C_BasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
+	//if ( pPlayer && pPlayer->GetActiveWeapon() == this )
+	//{
+	//	C_BaseViewModel *pViewModel = pPlayer->GetViewModel();
+	//	if ( pViewModel )
+	//	{
+	//		pStudioHdr = pViewModel->GetModelPtr();
+	//	}
+	//}
 
-	if ( pStudioHdr )
-	{
-		BaseClass::DoAnimationEvents( pStudioHdr );
-	}
+	//if ( pStudioHdr )
+	//{
+	//	BaseClass::DoAnimationEvents( pStudioHdr );
+	//}
+	BaseClass::DoAnimationEvents(pStudioHdr);
 }
 
 void CWeaponPortalBase::GetRenderBounds( Vector& theMins, Vector& theMaxs )
@@ -373,6 +379,27 @@ void CWeaponPortalBase::GetRenderBounds( Vector& theMins, Vector& theMaxs )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Allows the client-side entity to override what the network tells it to use for
+// a model. This is used for third person mode, specifically in HL2 where the
+// the weapon timings are on the view model and not the world model. That means the
+// server needs to use the view model, but the client wants to use the world model.
+//-----------------------------------------------------------------------------
+int CWeaponPortalBase::CalcOverrideModelIndex()
+{ 
+	//C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
+	//if ( localplayer && 
+	//	localplayer == GetOwner() &&
+	//	ShouldDrawLocalPlayerViewModel() )
+	//{
+	//	return BaseClass::CalcOverrideModelIndex();
+	//}
+	//else
+	//{
+	//	return GetWorldModelIndex();
+	//}
+	return GetWorldModelIndex();
+}
 
 #else
 	
@@ -389,35 +416,36 @@ void CWeaponPortalBase::Spawn()
 
 void CWeaponPortalBase::	Materialize( void )
 {
-	if ( IsEffectActive( EF_NODRAW ) )
-	{
-		// changing from invisible state to visible.
-		EmitSound( "AlyxEmp.Charge" );
-		
-		RemoveEffects( EF_NODRAW );
-		DoMuzzleFlash();
-	}
+	//if ( IsEffectActive( EF_NODRAW ) )
+	//{
+	//	// changing from invisible state to visible.
+	//	EmitSound( "AlyxEmp.Charge" );
+	//	
+	//	RemoveEffects( EF_NODRAW );
+	//	DoMuzzleFlash();
+	//}
 
-	if ( HasSpawnFlags( SF_NORESPAWN ) == false )
-	{
-		VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
-		SetMoveType( MOVETYPE_VPHYSICS );
+	//if ( HasSpawnFlags( SF_NORESPAWN ) == false )
+	//{
+	//	VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
+	//	SetMoveType( MOVETYPE_VPHYSICS );
 
-		//PortalRules()->AddLevelDesignerPlacedObject( this );
-	}
+	//	//PortalRules()->AddLevelDesignerPlacedObject( this );
+	//}
 
-	if ( HasSpawnFlags( SF_NORESPAWN ) == false )
-	{
-		if ( GetOriginalSpawnOrigin() == vec3_origin )
-		{
-			m_vOriginalSpawnOrigin = GetAbsOrigin();
-			m_vOriginalSpawnAngles = GetAbsAngles();
-		}
-	}
+	//if ( HasSpawnFlags( SF_NORESPAWN ) == false )
+	//{
+	//	if ( GetOriginalSpawnOrigin() == vec3_origin )
+	//	{
+	//		m_vOriginalSpawnOrigin = GetAbsOrigin();
+	//		m_vOriginalSpawnAngles = GetAbsAngles();
+	//	}
+	//}
 
-	SetPickupTouch();
+	//SetPickupTouch();
 
-	SetThink (NULL);
+	//SetThink (NULL);
+	BaseClass::Materialize();
 }
 
 #endif

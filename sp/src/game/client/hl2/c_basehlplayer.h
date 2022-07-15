@@ -73,6 +73,8 @@ private:
 	float				m_flSpeedMod;
 	float				m_flExitSpeedMod;
 
+protected:
+	QAngle				m_angEyeAngles;
 
 friend class CHL2GameMovement;
 };

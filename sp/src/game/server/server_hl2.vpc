@@ -14,7 +14,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;.\portal;$SRCDIR\game\shared\Multiplayer"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\hl2;.\hl2;$SRCDIR\game\shared\portal;.\portal"
 		$PreprocessorDefinitions		"$BASE;HL2_DLL;USES_SAVERESTORE;PORTAL"
 	}
 }
@@ -280,8 +280,6 @@ $Project "Server (Portal_HL2)"
 			$File	"portal\func_portal_detector.h"
 			$File	"portal\func_portal_orientation.cpp"
 			$File	"portal\func_portal_orientation.h"
-			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.cpp"
-			$File	"$SRCDIR\game\shared\Multiplayer\multiplayer_animstate.h"
 			$File	"portal\neurotoxin_countdown.cpp"
 			$File	"portal\npc_portal_turret_floor.cpp"
 			$File	"portal\npc_portal_turret_ground.cpp"
@@ -307,8 +305,6 @@ $Project "Server (Portal_HL2)"
 			$File	"portal\portal_player.h"
 			$File	"$SRCDIR\game\shared\portal\portal_player_shared.cpp"
 			$File	"$SRCDIR\game\shared\portal\portal_player_shared.h"
-			$File	"$SRCDIR\game\shared\portal\portal_playeranimstate.cpp"
-			$File	"$SRCDIR\game\shared\portal\portal_playeranimstate.h"
 			$File	"$SRCDIR\game\shared\portal\portal_shareddefs.cpp"
 			$File	"$SRCDIR\game\shared\portal\portal_shareddefs.h"
 			$File	"$SRCDIR\game\shared\portal\portal_usermessages.cpp"

@@ -14,6 +14,7 @@
 #include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
+#include "singleplayer_animstate.h"
 
 class CAI_Squad;
 class CPropCombineBall;
@@ -92,6 +93,8 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
+	void				SetAnimation(PLAYER_ANIM playerAnim);
+	
 	bool				ValidatePlayerModel(const char *pModel);
 
 	void				SetPlayerModel(void);
@@ -318,7 +321,10 @@ private:
 	CNetworkVarForDerived( bool, m_fIsWalking );
 
 protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
+	CSinglePlayerAnimState *m_pPlayerAnimState;
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
+	CNetworkQAngle(m_angEyeAngles);
+	float				m_flTimeUseSuspended; //needed by CPortal_Player::PlayerUse
 
 private:
 
@@ -353,8 +359,6 @@ private:
 	
 	float				m_flArmorReductionTime;
 	int					m_iArmorReductionFrom;
-
-	float				m_flTimeUseSuspended;
 
 	CSimpleSimTimer		m_LowerWeaponTimer;
 	CSimpleSimTimer		m_AutoaimTimer;

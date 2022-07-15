@@ -1,0 +1,19 @@
+"VertexLitGeneric"
+{	
+	"$baseTexture" "Models/SirGibs/gordon_survivor/v_hand_sheet"
+	"$bumpmap" "Models/SirGibs/gordon_survivor/v_hand_sheet_normal"
+
+	"$nodecal" "0"
+	"$multipass" 0
+
+	"$envmap" "env_cubemap"
+	"$normalmapenvmapmask" "1"
+	"$envmaptint" "[.1 .1 .1]"
+//	"$envmapcontrast" "1.0"
+
+	"$phong" "1"
+	"$phongboost" "5"
+	"$phongexponent" "20"
+	"$phongalbedotint" "1"
+	"$phongfresnelranges"	"[0.5 0.5 1]"
+}

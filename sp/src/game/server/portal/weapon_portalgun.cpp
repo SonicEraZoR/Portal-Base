@@ -605,7 +605,7 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 
 		if ( !bTest && pPlayer )
 		{
-			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY, 0 );
+			pPlayer->SetAnimation(PLAYER_ATTACK1);
 		}
 
 		Vector forward, right, up;

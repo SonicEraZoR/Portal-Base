@@ -76,15 +76,11 @@ void C_BaseCombatWeapon::NotifyShouldTransmit( ShouldTransmitState_t state )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: To wrap PORTAL mod specific functionality into one place
+// Purpose: 
 //-----------------------------------------------------------------------------
-static inline bool ShouldDrawLocalPlayerViewModel( void )
+static inline bool ShouldDrawLocalPlayerViewModel(void)
 {
-//#if defined( PORTAL )
-//	return false;
-//#else
 	return !C_BasePlayer::ShouldDrawLocalPlayer();
-//#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +146,7 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 					pHudSelection->OnWeaponPickup( this );
 				}
 
-				pPlayer->EmitSound("Player.PickupWeapon");
+				pPlayer->EmitSound( "Player.PickupWeapon" );
 			}
 		}
 	}

@@ -1,0 +1,23 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\SirGibs/gordon_survivor/base_m_d"
+	"$bumpmap" "models\SirGibs/gordon_survivor/base_m_n"
+        "$lightwarptexture" "models\SirGibs/gordon_survivor/Base_M_caucasian_wrp"
+//        "$lightwarptexture" "models\SirGibs/gordon_survivor/Base_M_african_wrp"
+        $halflambert 0
+	"$nodecal" "1"
+	"$model" "1"
+	"$surfaceprop" "flesh"
+
+// -- From here down is new stuff which will only be applied if $phong is set to 1 --
+        $phong 1
+        $phongboost "1.4"
+	$phongexponenttexture "models/SirGibs/gordon_survivor/male_exponent"
+        $phongtint "[.85 .85 1]"
+        $phongfresnelranges "[.2 .5 5]"
+
+// Rim lighting parameters
+	"$rimlight" "1"				// To enable rim lighting (requires phong)
+	"$rimlightexponent" "80"             // Exponent for phong component of rim lighting
+	"$rimlightboost" ".5"	               // Boost for ambient cube component of rim lighting
+}

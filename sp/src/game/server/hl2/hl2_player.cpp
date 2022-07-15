@@ -59,10 +59,15 @@
 #include "tier0/memdbgon.h"
 
 const char *g_pszChellModel = "models/player/chell.mdl";
+const char *g_pszGordonModel = "models/sirgibs/ragdolls/gordon_survivor_player.mdl";
 const char *g_pszPlayerModel = "models/player.mdl";
 
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
+
+// Max mass the player can lift with +use. 85 in Portal
+ConVar max_lift_mass("max_lift_mass", "35", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max mass the player can lift with +use, 85 in Portal");
+ConVar max_lift_size("max_lift_size", "128", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOT_CONNECTED, "Max size the player can lift with +use");
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -390,6 +395,10 @@ END_DATADESC()
 
 CHL2_Player::CHL2_Player()
 {
+	// Here we create and init the player animation state.
+	m_pPlayerAnimState = CreatePlayerAnimationState(this);
+	m_angEyeAngles.Init();
+
 	m_nNumMissPositions	= 0;
 	m_pPlayerAISquad = 0;
 	m_bSprintEnabled = true;
@@ -420,6 +429,8 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
 	SendPropBool( SENDINFO(m_fIsSprinting) ),
+	SendPropAngle(SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN),
+	SendPropAngle(SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN),
 END_SEND_TABLE()
 
 
@@ -440,6 +451,7 @@ void CHL2_Player::Precache( void )
 	//Precache Citizen models
 	PrecacheModel(g_pszPlayerModel);
 	PrecacheModel(g_pszChellModel);
+	PrecacheModel(g_pszGordonModel);
 }
 
 //-----------------------------------------------------------------------------
@@ -473,6 +485,12 @@ void CHL2_Player::EquipSuit( bool bPlayEffects )
 	if ( bPlayEffects == true )
 	{
 		StartAdmireGlovesAnimation();
+	}
+
+	// setting suit skin
+	if (!Q_stricmp(g_pszGordonModel, GetModelName().ToCStr()))
+	{
+		SetBodygroup(2, 1);
 	}
 }
 
@@ -902,6 +920,16 @@ void CHL2_Player::PreThink(void)
 void CHL2_Player::PostThink( void )
 {
 	BaseClass::PostThink();
+
+	m_angEyeAngles = EyeAngles();
+
+#ifndef PORTAL //this needs to be in CPortal_Player and not in CHL2_Player because otherwise it won't work on player's shadowclone
+	QAngle angles = GetLocalAngles();
+	angles[PITCH] = 0;
+	SetLocalAngles(angles);
+#endif
+
+	m_pPlayerAnimState->Update();
 
 	if ( !g_fGameOver && !IsPlayerLockedInPlace() && IsAlive() )
 	{
@@ -1386,6 +1414,12 @@ void CHL2_Player::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 
 CHL2_Player::~CHL2_Player( void )
 {
+	// Clears the animation state.
+	if (m_pPlayerAnimState != NULL)
+	{
+		m_pPlayerAnimState->Release();
+		m_pPlayerAnimState = NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3129,7 +3163,7 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 	
 	if ( bLimitMassAndSize == true )
 	{
-		if ( CBasePlayer::CanPickupObject( pObject, 35, 128 ) == false )
+		if ( CBasePlayer::CanPickupObject( pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat() ) == false )
 			 return;
 	}
 
@@ -3934,6 +3968,182 @@ void CLogicPlayerProxy::InputSuppressCrosshair( inputdata_t &inputdata )
 }
 #endif // PORTAL
 
+// Set the activity based on an event or current state
+void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
+{
+	int animDesired;
+
+	float speed;
+
+	speed = GetAbsVelocity().Length2D();
+
+	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
+	{
+		speed = 0;
+		playerAnim = PLAYER_IDLE;
+	}
+
+	Activity idealActivity = ACT_HL2MP_RUN;
+
+	if (playerAnim == PLAYER_JUMP)
+	{
+		if (HasWeapons())
+			idealActivity = ACT_HL2MP_JUMP;
+		else
+			idealActivity = ACT_JUMP;
+	}
+	else if (playerAnim == PLAYER_DIE)
+	{
+		if (m_lifeState == LIFE_ALIVE)
+		{
+			return;
+		}
+	}
+	else if (playerAnim == PLAYER_ATTACK1)
+	{
+		if (GetActivity() == ACT_HOVER ||
+			GetActivity() == ACT_SWIM ||
+			GetActivity() == ACT_HOP ||
+			GetActivity() == ACT_LEAP ||
+			GetActivity() == ACT_DIESIMPLE)
+		{
+			idealActivity = GetActivity();
+		}
+		else
+		{
+			idealActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
+		}
+	}
+	else if (playerAnim == PLAYER_RELOAD)
+	{
+		idealActivity = ACT_HL2MP_GESTURE_RELOAD;
+	}
+	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
+	{
+		if (!(GetFlags() & FL_ONGROUND) && (GetActivity() == ACT_HL2MP_JUMP || GetActivity() == ACT_JUMP))    // Still jumping
+		{
+			idealActivity = GetActivity();
+		}
+		else if (GetWaterLevel() > 1)
+		{
+			if (speed == 0)
+			{
+				if (HasWeapons())
+					idealActivity = ACT_HL2MP_IDLE;
+				else
+					idealActivity = ACT_IDLE;
+			}
+			else
+			{
+				if (HasWeapons())
+					idealActivity = ACT_HL2MP_RUN;
+				else
+					idealActivity = ACT_RUN;
+			}
+		}
+		else
+		{
+			if (GetFlags() & FL_DUCKING)
+			{
+				if (speed > 0)
+				{
+					if (HasWeapons())
+						idealActivity = ACT_HL2MP_WALK_CROUCH;
+					else
+						idealActivity = ACT_WALK_CROUCH;
+				}
+				else
+				{
+					if (HasWeapons())
+						idealActivity = ACT_HL2MP_IDLE_CROUCH;
+					else
+						idealActivity = ACT_COVER_LOW;
+				}
+			}
+			else
+			{
+				if (speed > 0)
+				{
+					{
+						if (HasWeapons())
+							idealActivity = ACT_HL2MP_RUN;
+						else
+						{
+							if (speed > HL2_WALK_SPEED + 20.0f)
+								idealActivity = ACT_RUN;
+							else
+								idealActivity = ACT_WALK;
+						}
+					}
+				}
+				else
+				{
+					if (HasWeapons())
+						idealActivity = ACT_HL2MP_IDLE;
+					else
+						idealActivity = ACT_IDLE;
+				}
+			}
+		}
+
+		//idealActivity = TranslateTeamActivity( idealActivity );
+	}
+
+	if (IsInAVehicle())
+	{
+		idealActivity = ACT_COVER_LOW;
+	}
+
+	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
+	}
+	else if (idealActivity == ACT_HL2MP_GESTURE_RELOAD)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		return;
+	}
+	else
+	{
+		SetActivity(idealActivity);
+
+		animDesired = SelectWeightedSequence(Weapon_TranslateActivity(idealActivity));
+
+		if (animDesired == -1)
+		{
+			animDesired = SelectWeightedSequence(idealActivity);
+
+			if (animDesired == -1)
+			{
+				animDesired = 0;
+			}
+		}
+
+		// Already using the desired animation?
+		if (GetSequence() == animDesired)
+			return;
+
+		m_flPlaybackRate = 1.0;
+		ResetSequence(animDesired);
+		SetCycle(0);
+		return;
+	}
+
+	// Already using the desired animation?
+	if (GetSequence() == animDesired)
+		return;
+
+	//Msg( "Set animation to %d\n", animDesired );
+	// Reset to first frame of desired animation
+	ResetSequence(animDesired);
+	SetCycle(0);
+}
+
 bool CHL2_Player::ValidatePlayerModel(const char *pModel)
 {
 	if (!Q_stricmp(g_pszPlayerModel, pModel))
@@ -3942,6 +4152,11 @@ bool CHL2_Player::ValidatePlayerModel(const char *pModel)
 	}
 
 	if (!Q_stricmp(g_pszChellModel, pModel))
+	{
+		return true;
+	}
+
+	if (!Q_stricmp(g_pszGordonModel, pModel))
 	{
 		return true;
 	}
@@ -3984,5 +4199,20 @@ void CHL2_Player::SetPlayerModel(void)
 	}
 
 	SetModel(szModelName);
+	// setting correct body group for gordon model
+	if (!Q_stricmp(g_pszGordonModel, szModelName))
+	{
+		if (IsSuitEquipped())
+		{
+			// setting suit skin
+			SetBodygroup(2, 1);
+		}
+		else
+		{
+			// or citizen skin
+			SetBodygroup(2, 3);
+		}
+	}
 	//m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
 }
+

@@ -7,6 +7,7 @@ using namespace vgui;
 #include <vgui_controls/cvartogglecheckbutton.h>
 
 ConVar cl_showmodsettingspanel("cl_showmodsettingspanel", "0", FCVAR_CLIENTDLL, "Sets the state of ModSettingsPanel <state>");
+ConVar cl_badgordonmodel("cl_badgordonmodel", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Used to keep the state of checkbox in the panel. Doesn't actually change the model");
 
 CON_COMMAND(ToggleModSettingsPanel, "Toggles ModSettingsPanel on or off")
 {
@@ -41,6 +42,7 @@ private:
 	CvarToggleCheckButton<ConVarRef> *m_pRegenerationEnable;
 	CvarToggleCheckButton<ConVarRef> *m_pReceiveFallDamage;
 	CheckButton *m_pChellModel;
+	CheckButton *m_pBadGordonModel;
 	ConVar *cl_playermodel;
 
 };
@@ -93,6 +95,9 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pReceiveFallDamage->SetCvarName("sv_receive_fall_damage");
 	m_pReceiveFallDamage->SizeToContents();
 	m_pChellModel = dynamic_cast<CheckButton*>( FindChildByName("ChellModel", true) );
+	m_pChellModel->SizeToContents();
+	m_pBadGordonModel = dynamic_cast<CheckButton*>(FindChildByName("BadGordonModel", true));
+	m_pBadGordonModel->SizeToContents();
 	cl_playermodel = cvar->FindVar("cl_playermodel");
 
 	DevMsg("ModSettingsPanel has been constructed\n");
@@ -153,9 +158,19 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pBetaQuickInfoOlderGunToggle->ApplyChanges();
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
-		if (!m_pChellModel->IsDepressed())
-			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
+
+		if (!m_pBadGordonModel->IsDepressed())
+		{
+			cl_badgordonmodel.SetValue(0);
+			engine->ClientCmd("cl_playermodel \"models/sirgibs/ragdolls/gordon_survivor_player.mdl\"");
+		}
 		else
+		{
+			cl_badgordonmodel.SetValue(1);
+			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
+		}
+
+		if (m_pChellModel->IsDepressed())
 			engine->ClientCmd("cl_playermodel \"models/player/chell.mdl\"");
 	}
 	if (!Q_stricmp(pcCommand, "ok"))
@@ -165,10 +180,21 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		m_pBetaQuickInfoOlderGunToggle->ApplyChanges();
 		m_pRegenerationEnable->ApplyChanges();
 		m_pReceiveFallDamage->ApplyChanges();
-		if (!m_pChellModel->IsDepressed())
-			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
+
+		if (!m_pBadGordonModel->IsDepressed())
+		{
+			cl_badgordonmodel.SetValue(0);
+			engine->ClientCmd("cl_playermodel \"models/sirgibs/ragdolls/gordon_survivor_player.mdl\"");
+		}
 		else
+		{
+			cl_badgordonmodel.SetValue(1);
+			engine->ClientCmd("cl_playermodel \"models/player.mdl\"");
+		}
+
+		if (m_pChellModel->IsDepressed())
 			engine->ClientCmd("cl_playermodel \"models/player/chell.mdl\"");
+
 		cl_showmodsettingspanel.SetValue(0);
 	}	
 }
@@ -179,6 +205,11 @@ void CModSettingsPanel::Activate()
 		m_pChellModel->SetSelected(true);
 	else
 		m_pChellModel->SetSelected(false);
+
+	if (cl_badgordonmodel.GetBool())
+		m_pBadGordonModel->SetSelected(true);
+	else
+		m_pBadGordonModel->SetSelected(false);
 
 	BaseClass::Activate();
 }

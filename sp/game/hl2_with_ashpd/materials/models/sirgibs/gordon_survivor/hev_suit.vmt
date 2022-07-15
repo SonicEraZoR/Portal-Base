@@ -1,0 +1,25 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "Models/SirGibs/gordon_survivor/hev_suit_mp"
+	"$bumpmap" "Models/SirGibs/gordon_survivor/hev_suit_normal"
+
+	"$surfaceprop" "plastic"
+
+	"$nodecal" "0"
+	"$halflambert" 1
+	"$multipass" 0
+
+	"$envmap" "env_cubemap"
+//	"$basealphaenvmapmask" "0"
+	"$normalmapalphaenvmapmask" "1"
+
+	"$envmaptint" "[.11 .11 .11]"
+//	"$envmapcontrast" "1.0"
+
+	"$phong" "1"
+	"$phongexponent" "15"
+	"$phongboost" "2.5"
+//	"$phongboost" "0.008"
+	"$phongfresnelranges"	"[0.2 0.6 1]"
+	"$phongalbedotint" "1"
+}
