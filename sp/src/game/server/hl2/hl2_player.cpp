@@ -3167,15 +3167,24 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 	
 	if ( bLimitMassAndSize == true )
 	{
-		if (FClassnameIs(GetActiveWeapon(), "weapon_portalgun"))
+		CBaseCombatWeapon* ActiveWeapon = GetActiveWeapon();
+		if (!ActiveWeapon)
 		{
-			if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass_portalgun.GetFloat(), max_lift_size_portalgun.GetFloat()))
+			if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat()))
 				return;
 		}
 		else
 		{
-			if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat()))
-				return;
+			if (FClassnameIs(ActiveWeapon, "weapon_portalgun"))
+			{
+				if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass_portalgun.GetFloat(), max_lift_size_portalgun.GetFloat()))
+					return;
+			}
+			else
+			{
+				if (!CBasePlayer::CanPickupObject(pObject, max_lift_mass.GetFloat(), max_lift_size.GetFloat()))
+					return;
+			}
 		}
 	}
 
