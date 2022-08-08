@@ -1684,6 +1684,8 @@ bool CPortalSimulator::CreateLocalCollision( void )
 				m_InternalData.Simulation.Static.World.Brushes.pCollideable = NULL;
 				return false;
 			}
+
+			Assert( Representation.pCollide != NULL );
 		}
 	}
 	m_InternalData.Simulation.Static.World.StaticProps.bCollisionExists = true;
