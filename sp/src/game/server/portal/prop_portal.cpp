@@ -759,7 +759,7 @@ void CProp_Portal::Activate( void )
 	{
 		Vector ptCenter = GetAbsOrigin();
 		QAngle qAngles = GetAbsAngles();
-		m_PortalSimulator.MoveTo( ptCenter, qAngles );
+		m_PortalSimulator.MoveTo(ptCenter, qAngles);
 
 		//resimulate everything we're touching
 		touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK );
@@ -1827,7 +1827,7 @@ void CProp_Portal::UpdatePortalTeleportMatrix( void )
 	}
 }
 
-void CProp_Portal::UpdatePortalLinkage( void )
+bool CProp_Portal::UpdatePortalLinkage( void )
 {
 	if( m_bActivated )
 	{
@@ -1965,7 +1965,10 @@ void CProp_Portal::UpdatePortalLinkage( void )
 
 		Vector ptCenter = GetAbsOrigin();
 		QAngle qAngles = GetAbsAngles();
-		m_PortalSimulator.MoveTo( ptCenter, qAngles );
+		if (!m_PortalSimulator.MoveTo(ptCenter, qAngles)) 
+		{
+			return false;
+		}
 
 		if( pLink )
 			m_PortalSimulator.AttachTo( &pLink->m_PortalSimulator );
@@ -1984,6 +1987,8 @@ void CProp_Portal::UpdatePortalLinkage( void )
 		if( pRemote )
 			pRemote->UpdatePortalLinkage();
 	}
+
+	return true;
 }
 
 void CProp_Portal::PlacePortal( const Vector &vOrigin, const QAngle &qAngles, float fPlacementSuccess, bool bDelay /*= false*/ )
@@ -2059,7 +2064,7 @@ void CProp_Portal::PlacePortal( const Vector &vOrigin, const QAngle &qAngles, fl
 	}	
 }
 
-void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
+void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles, const bool isFailReplace )
 {
 	// Tell our physics environment to stop simulating it's entities.
 	// Fast moving objects can pass through the hole this frame while it's in the old location.
@@ -2070,6 +2075,9 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 	m_vPrevForward = vOldForward;
 
 	WakeNearbyEntities();
+
+	Vector prevPos = GetAbsOrigin();
+	QAngle prevRot = GetAbsAngles();
 
 	Teleport( &vOrigin, &qAngles, 0 );
 
@@ -2097,17 +2105,42 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 		controller.SoundChangeVolume( m_pAmbientSound, 0.4, 0.1 );
 	}
 
-	DispatchParticleEffect( ( ( m_bIsPortal2 ) ? ( "portal_2_particles" ) : ( "portal_1_particles" ) ), PATTACH_POINT_FOLLOW, this, "particles_2", true );
-	DispatchParticleEffect( ( ( m_bIsPortal2 ) ? ( "portal_2_edge" ) : ( "portal_1_edge" ) ), PATTACH_POINT_FOLLOW, this, "particlespin" );
+	if (!isFailReplace) 
+	{
+		DispatchParticleEffect(((m_bIsPortal2) ? ("portal_2_particles") : ("portal_1_particles")), PATTACH_POINT_FOLLOW, this, "particles_2", true);
+		DispatchParticleEffect(((m_bIsPortal2) ? ("portal_2_edge") : ("portal_1_edge")), PATTACH_POINT_FOLLOW, this, "particlespin");
+	}
 
 	//if the other portal should be static, let's not punch stuff resting on it
 	bool bOtherShouldBeStatic = false;
 	if( !m_hLinkedPortal )
 		bOtherShouldBeStatic = true;
 
+	bool prevActivated = m_bActivated;
+
 	m_bActivated = true;
 
-	UpdatePortalLinkage();
+	if (!UpdatePortalLinkage())
+	{
+		Assert(!isFailReplace);
+		DoFizzleEffect(PORTAL_FIZZLE_CANT_FIT, false);
+		if (isFailReplace)  // is is already failed, it should be ok to place on the prev position. But failed again, so only can Fizzle it.
+		{
+			Fizzle();
+		}
+		else 
+		{
+			if (prevActivated)
+			{
+				NewLocation(prevPos, prevRot, true);
+			}
+			else 
+			{
+				Fizzle();
+			}
+		}
+		return;
+	}
 	UpdatePortalTeleportMatrix();
 
 	// Update the four corners of this portal for faster reference
@@ -2124,13 +2157,16 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles )
 		}
 	}
 
-	if ( m_bIsPortal2 )
+	if (!isFailReplace)
 	{
-		EmitSound( "Portal.open_red" );
-	}
-	else
-	{
-		EmitSound( "Portal.open_blue" );
+		if (m_bIsPortal2)
+		{
+			EmitSound("Portal.open_red");
+		}
+		else
+		{
+			EmitSound("Portal.open_blue");
+		}
 	}
 }
 

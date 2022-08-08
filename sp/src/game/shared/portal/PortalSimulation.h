@@ -280,7 +280,7 @@ public:
 	CPortalSimulator( void );
 	~CPortalSimulator( void );
 
-	void				MoveTo( const Vector &ptCenter, const QAngle &angles );
+	bool				MoveTo(const Vector &ptCenter, const QAngle &angles);
 	void				ClearEverything( void );
 
 	void				AttachTo( CPortalSimulator *pLinkedPortalSimulator );
@@ -374,8 +374,8 @@ protected:
 	void				ClearLinkedEntities( void ); //gets rid of transformed shadow clones
 #endif
 
-	void				CreateAllCollision( void );
-	void				CreateLocalCollision( void );
+	bool				CreateAllCollision(void);
+	bool				CreateLocalCollision(void);
 	void				CreateLinkedCollision( void );
 
 	void				ClearAllCollision( void );

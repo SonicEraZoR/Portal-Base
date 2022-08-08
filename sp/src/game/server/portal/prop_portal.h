@@ -90,7 +90,7 @@ public:
 	void					ForceEntityToFitInPortalWall( CBaseEntity *pEntity ); //projects an object's center into the middle of the portal wall hall, and traces back to where it wants to be
 
 	void					PlacePortal( const Vector &vOrigin, const QAngle &qAngles, float fPlacementSuccess, bool bDelay = false );
-	void					NewLocation( const Vector &vOrigin, const QAngle &qAngles );
+	void					NewLocation(const Vector &vOrigin, const QAngle &qAngles, const bool isFailReplace = false);
 
 	void					ResetModel( void ); //sets the model and bounding box
 	void					DoFizzleEffect( int iEffect, bool bDelayedPos = true ); //display cool visual effect
@@ -107,7 +107,7 @@ public:
 	void					InputFizzle( inputdata_t &inputdata );
 	void					InputNewLocation( inputdata_t &inputdata );
 
-	void					UpdatePortalLinkage( void );
+	bool					UpdatePortalLinkage(void);
 	void					UpdatePortalTeleportMatrix( void ); //computes the transformation from this portal to the linked portal, and will update the remote matrix as well
 
 	//void					SendInteractionMessage( CBaseEntity *pEntity, bool bEntering ); //informs clients that the entity is interacting with a portal (mostly used for clip planes)
