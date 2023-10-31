@@ -40,7 +40,8 @@ enum PS_PhysicsObjectSourceType_t
 	PSPOST_REMOTE_BRUSHES,
 	PSPOST_LOCAL_STATICPROPS,
 	PSPOST_REMOTE_STATICPROPS,
-	PSPOST_HOLYWALL_TUBE
+	PSPOST_HOLYWALL_TUBE,
+	PSPOST_LOCAL_DISPLACEMENT,
 };
 
 struct PortalTransformAsAngledPosition_t //a matrix transformation from this portal to the linked portal, stored as vector and angle transforms
@@ -124,6 +125,16 @@ struct PS_SD_Static_World_Brushes_t
 	
 };
 
+struct PS_SD_Static_World_Displacements_t
+{
+	CPhysCollide *pCollideable;
+#ifndef CLIENT_DLL
+	IPhysicsObject *pPhysicsObject;
+	PS_SD_Static_World_Displacements_t() : pCollideable(NULL), pPhysicsObject(NULL) {};
+#else
+	PS_SD_Static_World_Displacements_t() : pCollideable(NULL) {};
+#endif
+};
 
 struct PS_SD_Static_World_StaticProps_ClippedProp_t
 {
@@ -153,6 +164,7 @@ struct PS_SD_Static_World_StaticProps_t
 struct PS_SD_Static_World_t //stuff in front of the portal
 {
 	PS_SD_Static_World_Brushes_t Brushes;
+	PS_SD_Static_World_Displacements_t Displacements;
 	PS_SD_Static_World_StaticProps_t StaticProps;
 };
 
