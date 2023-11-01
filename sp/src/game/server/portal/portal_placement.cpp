@@ -8,6 +8,7 @@
 #include "portal_shareddefs.h"
 #include "prop_portal_shared.h"
 #include "func_noportal_volume.h"
+#include "func_allowportal_volume.h"
 #include "BasePropDoor.h"
 #include "collisionutils.h"
 #include "decals.h"
@@ -34,6 +35,7 @@ bool g_bBumpedByLinkedPortal;
 
 ConVar sv_portal_placement_debug ("sv_portal_placement_debug", "0", FCVAR_REPLICATED );
 ConVar sv_portal_placement_never_bump ("sv_portal_placement_never_bump", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar sv_toggle_portal_placement_ctrl_volumes("sv_toggle_portal_placement_ctrl_volume", "0", FCVAR_GAMEDLL);
 
 
 bool IsMaterialInList( const csurface_t &surface, char *g_ppszMaterials[] )
@@ -970,43 +972,143 @@ void FitPortalAroundOtherPortals( const CProp_Portal *pIgnorePortal, Vector &vOr
 
 bool IsPortalIntersectingNoPortalVolume( const Vector &vOrigin, const QAngle &qAngles, const Vector &vForward )
 {
-	// Walk the no portal volume list, check each with box-box intersection
-	for ( CFuncNoPortalVolume *pNoPortalEnt = GetNoPortalVolumeList(); pNoPortalEnt != NULL; pNoPortalEnt = pNoPortalEnt->m_pNext )
+	if (sv_toggle_portal_placement_ctrl_volumes.GetBool())
 	{
-		// Skip inactive no portal zones
-		if ( !pNoPortalEnt->IsActive() )
+		for (CFuncAllowPortalVolume *pAllowPortalEnt = GetAllowPortalVolumeList(); pAllowPortalEnt != NULL; pAllowPortalEnt = pAllowPortalEnt->m_pNext)
 		{
-			continue;
-		}
-
-		Vector vMin;
-		Vector vMax;
-		pNoPortalEnt->GetCollideable()->WorldSpaceSurroundingBounds( &vMin, &vMax );
-
-		Vector vBoxCenter = ( vMin + vMax ) * 0.5f;
-		Vector vBoxExtents = ( vMax - vMin ) * 0.5f;
-
-		// Take bump forgiveness into account on non major axies
-		vBoxExtents += Vector( ( ( vForward.x > 0.5f || vForward.x < -0.5f ) ? ( 0.0f ) : ( -PORTAL_BUMP_FORGIVENESS ) ),
-							   ( ( vForward.y > 0.5f || vForward.y < -0.5f ) ? ( 0.0f ) : ( -PORTAL_BUMP_FORGIVENESS ) ),
-							   ( ( vForward.z > 0.5f || vForward.z < -0.5f ) ? ( 0.0f ) : ( -PORTAL_BUMP_FORGIVENESS ) ) );
-
-		if ( UTIL_IsBoxIntersectingPortal( vBoxCenter, vBoxExtents, vOrigin, qAngles ) )
-		{
-			if ( sv_portal_placement_debug.GetBool() )
+			if (!pAllowPortalEnt->IsActive())
 			{
-				NDebugOverlay::Box( Vector( 0.0f, 0.0f, 0.0f ), vMin, vMax, 0, 255, 0, 128, 0.5f );
-				UTIL_Portal_NDebugOverlay( vOrigin, qAngles, 0, 0, 255, 128, false, 0.5f );
-
-				DevMsg( "Portal placed in no portal volume.\n" );
+				continue;
 			}
 
-			return true; 
-		}
-	}
+			Vector vMin;
+			Vector vMax;
+			pAllowPortalEnt->GetCollideable()->WorldSpaceSurroundingBounds(&vMin, &vMax);
 
-	// Passed the list, so we didn't hit any func_noportal_volumes
-	return false;
+			Vector vBoxCenter = (vMin + vMax) * 0.5f;
+			Vector vBoxExtents = (vMax - vMin) * 0.5f;
+
+			vBoxExtents -= Vector(((vForward.x > 0.5f || vForward.x < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+				((vForward.y > 0.5f || vForward.y < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+				((vForward.z > 0.5f || vForward.z < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)));
+
+			if (UTIL_IsBoxIntersectingPortal(vBoxCenter, vBoxExtents, vOrigin, qAngles))
+			{
+				for (CFuncNoPortalVolume *pNoPortalEnt = GetNoPortalVolumeList(); pNoPortalEnt != NULL; pNoPortalEnt = pNoPortalEnt->m_pNext)
+				{
+					// Skip inactive no portal zones
+					if (!pNoPortalEnt->IsActive())
+					{
+						continue;
+					}
+
+					Vector vMin;
+					Vector vMax;
+					pNoPortalEnt->GetCollideable()->WorldSpaceSurroundingBounds(&vMin, &vMax);
+
+					Vector vBoxCenter = (vMin + vMax) * 0.5f;
+					Vector vBoxExtents = (vMax - vMin) * 0.5f;
+
+					// Take bump forgiveness into account on non major axies
+					vBoxExtents += Vector(((vForward.x > 0.5f || vForward.x < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+						((vForward.y > 0.5f || vForward.y < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+						((vForward.z > 0.5f || vForward.z < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)));
+
+					if (UTIL_IsBoxIntersectingPortal(vBoxCenter, vBoxExtents, vOrigin, qAngles))
+					{
+						if (sv_portal_placement_debug.GetBool())
+						{
+							NDebugOverlay::Box(Vector(0.0f, 0.0f, 0.0f), vMin, vMax, 0, 255, 0, 128, 0.5f);
+							UTIL_Portal_NDebugOverlay(vOrigin, qAngles, 0, 0, 255, 128, false, 0.5f);
+
+							DevMsg("Portal placed in no portal volume.\n");
+						}
+
+						return true;
+					}
+				}
+
+				if (sv_portal_placement_debug.GetBool())
+				{
+					NDebugOverlay::Box(Vector(0.0f, 0.0f, 0.0f), vMin, vMax, 0, 255, 0, 128, 0.5f);
+				}
+
+				return false; // return false early if we're intersecting with allow portal volume
+			}
+		}
+
+		// Passed the list, so we didn't hit any func_allowportal_volumes
+		return true;
+	}
+	else
+	{
+		// Walk the no portal volume list, check each with box-box intersection
+		for (CFuncNoPortalVolume *pNoPortalEnt = GetNoPortalVolumeList(); pNoPortalEnt != NULL; pNoPortalEnt = pNoPortalEnt->m_pNext)
+		{
+			// Skip inactive no portal zones
+			if (!pNoPortalEnt->IsActive())
+			{
+				continue;
+			}
+
+			Vector vMin;
+			Vector vMax;
+			pNoPortalEnt->GetCollideable()->WorldSpaceSurroundingBounds(&vMin, &vMax);
+
+			Vector vBoxCenter = (vMin + vMax) * 0.5f;
+			Vector vBoxExtents = (vMax - vMin) * 0.5f;
+
+			// Take bump forgiveness into account on non major axies
+			vBoxExtents += Vector(((vForward.x > 0.5f || vForward.x < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+				((vForward.y > 0.5f || vForward.y < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+				((vForward.z > 0.5f || vForward.z < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)));
+
+			if (UTIL_IsBoxIntersectingPortal(vBoxCenter, vBoxExtents, vOrigin, qAngles))
+			{
+				for (CFuncAllowPortalVolume *pAllowPortalEnt = GetAllowPortalVolumeList(); pAllowPortalEnt != NULL; pAllowPortalEnt = pAllowPortalEnt->m_pNext)
+				{
+					if (!pAllowPortalEnt->IsActive())
+					{
+						continue;
+					}
+
+					Vector vMin;
+					Vector vMax;
+					pAllowPortalEnt->GetCollideable()->WorldSpaceSurroundingBounds(&vMin, &vMax);
+
+					Vector vBoxCenter = (vMin + vMax) * 0.5f;
+					Vector vBoxExtents = (vMax - vMin) * 0.5f;
+
+					vBoxExtents -= Vector(((vForward.x > 0.5f || vForward.x < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+						((vForward.y > 0.5f || vForward.y < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)),
+						((vForward.z > 0.5f || vForward.z < -0.5f) ? (0.0f) : (-PORTAL_BUMP_FORGIVENESS)));
+
+					if (UTIL_IsBoxIntersectingPortal(vBoxCenter, vBoxExtents, vOrigin, qAngles))
+					{
+						if (sv_portal_placement_debug.GetBool())
+						{
+							NDebugOverlay::Box(Vector(0.0f, 0.0f, 0.0f), vMin, vMax, 0, 255, 0, 128, 0.5f);
+						}
+
+						return false; // return false early if we're intersecting with allow portal volume
+					}
+				}
+
+				if (sv_portal_placement_debug.GetBool())
+				{
+					NDebugOverlay::Box(Vector(0.0f, 0.0f, 0.0f), vMin, vMax, 0, 255, 0, 128, 0.5f);
+					UTIL_Portal_NDebugOverlay(vOrigin, qAngles, 0, 0, 255, 128, false, 0.5f);
+
+					DevMsg("Portal placed in no portal volume.\n");
+				}
+
+				return true;
+			}
+		}
+
+		// Passed the list, so we didn't hit any func_noportal_volumes
+		return false;
+	}
 }
 
 bool IsPortalOverlappingOtherPortals( const CProp_Portal *pIgnorePortal, const Vector &vOrigin, const QAngle &qAngles, bool bFizzle /*= false*/ )
