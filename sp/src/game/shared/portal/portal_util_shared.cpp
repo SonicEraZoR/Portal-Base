@@ -241,6 +241,8 @@ void UTIL_Portal_Trace_Filter( CTraceFilterSimpleClassnameList *traceFilterPorta
 	traceFilterPortalShot->AddClassnameToIgnore("item_box_buckshot");
 	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_ar2_altfire");
 	traceFilterPortalShot->AddClassnameToIgnore("item_battery");
+	traceFilterPortalShot->AddClassnameToIgnore("item_crate");
+	traceFilterPortalShot->AddClassnameToIgnore("npc_bullseye");
 }
 
 
