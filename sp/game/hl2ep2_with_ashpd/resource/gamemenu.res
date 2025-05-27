@@ -47,33 +47,27 @@
 	}
 	"8"
 	{
-		"label"	"#GameUI_LoadCommentary"
-		"command" "OpenLoadSingleplayerCommentaryDialog"
+		"label" "#GameUI_Controller"
+		"command" "OpenControllerDialog"
 		"InGameOrder" "70"
+		"ConsoleOnly" "1"
 	}
 	"9"
 	{
-		"label" "#GameUI_Controller"
-		"command" "OpenControllerDialog"
+		"label" "#GameUI_GameMenu_ModOptions"
+		"command" "engine ToggleModSettingsPanel"
 		"InGameOrder" "80"
-		"ConsoleOnly" "1"
 	}
 	"10"
 	{
-		"label" "#GameUI_GameMenu_ModOptions"
-		"command" "engine ToggleModSettingsPanel"
+		"label" "#GameUI_GameMenu_Options"
+		"command" "OpenOptionsDialog"
 		"InGameOrder" "90"
 	}
 	"11"
 	{
-		"label" "#GameUI_GameMenu_Options"
-		"command" "OpenOptionsDialog"
-		"InGameOrder" "100"
-	}
-	"12"
-	{
 		"label" "#GameUI_GameMenu_Quit"
 		"command" "Quit"
-		"InGameOrder" "110"
+		"InGameOrder" "100"
 	}
 }
