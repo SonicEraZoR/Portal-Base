@@ -834,8 +834,7 @@ Scheme
 	{
 		"1"		"resource/HALFLIFE2.ttf"
 		"2"		"resource/HL2crosshairs.ttf"
-		"1"		"resource/LostCoast.ttf"
-		"4"		"resource/RealBeta's Weapon Icons.ttf"
+		"3"		"resource/RealBeta's Weapon Icons.ttf"
 	}
 
 }
