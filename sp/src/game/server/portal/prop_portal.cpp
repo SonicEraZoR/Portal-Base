@@ -10,8 +10,11 @@
 #include "portal_player.h"
 #include "portal/weapon_physcannon.h"
 #include "physics_npc_solver.h"
+// portal's microphone and speakers break music on some hl2 maps, so I'll just disable them for hl2 for now
+#ifndef PORTAL
 #include "envmicrophone.h"
 #include "env_speaker.h"
+#endif // !PORTAL
 #include "func_portal_detector.h"
 #include "model_types.h"
 #include "te_effect_dispatch.h"
@@ -663,6 +666,7 @@ void CProp_Portal::Fizzle( void )
 void CProp_Portal::RemovePortalMicAndSpeaker()
 {
 
+#ifndef PORTAL
 	// Shut down microphone/speaker if they exist
 	if ( m_hMicrophone )
 	{
@@ -703,6 +707,7 @@ void CProp_Portal::RemovePortalMicAndSpeaker()
 		}
 		m_hSpeaker = 0;
 	}
+#endif // !PORTAL
 }
 
 void CProp_Portal::PunchPenetratingPlayer( CBaseEntity *pPlayer )
@@ -1879,6 +1884,7 @@ bool CProp_Portal::UpdatePortalLinkage( void )
 			pLink->m_hLinkedPortal = hThis;
 			m_bIsPortal2 = !m_hLinkedPortal->m_bIsPortal2;
 
+#ifndef PORTAL
 			// Initialize mics/speakers
 			if( m_hMicrophone == 0 )
 			{
@@ -1954,6 +1960,7 @@ bool CProp_Portal::UpdatePortalLinkage( void )
 			CSpeaker *pSpeaker = static_cast<CSpeaker*>( m_hSpeaker.Get() );
 			pSpeaker->Teleport( &GetAbsOrigin(), &GetAbsAngles(), &vZero );
 			pSpeaker->InputTurnOn( in );
+#endif
 
 			UpdatePortalTeleportMatrix();
 		}
@@ -2081,6 +2088,7 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles, co
 
 	Teleport( &vOrigin, &qAngles, 0 );
 
+#ifndef PORTAL
 	if ( m_hMicrophone )
 	{
 		CEnvMicrophone *pMicrophone = static_cast<CEnvMicrophone*>( m_hMicrophone.Get() );
@@ -2096,6 +2104,7 @@ void CProp_Portal::NewLocation( const Vector &vOrigin, const QAngle &qAngles, co
 		inputdata_t in;
 		pSpeaker->InputTurnOn( in );
 	}
+#endif // !PORTAL
 
 	CreateSounds();
 
