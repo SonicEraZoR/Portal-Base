@@ -1,9 +1,8 @@
 "GameInfo"
 {
 	game 		"Half-Life 2: Episode Two with ASHPD"
-	title 		"Half-Life 2: Episode Two with"
-	title2		"Aperture Science Handheld Portal Device"
 
+	gamelogo 1
 	type		singleplayer_only
 	hasportals  1
 	supportsvr	1
