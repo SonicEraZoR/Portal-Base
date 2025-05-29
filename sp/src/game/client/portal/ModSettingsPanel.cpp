@@ -74,12 +74,15 @@ CModSettingsPanel::CModSettingsPanel(vgui::VPANEL parent) : BaseClass(NULL, "Mod
 	m_pOKButton = dynamic_cast<Button*>( FindChildByName("ButtonOK", true) );
 	m_pOKButton->AddActionSignalTarget(this);
 	m_pOKButton->SetCommand("ok");
+	m_pOKButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
 	m_pCancelButton = dynamic_cast<Button*>( FindChildByName("ButtonCancel", true) );
 	m_pCancelButton->AddActionSignalTarget(this);
 	m_pCancelButton->SetCommand("turnoff");
+	m_pCancelButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
 	m_pApplyButton = dynamic_cast<Button*>( FindChildByName("ButtonApply", true) );
 	m_pApplyButton->AddActionSignalTarget(this);
 	m_pApplyButton->SetCommand("apply");
+	m_pApplyButton->SetButtonActivationType(Button::ACTIVATE_ONPRESSEDANDRELEASED);
 	m_pBetaQuickInfoToggle = dynamic_cast<CvarToggleCheckButton<ConVarRef>*>( FindChildByName("BetaQuickInfoToggle", true) );
 	m_pBetaQuickInfoToggle->SetCvarName("beta_quickinfo");
 	m_pBetaQuickInfoToggle->SizeToContents();
@@ -157,6 +160,7 @@ void CModSettingsPanel::OnCommand(const char* pcCommand)
 		cl_showmodsettingspanel.SetValue(0);
 	if (!Q_stricmp(pcCommand, "apply"))
 	{
+		m_pApplyButton->SetEnabled(false);
 		m_pBetaQuickInfoToggle->ApplyChanges();
 		m_pBetaQuickInfoDelayToggle->ApplyChanges();
 		m_pBetaQuickInfoOlderGunToggle->ApplyChanges();
@@ -216,6 +220,11 @@ void CModSettingsPanel::Activate()
 		m_pBadGordonModel->SetSelected(true);
 	else
 		m_pBadGordonModel->SetSelected(false);
+
+	if (!m_pApplyButton->IsEnabled())
+	{
+		m_pApplyButton->SetEnabled(true);
+	}
 
 	BaseClass::Activate();
 }
