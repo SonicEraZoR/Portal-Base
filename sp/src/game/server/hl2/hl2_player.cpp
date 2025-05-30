@@ -49,6 +49,10 @@
 
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
+#ifdef LINUX
+#undef offsetof
+#define offsetof(s,m)	(size_t)&(((s *)0)->m)
+#endif
 #endif
 
 #ifdef PORTAL
