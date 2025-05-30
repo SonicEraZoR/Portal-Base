@@ -14,7 +14,7 @@
 #include "apparent_velocity_helper.h"
 #include "utldict.h"
 #include "filesystem.h"
-#include "..\public\datacache\imdlcache.h"
+#include "../public/datacache/imdlcache.h"
 
 extern ConVar mp_facefronttime, mp_feetyawrate, mp_ik;
 
