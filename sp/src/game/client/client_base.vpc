@@ -195,7 +195,6 @@ $Project
 		$File	"animatedtextureproxy.cpp"
 		$File	"AnimateSpecificTextureProxy.cpp"
 		$File	"$SRCDIR\game\shared\animation.cpp"
-		$File	"$SRCDIR\game\shared\base_playeranimstate.cpp"
 		$File	"$SRCDIR\game\shared\baseachievement.cpp"
 		$File	"$SRCDIR\game\shared\baseachievement.h"
 		$File	"baseanimatedtextureproxy.cpp"

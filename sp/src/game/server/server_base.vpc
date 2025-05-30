@@ -216,7 +216,6 @@ $Project
 		$File	"$SRCDIR\game\shared\animation.cpp"
 		$File	"$SRCDIR\game\shared\animation.h"
 		$File	"$SRCDIR\game\shared\apparent_velocity_helper.h"
-		$File	"$SRCDIR\game\shared\base_playeranimstate.cpp"
 		$File	"base_transmit_proxy.cpp"
 		$File	"$SRCDIR\game\shared\baseachievement.cpp"
 		$File	"$SRCDIR\game\shared\baseachievement.h"
