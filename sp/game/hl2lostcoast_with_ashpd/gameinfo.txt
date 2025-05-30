@@ -2,6 +2,7 @@
 {
 	game 		"Half-Life 2: Lost Coast with ASHPD"
 
+	icon	"resource/icon"
 	gamelogo 1
 	type		singleplayer_only
 	hasportals  1
