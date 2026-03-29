@@ -16,6 +16,7 @@
 #include "filesystem.h"
 #include "collisionutils.h"
 #include "tier1/callqueue.h"
+#include "debugoverlay_shared.h"
 
 #ifndef CLIENT_DLL
 
@@ -1660,6 +1661,54 @@ bool CPortalSimulator::CreateLocalCollision( void )
 	STOPDEBUGTIMER( worldBrushTimer );
 	DEBUGTIMERONLY( DevMsg( 2, "[PSDT:%d] %sWorld Brushes=%fms\n", GetPortalSimulatorGUID(), TABSPACING, worldBrushTimer.GetDuration().GetMillisecondsF() ); );
 
+	Vector vOBBForward = m_InternalData.Placement.vForward;
+	Vector vOBBRight = m_InternalData.Placement.vRight;
+	Vector vOBBUp = m_InternalData.Placement.vUp;
+
+
+	//scale the extents to usable sizes
+	float flScaleX = sv_portal_collision_sim_bounds_x.GetFloat();
+	if (flScaleX < 200.0f)
+		flScaleX = 200.0f;
+	float flScaleY = sv_portal_collision_sim_bounds_y.GetFloat();
+	if (flScaleY < 200.0f)
+		flScaleY = 200.0f;
+	float flScaleZ = sv_portal_collision_sim_bounds_z.GetFloat();
+	if (flScaleZ < 252.0f)
+		flScaleZ = 252.0f;
+
+	vOBBForward *= flScaleX;
+	vOBBRight *= flScaleY;
+	vOBBUp *= flScaleZ;	// default size for scale z (252) is player (height + portal half height) * 2. Any smaller than this will allow for players to 
+	// reach unsimulated geometry before an end touch with teh portal.
+
+	Vector ptOBBOrigin = m_InternalData.Placement.ptCenter;
+	ptOBBOrigin -= vOBBRight / 2.0f;
+	ptOBBOrigin -= vOBBUp / 2.0f;
+
+	Vector vAABBMins, vAABBMaxs;
+	vAABBMins = vAABBMaxs = ptOBBOrigin;
+
+	for (int i = 1; i != 8; ++i)
+	{
+		Vector ptTest = ptOBBOrigin;
+		if (i & (1 << 0)) ptTest += vOBBForward;
+		if (i & (1 << 1)) ptTest += vOBBRight;
+		if (i & (1 << 2)) ptTest += vOBBUp;
+
+		if (ptTest.x < vAABBMins.x) vAABBMins.x = ptTest.x;
+		if (ptTest.y < vAABBMins.y) vAABBMins.y = ptTest.y;
+		if (ptTest.z < vAABBMins.z) vAABBMins.z = ptTest.z;
+		if (ptTest.x > vAABBMaxs.x) vAABBMaxs.x = ptTest.x;
+		if (ptTest.y > vAABBMaxs.y) vAABBMaxs.y = ptTest.y;
+		if (ptTest.z > vAABBMaxs.z) vAABBMaxs.z = ptTest.z;
+	}
+
+	//draws a box around the area in which displacements are grabbed
+	//NDebugOverlay::Box(vec3_origin, vAABBMins, vAABBMaxs, 0, 255, 0, 100, 9999);
+	m_InternalData.Simulation.Static.World.Brushes.pDisCollideable = enginetrace->GetCollidableFromDisplacementsInAABB(vAABBMins, vAABBMaxs);
+
+
 	CREATEDEBUGTIMER( worldPropTimer );
 	STARTDEBUGTIMER( worldPropTimer );
 #ifdef _DEBUG
@@ -1682,6 +1731,7 @@ bool CPortalSimulator::CreateLocalCollision( void )
 
 			if (Representation.pCollide == NULL) {
 				m_InternalData.Simulation.Static.World.Brushes.pCollideable = NULL;
+				m_InternalData.Simulation.Static.World.Brushes.pDisCollideable = NULL;
 				return false;
 			}
 
@@ -1827,6 +1877,12 @@ void CPortalSimulator::ClearLocalCollision( void )
 	{
 		physcollision->DestroyCollide( m_InternalData.Simulation.Static.World.Brushes.pCollideable );
 		m_InternalData.Simulation.Static.World.Brushes.pCollideable = NULL;
+	}
+
+	if (m_InternalData.Simulation.Static.World.Brushes.pDisCollideable)
+	{
+		physcollision->DestroyCollide(m_InternalData.Simulation.Static.World.Brushes.pDisCollideable);
+		m_InternalData.Simulation.Static.World.Brushes.pDisCollideable = NULL;
 	}
 
 	if( m_InternalData.Simulation.Static.World.StaticProps.bCollisionExists && 
@@ -3034,6 +3090,9 @@ void DumpActiveCollision( const CPortalSimulator *pPortalSimulator, const char *
 
 	if( pPortalSimulator->m_DataAccess.Simulation.Static.World.Brushes.pCollideable )
 		PortalSimulatorDumps_DumpCollideToGlView( pPortalSimulator->m_DataAccess.Simulation.Static.World.Brushes.pCollideable, vec3_origin, vec3_angle, PSDAC_INTENSITY_LOCALBRUSH, szFileName );
+
+	if (pPortalSimulator->m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable)
+		PortalSimulatorDumps_DumpCollideToGlView(pPortalSimulator->m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable, vec3_origin, vec3_angle, PSDAC_INTENSITY_LOCALBRUSH, szFileName);
 	
 	if( pPortalSimulator->m_DataAccess.Simulation.Static.World.StaticProps.bCollisionExists )
 	{
@@ -3057,6 +3116,9 @@ void DumpActiveCollision( const CPortalSimulator *pPortalSimulator, const char *
 	{
 		if( pLinkedPortal->m_DataAccess.Simulation.Static.World.Brushes.pCollideable )
 			PortalSimulatorDumps_DumpCollideToGlView( pLinkedPortal->m_DataAccess.Simulation.Static.World.Brushes.pCollideable, pPortalSimulator->m_DataAccess.Placement.ptaap_LinkedToThis.ptOriginTransform, pPortalSimulator->m_DataAccess.Placement.ptaap_LinkedToThis.qAngleTransform, PSDAC_INTENSITY_REMOTEBRUSH, szFileName );
+
+		if (pLinkedPortal->m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable)
+			PortalSimulatorDumps_DumpCollideToGlView(pLinkedPortal->m_DataAccess.Simulation.Static.World.Brushes.pDisCollideable, pPortalSimulator->m_DataAccess.Placement.ptaap_LinkedToThis.ptOriginTransform, pPortalSimulator->m_DataAccess.Placement.ptaap_LinkedToThis.qAngleTransform, PSDAC_INTENSITY_REMOTEBRUSH, szFileName);
 
 		//for( int i = pPortalSimulator->m_DataAccess.Simulation.Static.Wall.RemoteTransformedToLocal.StaticProps.Collideables.Count(); --i >= 0; )
 		//	PortalSimulatorDumps_DumpCollideToGlView( pPortalSimulator->m_DataAccess.Simulation.Static.Wall.RemoteTransformedToLocal.StaticProps.Collideables[i], vec3_origin, vec3_angle, PSDAC_INTENSITY_REMOTEPROP, szFileName );	
