@@ -163,6 +163,7 @@ IMPLEMENT_ACTTABLE(CWeaponShotgun);
 
 void CWeaponShotgun::Precache( void )
 {
+	PrecacheModel("models/weapons/shotgun_shell.mdl");
 	CBaseCombatWeapon::Precache();
 }
 
@@ -217,8 +218,14 @@ void CWeaponShotgun::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatC
 		case EVENT_WEAPON_SHOTGUN_FIRE:
 		{
 			FireNPCPrimaryAttack( pOperator, false );
+			break;
 		}
-		break;
+		case 6001: //mygamepedia: Eject a brass shell from attachment 1
+		{
+			PrecacheModel("models/weapons/shotgun_shell.mdl");
+			EjectBrassPhysics(2);
+			break;
+		}
 
 		default:
 			CBaseCombatWeapon::Operator_HandleAnimEvent( pEvent, pOperator );

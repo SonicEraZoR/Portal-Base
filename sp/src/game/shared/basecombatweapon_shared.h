@@ -445,6 +445,9 @@ public:
 
 	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return NULL; }
 
+	void EjectBrassPhysics(int iType);
+
+
 // Client only methods
 #else
 

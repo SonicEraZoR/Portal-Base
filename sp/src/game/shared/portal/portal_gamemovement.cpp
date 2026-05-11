@@ -30,6 +30,12 @@
 ConVar sv_player_trace_through_portals("sv_player_trace_through_portals", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Causes player movement traces to trace through portals." );
 ConVar sv_player_funnel_into_portals("sv_player_funnel_into_portals", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX, "Causes the player to auto correct toward the center of floor portals." ); 
 
+ConVar sv_portalbase_use_hl2_movement("sv_portalbase_use_hl2_movement", "1",
+	FCVAR_REPLICATED,
+	"Disable specific Portal movement features that makes the player movement different from Half-Life 2.");
+
+extern ConVar sv_portalbase_portalgamerules_fall_damage_type;
+
 class CReservePlayerSpot;
 
 #define PORTAL_FUNNEL_AMOUNT 6.0f
@@ -252,8 +258,16 @@ void CPortalGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float
 		return;
 
 	// Cap speed
-	if (wishspd > 60.0f)
-		wishspd = 60.0f;
+	if (!sv_portalbase_use_hl2_movement.GetBool()) //mygamepedia: orig portal uses hardcoded val, while hl2 uses cvar
+	{
+		if (wishspd > 60.0f)
+			wishspd = 60.0f;
+	}
+	else
+	{
+		if (wishspd > GetAirSpeedCap())
+			wishspd = GetAirSpeedCap();
+	}
 
 	// Determine veer amount
 	currentspeed = mv->m_vecVelocity.Dot(wishdir);
@@ -313,17 +327,21 @@ void CPortalGameMovement::AirMove( void )
 	//
 	// Don't let the player screw their fling because of adjusting into a floor portal
 	//
-	if ( mv->m_vecVelocity[ 0 ] * mv->m_vecVelocity[ 0 ] + mv->m_vecVelocity[ 1 ] * mv->m_vecVelocity[ 1 ] > MIN_FLING_SPEED * MIN_FLING_SPEED )
-	{
-		if ( mv->m_vecVelocity[ 0 ] > MIN_FLING_SPEED * 0.5f && wishdir[ 0 ] < 0.0f )
-			wishdir[ 0 ] = 0.0f;
-		else if ( mv->m_vecVelocity[ 0 ] < -MIN_FLING_SPEED * 0.5f && wishdir[ 0 ] > 0.0f )
-			wishdir[ 0 ] = 0.0f;
 
-		if ( mv->m_vecVelocity[ 1 ] > MIN_FLING_SPEED * 0.5f && wishdir[ 1 ] < 0.0f )
-			wishdir[ 1 ] = 0.0f;
-		else if ( mv->m_vecVelocity[ 1 ] < -MIN_FLING_SPEED * 0.5f && wishdir[ 1 ] > 0.0f )
-			wishdir[ 1 ] = 0.0f;
+	if (!sv_portalbase_use_hl2_movement.GetBool()) //this doesn't let you to change fling direction at high speed
+	{
+		if (mv->m_vecVelocity[0] * mv->m_vecVelocity[0] + mv->m_vecVelocity[1] * mv->m_vecVelocity[1] > MIN_FLING_SPEED * MIN_FLING_SPEED)
+		{
+			if (mv->m_vecVelocity[0] > MIN_FLING_SPEED * 0.5f && wishdir[0] < 0.0f)
+				wishdir[0] = 0.0f;
+			else if (mv->m_vecVelocity[0] < -MIN_FLING_SPEED * 0.5f && wishdir[0] > 0.0f)
+				wishdir[0] = 0.0f;
+
+			if (mv->m_vecVelocity[1] > MIN_FLING_SPEED * 0.5f && wishdir[1] < 0.0f)
+				wishdir[1] = 0.0f;
+			else if (mv->m_vecVelocity[1] < -MIN_FLING_SPEED * 0.5f && wishdir[1] > 0.0f)
+				wishdir[1] = 0.0f;
+		}
 	}
 
 	//
@@ -357,7 +375,12 @@ void CPortalGameMovement::AirMove( void )
 		wishspeed = mv->m_flMaxSpeed;
 	}
 
-	AirAccelerate( wishdir, wishspeed, 15.0f );
+	if (sv_portalbase_use_hl2_movement.GetBool()) //mygamepedia: orig p1 uses hardcoded val, hl2 uses cvar
+	{
+		AirAccelerate(wishdir, wishspeed, 15.0f);
+	}
+	else
+		AirAccelerate(wishdir, wishspeed, sv_airaccelerate.GetFloat());
 
 	// Add in any base velocity to the current velocity.
 	VectorAdd(mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
@@ -375,6 +398,10 @@ void CPortalGameMovement::PlayerRoughLandingEffects( float fvol )
 #ifndef CLIENT_DLL
 	if ( fvol >= 1.0 )
 	{
+		//mygamepedia: don't play the sound if fall damage not disabled
+		if (sv_portalbase_portalgamerules_fall_damage_type.GetInt() != 0)
+			return;
+
 		// Play the future shoes sound
 		CRecipientFilter filter;
 		filter.AddRecipientsByPAS( player->GetAbsOrigin() );

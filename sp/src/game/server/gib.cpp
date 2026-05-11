@@ -16,6 +16,7 @@
 #include "ai_utils.h"
 #include "EntityFlame.h"
 #include "physics_prop_ragdoll.h"
+#include "portal_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -411,9 +412,13 @@ bool CGib::SUB_AllowedToFade( void )
 
 	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
 
-	if ( pPlayer && pPlayer->FInViewCone( this ) && m_bForceRemove == false )
+	if (pPlayer)
 	{
-		return false;
+		CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+
+		//mygamepedia: also check if i can see it in portals
+		if ((pPortalPlayer->FInViewConeThroughPortal(this) && !m_bForceRemove) || (pPlayer->FInViewCone(this) && !m_bForceRemove))
+			return false;
 	}
 
 	return true;

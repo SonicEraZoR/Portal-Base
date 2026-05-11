@@ -24,6 +24,8 @@
 
 ConVar	pistol_use_new_accuracy( "pistol_use_new_accuracy", "1" );
 
+extern void EjectBrassPhysics(Vector& pos1, QAngle& angles, QAngle& gunAngles, int type);
+
 //-----------------------------------------------------------------------------
 // CWeaponPistol
 //-----------------------------------------------------------------------------
@@ -138,6 +140,11 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 {
 	switch( pEvent->event )
 	{
+		case 6001:
+		{
+			EjectBrassPhysics(0); //mygamepedia: Eject a brass shell from attachment 1
+			break;
+		}
 		case EVENT_WEAPON_PISTOL_FIRE:
 		{
 			Vector vecShootOrigin, vecShootDir;
@@ -155,6 +162,7 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}
+
 		break;
 		default:
 			BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
@@ -201,6 +209,10 @@ void CWeaponPistol::PrimaryAttack( void )
 		// not be the ideal way to achieve this, but it's cheap and it works, which is
 		// great for a feature we're evaluating. (sjb)
 		pOwner->ViewPunchReset();
+
+		//mygamepedia: orig pistol viewmodel doesn't create shells (unlike npcs)
+		//let it create shells here
+		EjectBrassPhysics(0);
 	}
 
 	BaseClass::PrimaryAttack();

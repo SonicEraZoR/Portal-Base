@@ -1098,6 +1098,12 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 
 		CBaseEntity *pHeldEntity = GetPlayerHeldEntity( pOtherAsPlayer );
 
+		//mygamepedia: try to get physcannon's grabbed object if the player don't have any held entity
+		if (!pHeldEntity)
+		{
+			pHeldEntity = PhysCannonGetHeldEntity(pOtherAsPlayer->GetActiveWeapon());
+		}
+
 		// Sometimes reorienting by pitch is more desirable than by roll depending on the portals' orientations and the relative player facing direction
 		if ( pHeldEntity )	// never pitch reorient while holding an object
 		{
@@ -1232,6 +1238,16 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 	else if( bPlayer )
 	{
 		CBaseEntity *pHeldEntity = GetPlayerHeldEntity( pOtherAsPlayer );
+		bool bPhysCannonHeld = false;
+
+		//mygamepedia: try to get physcannon's grabbed object if the player don't have any held entity
+		if (!pHeldEntity)
+		{
+			pHeldEntity = PhysCannonGetHeldEntity(pOtherAsPlayer->GetActiveWeapon());
+			if (pHeldEntity)
+				bPhysCannonHeld = true;
+		}
+
 		if( pHeldEntity )
 		{
 			pOtherAsPlayer->ToggleHeldObjectOnOppositeSideOfPortal();
@@ -1246,7 +1262,15 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 				//we need to make sure the held object and player don't interpenetrate when the player's shape changes
 				Vector vTargetPosition;
 				QAngle qTargetOrientation;
-				UpdateGrabControllerTargetPosition( pOtherAsPlayer, &vTargetPosition, &qTargetOrientation );
+				
+				if (bPhysCannonHeld) //mygamepedia: fix physcannon teleporting objects to incorrect place after passing portals
+				{
+					UpdatePhysCannonGrabControllerTargetPosition(pOtherAsPlayer, &vTargetPosition, &qTargetOrientation);
+				}
+				else
+				{
+					UpdateGrabControllerTargetPosition(pOtherAsPlayer, &vTargetPosition, &qTargetOrientation);
+				}
 
 				pHeldEntity->Teleport( &vTargetPosition, &qTargetOrientation, 0 );
 

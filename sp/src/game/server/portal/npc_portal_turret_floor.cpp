@@ -108,6 +108,7 @@ public:
 	virtual void	Activate( void );
 	virtual void	UpdateOnRemove( void );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
+	virtual bool	IsPortalTurret() { return true; }
 
 	virtual bool	ShouldAttractAutoAim( CBaseEntity *pAimingEnt );
 	virtual float	GetAutoAimRadius();

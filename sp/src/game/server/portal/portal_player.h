@@ -86,8 +86,6 @@ public:
 	bool m_bSilentDropAndPickup;
 
 	void SuppressCrosshair( bool bState ) { m_bSuppressingCrosshair = bState; }
-
-	virtual bool Weapon_CanUse(CBaseCombatWeapon* pWeapon); //mygamepedia: done for tests with stunstick
 	
 private:
 	CSoundPatch		*m_pWooshSound;

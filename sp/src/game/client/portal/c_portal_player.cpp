@@ -11,6 +11,7 @@
 #include "portal_shareddefs.h"
 #include "ivieweffects.h"		// for screenshake
 #include "prop_portal_shared.h"
+#include "view.h"
 
 // NVNT for fov updates
 #include "haptics/ihaptics.h"
@@ -734,6 +735,72 @@ void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& 
 
 		vm->CalcViewModelView( this, vInterpEyeOrigin, eyeAngles );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Write vm pos data for shells - MyGamepedia
+//-----------------------------------------------------------------------------
+bool C_Portal_Player::CreateMove(float flInputSampleTime, CUserCmd* pCmd)
+{
+	//not sure if i can do it before main class version
+	bool bReturn = BaseClass::CreateMove(flInputSampleTime, pCmd);
+
+	if (!(MainViewOrigin().DistToSqr(GetAbsOrigin()) < (256 * 256)))
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	C_BaseViewModel* vm = GetViewModel(0);
+	if (!vm)
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	CStudioHdr* hdr = vm->GetModelPtr();
+
+	if (!hdr || !(hdr->GetNumAttachments() > 0))
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	Vector attachOrigin;
+	QAngle attachAngles;
+
+	bool bHasValidAttach = false;
+
+	//for physcannon, we want muzzle, shell attach for the rest
+	if (GetActiveWeapon() && GetActiveWeapon()->IsPhyscannon())
+	{
+		bHasValidAttach = vm->GetAttachment(1, attachOrigin, attachAngles);
+	}
+	else
+		bHasValidAttach = vm->GetAttachment(2, attachOrigin, attachAngles);
+
+	if (bHasValidAttach)
+	{
+		QAngle vmAng = vm->GetAbsAngles();
+
+		pCmd->fViewModelCalcAnglesX = vmAng.x;
+		pCmd->fViewModelCalcAnglesY = vmAng.y;
+		pCmd->fViewModelCalcAnglesZ = vmAng.z;
+
+		pCmd->fViewModelAttachOriginX = attachOrigin.x;
+		pCmd->fViewModelAttachOriginY = attachOrigin.y;
+		pCmd->fViewModelAttachOriginZ = attachOrigin.z;
+
+		pCmd->fViewModelAttachAnglesX = attachAngles.x;
+		pCmd->fViewModelAttachAnglesY = attachAngles.y;
+		pCmd->fViewModelAttachAnglesZ = attachAngles.z;
+
+		pCmd->iViewModelHasValidParams = 1;
+	}
+	else
+		pCmd->iViewModelHasValidParams = 0;
+
+	return bReturn;
 }
 
 bool LocalPlayerIsCloseToPortal( void )

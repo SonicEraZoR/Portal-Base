@@ -705,7 +705,8 @@ void C_PhysPropClientside::ParseAllEntities(const char *pMapData)
 }
 
 CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, const Vector &position, 
-	const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, int nSkin, const breakablepropparams_t &params )
+	const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, int nSkin, const breakablepropparams_t &params,
+	bool bUsePropPhysicsOverride = false)
 {
 	C_PhysPropClientside *pEntity = C_PhysPropClientside::CreateNew();
 

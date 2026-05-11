@@ -31,6 +31,9 @@ public:
 	void ClientThink( void );
 	void FixTeleportationRoll( void );
 
+	//mygamepedia: this allows the client to transfer vm pos data for server shells
+	virtual bool	CreateMove(float flInputSampleTime, CUserCmd* pCmd);
+
 	static inline C_Portal_Player* GetLocalPortalPlayer()
 	{
 		return (C_Portal_Player*)C_BasePlayer::GetLocalPlayer();

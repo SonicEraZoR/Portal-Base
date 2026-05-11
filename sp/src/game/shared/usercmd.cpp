@@ -169,6 +169,113 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 		buf->WriteOneBit( 0 );
 	}
 
+	//mygamepedia: viewmodel data transfer - cal angles
+
+	if (to->fViewModelCalcAnglesX != from->fViewModelCalcAnglesX)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelCalcAnglesX);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelCalcAnglesY != from->fViewModelCalcAnglesY)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelCalcAnglesY);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelCalcAnglesZ != from->fViewModelCalcAnglesZ)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelCalcAnglesZ);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	//mygamepedia: viewmodel data transfer - ang angles
+
+	if (to->fViewModelAttachAnglesX != from->fViewModelAttachAnglesX)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachAnglesX);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelAttachAnglesY != from->fViewModelAttachAnglesY)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachAnglesY);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelAttachAnglesZ != from->fViewModelAttachAnglesZ)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachAnglesZ);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	//mygamepedia: viewmodel data transfer - pos angles
+
+	if (to->fViewModelAttachOriginX != from->fViewModelAttachOriginX)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachOriginX);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelAttachOriginY != from->fViewModelAttachOriginY)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachOriginY);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	if (to->fViewModelAttachOriginZ != from->fViewModelAttachOriginZ)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteFloat(to->fViewModelAttachOriginZ);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
+	//mygamepedia: viewmodel data transfer - valid or not
+	if (to->iViewModelHasValidParams != from->iViewModelHasValidParams)
+	{
+		buf->WriteOneBit(1);
+		buf->WriteShort(to->iViewModelHasValidParams);
+	}
+	else
+	{
+		buf->WriteOneBit(0);
+	}
+
 #if defined( HL2_CLIENT_DLL )
 	if ( to->entitygroundcontact.Count() != 0 )
 	{
@@ -287,6 +394,48 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 	if ( buf->ReadOneBit() )
 	{
 		move->mousedy = buf->ReadShort();
+	}
+
+	//mygamepedia: viewmodel data transfer
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelCalcAnglesX = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelCalcAnglesY = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelCalcAnglesZ = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachAnglesX = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachAnglesY = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachAnglesZ = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachOriginX = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachOriginY = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->fViewModelAttachOriginZ = buf->ReadFloat();
+	}
+	if (buf->ReadOneBit())
+	{
+		move->iViewModelHasValidParams = buf->ReadShort();
 	}
 
 #if defined( HL2_DLL )

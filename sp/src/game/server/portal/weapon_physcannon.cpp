@@ -48,6 +48,9 @@
 #include "haptics/haptic_utils.h"
 #include "npc_security_camera.h"
 #include "items.h"
+#include "debugoverlay_shared.h" 
+#include "game.h"
+#include "physicsshadowclone.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -70,17 +73,29 @@ ConVar physcannon_punt_cone( "physcannon_punt_cone", "0.997" );
 ConVar player_throwforce( "player_throwforce", "1000" );
 ConVar physcannon_dmg_glass( "physcannon_dmg_glass", "15" );
 
+//mygamepedia: debug convars (portal logic mainly)
+ConVar sv_portalbase_debug_physcannon_portal_clonepull("sv_portalbase_debug_physcannon_portal_clonepull", "0");
+ConVar sv_portalbase_debug_physcannon_portal_punt("sv_portalbase_debug_physcannon_portal_punt", "0");
+ConVar sv_portalbase_debug_physcannon_portal_punt_clone("sv_portalbase_debug_physcannon_portal_punt_clone", "0");
+ConVar sv_portalbase_debug_physcannon_portal_grab("sv_portalbase_debug_physcannon_portal_grab", "0");
+ConVar sv_portalbase_debug_physcannon_portal_attach("sv_portalbase_debug_physcannon_portal_attach", "0");
+ConVar sv_portalbase_debug_physcannon_portal_conegrab("sv_portalbase_debug_physcannon_portal_conegrab", "0");
+ConVar sv_portalbase_debug_physcannon_effect_launch("sv_portalbase_debug_physcannon_effect_launch", "0");
+ConVar sv_portalbase_debug_physcannon_effect_launch_mega("sv_portalbase_debug_physcannon_effect_launch_mega", "0");
+
 extern ConVar hl2_normspeed;
 extern ConVar hl2_walkspeed;
 extern ConVar sv_portalbase_item_touch_area;
 
 #define PHYSCANNON_BEAM_SPRITE "sprites/orangelight1.vmt"
+#define PHYSCANNON_BEAM_PORTAL_SPRITE "sprites/orangelight1_portal.vmt"  //mygamepedia: fixed sprite without $ignorez
 #define PHYSCANNON_GLOW_SPRITE "sprites/glow04_noz.vmt"
 #define PHYSCANNON_ENDCAP_SPRITE "sprites/orangeflare1.vmt"
 #define PHYSCANNON_CENTER_GLOW "sprites/orangecore1.vmt"
 #define PHYSCANNON_BLAST_SPRITE "sprites/orangecore2.vmt"
  
 #define MEGACANNON_BEAM_SPRITE "sprites/lgtning_noz.vmt"
+#define MEGACANNON_BEAM_PORTAL_SPRITE "sprites/lgtning_portal.vmt" //mygamepedia: fixed sprite without $ignorez
 #define MEGACANNON_GLOW_SPRITE "sprites/blueflare1_noz.vmt"
 #define MEGACANNON_ENDCAP_SPRITE "sprites/blueflare1_noz.vmt"
 #define MEGACANNON_CENTER_GLOW "effects/fluttercore.vmt"
@@ -92,9 +107,45 @@ extern ConVar sv_portalbase_item_touch_area;
 #define	MEGACANNON_SKIN	1
 
 // -------------------------------------------------------------------------
+// Purpose: Helper that allows us to get real entity instance when we got shadow clone
+// - MyGamepedia
+// -------------------------------------------------------------------------
+static CBaseEntity* ResolveToRealEntity(CBaseEntity* pEntity)
+{
+	if (pEntity && CPhysicsShadowClone::IsShadowClone(pEntity))
+	{
+		CBaseEntity* pReal = ((CPhysicsShadowClone*)pEntity)->GetClonedEntity();
+		if (pReal)
+			return pReal;
+	}
+	return pEntity;
+}
+
+// -------------------------------------------------------------------------
+// Purpose: Helper given a real entity (resolved from a shadow clone),
+// find the CProp_Portal on the real entity's side (Portal B)
+// - MyGamepedia
+// -------------------------------------------------------------------------
+static CProp_Portal* FindPortalOwningEntity(CBaseEntity* pRealEntity)
+{
+	CPortalSimulator* pSim = CPortalSimulator::GetSimulatorThatOwnsEntity(pRealEntity);
+	if (!pSim)
+		return NULL;
+
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+	CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();
+	for (int i = 0; i != iPortalCount; ++i)
+	{
+		CProp_Portal* pPortal = pPortals[i];
+		if (&pPortal->m_PortalSimulator == pSim)
+			return pPortal;
+	}
+	return NULL;
+}
+
+// -------------------------------------------------------------------------
 //  Physcannon trace filter to handle special cases
 // -------------------------------------------------------------------------
-
 class CTraceFilterPhyscannon : public CTraceFilterSimple
 {
 public:
@@ -192,6 +243,25 @@ public:
 	DECLARE_CLASS( CTraceFilterOnlyBrushes, CTraceFilterSimple );
 	CTraceFilterOnlyBrushes( int collisionGroup ) : CTraceFilterSimple( NULL, collisionGroup ) {}
 	virtual TraceType_t	GetTraceType() const { return TRACE_WORLD_ONLY; }
+};
+
+//mygamepedia: used for launch to get pPuntEntity hit point
+class CTraceFilterOnlyHitsThis : public ITraceFilter
+{
+public:
+	CTraceFilterOnlyHitsThis(IHandleEntity* pTarget) : m_pTarget(pTarget) {}
+
+	virtual bool ShouldHitEntity(IHandleEntity* pEntity, int contentsMask)
+	{
+		return pEntity == m_pTarget;
+	}
+
+	virtual TraceType_t GetTraceType() const
+	{
+		return TRACE_ENTITIES_ONLY; // skips world brushes entirely  
+	}
+
+	IHandleEntity* m_pTarget;
 };
 
 //-----------------------------------------------------------------------------
@@ -1397,6 +1467,8 @@ public:
 	void	ItemPostFrame();
 	void	ItemBusyFrame();
 
+	void SetupClonePortalPull(CBaseEntity* pRealEntity, const Vector& playerStart);
+
 	virtual float GetMaxAutoAimDeflection() { return 0.90f; }
 
 	virtual bool	IsPhyscannon() { return true; }
@@ -1424,8 +1496,6 @@ public:
 	
 	bool	ShouldDisplayHUDHint() { return true; }
 
-
-
 protected:
 	enum FindObjectResult_t
 	{
@@ -1434,8 +1504,8 @@ protected:
 		OBJECT_BEING_DETACHED,
 	};
 
-	void	DoMegaEffect( int effectType, Vector *pos = NULL );
-	void	DoEffect( int effectType, Vector *pos = NULL );
+	void	DoMegaEffect(int effectType, Vector *pos = NULL, CBaseEntity* pEntity = NULL);
+	void	DoEffect(int effectType, Vector *pos = NULL, CBaseEntity* pEntity = NULL);
 
 	void	OpenElements( void );
 	void	CloseElements( void );
@@ -1473,8 +1543,8 @@ protected:
 	void	DoMegaEffectHolding( void );
 	void	DoEffectHolding( void );
 
-	void	DoMegaEffectLaunch( Vector *pos );
-	void	DoEffectLaunch( Vector *pos );
+	void	DoMegaEffectLaunch(Vector *pos, CBaseEntity* pPuntEntity = NULL);
+	void	DoEffectLaunch(Vector *pos, CBaseEntity* pPuntEntity = NULL);
 
 	void	DoEffectNone( void );
 	void	DoEffectIdle( void );
@@ -1512,6 +1582,18 @@ protected:
 	bool	m_flLastDenySoundPlayed;	//Debounce for deny sound
 	int		m_nAttack2Debounce;
 
+	CNetworkVar(int, m_EffectState);		// Current state of the effects on the gun
+
+	//mygamepedia: new vars to work with portals
+	bool   m_bPortalPull;
+	CProp_Portal* m_pPortalPullPortal;
+	Vector m_vecPortalPullTarget;
+	CHandle<CBeam> m_hPortalPuntBeamA;   // weapon -> portal surface  
+	CHandle<CBeam> m_hPortalPuntBeamB;   // linked portal exit -> object  
+	bool           m_bPortalPunt;
+	Vector         m_vPortalPuntHitPoint;    // portal surface intersection  
+	Vector         m_vPortalPuntLinkedExit;  // linked portal exit (beam B start)
+
 	CNetworkVar( bool, m_bIsCurrentlyUpgrading );
 
 	float	m_flElementDebounce;
@@ -1528,8 +1610,6 @@ protected:
 	CSoundPatch			*m_sndMotor;		// Whirring sound for the gun
 	
 	CGrabController		m_grabController;
-	
-	int					m_EffectState;		// Current state of the effects on the gun
 
 	bool				m_bPhyscannonState;
 
@@ -1555,6 +1635,7 @@ IMPLEMENT_ACTTABLE(CWeaponPhysCannon);
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponPhysCannon, DT_WeaponPhysCannon)
 	SendPropBool( SENDINFO( m_bIsCurrentlyUpgrading ) ),
+	SendPropInt(SENDINFO(m_EffectState)),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_physcannon, CWeaponPhysCannon );
@@ -1649,12 +1730,14 @@ CWeaponPhysCannon::CWeaponPhysCannon( void )
 void CWeaponPhysCannon::Precache( void )
 {
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
+	PrecacheModel(PHYSCANNON_BEAM_PORTAL_SPRITE);
 	PrecacheModel( PHYSCANNON_GLOW_SPRITE );
 	PrecacheModel( PHYSCANNON_ENDCAP_SPRITE );
 	PrecacheModel( PHYSCANNON_CENTER_GLOW );
 	PrecacheModel( PHYSCANNON_BLAST_SPRITE );
 
 	PrecacheModel( MEGACANNON_BEAM_SPRITE );
+	PrecacheModel(MEGACANNON_BEAM_PORTAL_SPRITE);
 	PrecacheModel( MEGACANNON_GLOW_SPRITE );
 	PrecacheModel( MEGACANNON_ENDCAP_SPRITE );
 	PrecacheModel( MEGACANNON_CENTER_GLOW );
@@ -1937,7 +2020,7 @@ void CWeaponPhysCannon::PuntNonVPhysics( CBaseEntity *pEntity, const Vector &for
 	ApplyMultiDamage();
 	
 	//Explosion effect
-	DoEffect( EFFECT_LAUNCH, &tr.endpos );
+	DoEffect(EFFECT_LAUNCH, &tr.endpos, pEntity);
 
 	PrimaryFireEffect();
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
@@ -2086,7 +2169,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 	pOwner->ViewPunch( recoil );
 
 	//Explosion effect
-	DoEffect( EFFECT_LAUNCH, &tr.endpos );
+	DoEffect(EFFECT_LAUNCH, &tr.endpos, pEntity);
 
 	PrimaryFireEffect();
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
@@ -2213,7 +2296,7 @@ void CWeaponPhysCannon::PuntRagdoll( CBaseEntity *pEntity, const Vector &vecForw
 	pOwner->ViewPunch( recoil );
 
 	//Explosion effect
-	DoEffect( EFFECT_LAUNCH, &tr.endpos );
+	DoEffect(EFFECT_LAUNCH, &tr.endpos, pEntity);
 
 	PrimaryFireEffect();
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
@@ -2292,32 +2375,102 @@ void CWeaponPhysCannon::PrimaryAttack( void )
 	if ( pOwner == NULL )
 		return;
 
-	if( m_bActive )
+	if (m_bActive)
 	{
-		// Punch the object being held!!
 		Vector forward;
-		pOwner->EyeVectors( &forward );
+		pOwner->EyeVectors(&forward);
 
-		// Validate the item is within punt range
-		CBaseEntity *pHeld = m_grabController.GetAttached();
-		Assert( pHeld != NULL );
+		CBaseEntity* pHeld = m_grabController.GetAttached();
+		Assert(pHeld != NULL);
 
-		if ( pHeld != NULL )
+		if (pHeld != NULL)
 		{
-			float heldDist = ( pHeld->WorldSpaceCenter() - pOwner->WorldSpaceCenter() ).Length();
-
-			if ( heldDist > physcannon_tracelength.GetFloat() )
+			float heldDist;
+			CPortal_Player* pPortalOwner = ToPortalPlayer(pOwner);
+			if (pPortalOwner->IsHeldObjectOnOppositeSideOfPortal())
 			{
-				// We can't punt this yet
+				CProp_Portal* pPortal = pPortalOwner->GetHeldObjectPortal();
+				CProp_Portal* pLinked = pPortal->m_hLinkedPortal;
+				VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+
+				float distToPortal = (pPortal->GetAbsOrigin() - pOwner->WorldSpaceCenter()).Length();
+				float distFromLinked = (pHeld->WorldSpaceCenter() - pLinked->GetAbsOrigin()).Length();
+				heldDist = distToPortal + distFromLinked;
+
+				// Compute beam A endpoint via plane intersection (works even when player is past portal)  
+				Vector vPortalForward;
+				pPortal->GetVectors(&vPortalForward, NULL, NULL);
+				Vector start = pOwner->EyePosition();
+				float fDenom = DotProduct(forward, vPortalForward);
+				if (fabs(fDenom) > 0.001f)
+				{
+					float t = DotProduct(pPortal->GetAbsOrigin() - start, vPortalForward) / fDenom;
+					m_vPortalPuntHitPoint = (t >= 0.0f)
+						? start + forward * t
+						: start - vPortalForward * DotProduct(start - pPortal->GetAbsOrigin(), vPortalForward);
+				}
+				else
+				{
+					m_vPortalPuntHitPoint = pPortal->GetAbsOrigin();
+				}
+				UTIL_Portal_PointTransform(matThisToLinked, m_vPortalPuntHitPoint, m_vPortalPuntLinkedExit);
+				m_bPortalPunt = true;
+
+				UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+				pPortalOwner->SetHeldObjectOnOppositeSideOfPortal(false);
+			}
+			else
+			{
+				heldDist = (pHeld->WorldSpaceCenter() - pOwner->WorldSpaceCenter()).Length();
+				m_bPortalPunt = false;
+			}
+
+			if (heldDist > physcannon_tracelength.GetFloat())
+			{
 				DryFire();
 				return;
 			}
 		}
 
-		LaunchObject( forward, physcannon_maxforce.GetFloat() );
+		if (sv_portalbase_debug_physcannon_portal_punt.GetBool() && g_pDeveloper->GetInt() && m_bPortalPunt)
+		{
+			Vector launchPos = pOwner->Weapon_ShootPosition();
+			// Line: launch pos -> portal entry hit point (yellow)  
+			NDebugOverlay::Line(launchPos, m_vPortalPuntHitPoint, 255, 255, 0, true, 5.0f);
+			NDebugOverlay::Box(m_vPortalPuntHitPoint, Vector(-4, -4, -4), Vector(4, 4, 4), 255, 255, 0, 64, 5.0f);
+			NDebugOverlay::Text(m_vPortalPuntHitPoint, "portal hit (active)", false, 5.0f);
+			// Line: launch pos -> held object position (cyan)  
+			NDebugOverlay::Line(launchPos, pHeld->WorldSpaceCenter(), 0, 255, 255, true, 5.0f);
+			NDebugOverlay::Box(pHeld->WorldSpaceCenter(), Vector(-4, -4, -4), Vector(4, 4, 4), 0, 255, 255, 64, 5.0f);
+			NDebugOverlay::Text(pHeld->WorldSpaceCenter(), "object launch pt (active)", false, 5.0f);
+		}
+
+		if (sv_portalbase_debug_physcannon_portal_punt.GetBool() && g_pDeveloper->GetInt())
+		{
+			Vector toHeld = pHeld->WorldSpaceCenter() - pOwner->EyePosition();
+			VectorNormalize(toHeld);
+			float fDot = DotProduct(forward, toHeld);
+
+			DevMsg("[PhysCannon Launch] entity: %s | m_bPortalPunt: %d\n",
+				pHeld->GetClassname(), (int)m_bPortalPunt);
+			DevMsg("[PhysCannon Launch] forward: (%.2f, %.2f, %.2f)\n",
+				forward.x, forward.y, forward.z);
+			DevMsg("[PhysCannon Launch] toHeld: (%.2f, %.2f, %.2f) | dot: %.3f%s\n",
+				toHeld.x, toHeld.y, toHeld.z, fDot,
+				(fDot < 0.0f) ? " <<< TOWARD PLAYER" : "");
+
+			if (m_bPortalPunt)
+			{
+				DevMsg("[PhysCannon Launch] portal hit: (%.2f, %.2f, %.2f) | linked exit: (%.2f, %.2f, %.2f)\n",
+					m_vPortalPuntHitPoint.x, m_vPortalPuntHitPoint.y, m_vPortalPuntHitPoint.z,
+					m_vPortalPuntLinkedExit.x, m_vPortalPuntLinkedExit.y, m_vPortalPuntLinkedExit.z);
+			}
+		}
+
+		LaunchObject(forward, physcannon_maxforce.GetFloat());  // <-- m_bPortalPunt is now set before this  
 
 		PrimaryFireEffect();
-		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+		SendWeaponAnim(ACT_VM_SECONDARYATTACK);
 		return;
 	}
 
@@ -2347,41 +2500,138 @@ void CWeaponPhysCannon::PrimaryAttack( void )
 		bValid = false;
 	}
 
-	// If the entity we've hit is invalid, try a traceline instead
-	if ( !bValid )
+	// Shadow clone punt: if we directly hit a clone, redirect to the real entity  
+	// and transform the punt direction as if the player were on the other side  
+	if (bValid && pEntity && CPhysicsShadowClone::IsShadowClone(pEntity))
 	{
-		UTIL_PhyscannonTraceLine( start, end, pOwner, &tr );
-		if ( tr.fraction == 1 || !tr.m_pEnt || tr.m_pEnt->IsEFlagSet( EFL_NO_PHYSCANNON_INTERACTION ) )
+		CBaseEntity* pRealEntity = ResolveToRealEntity(pEntity);
+		if (pRealEntity != pEntity)
 		{
-			if( hl2_episodic.GetBool() )
+			CProp_Portal* pPortalA = NULL;
+			int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+			CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();
+			for (int p = 0; p < iPortalCount && !pPortalA; ++p)
 			{
-				// Try to find something in a very small cone. 
-				CBaseEntity *pObject = FindObjectInCone( start, forward, physcannon_punt_cone.GetFloat() );
-
-				if( pObject )
+				CProp_Portal* pPortal = pPortals[p];
+				if (!pPortal || !pPortal->IsActivedAndLinked())
+					continue;
+				auto& cloneList = pPortal->m_PortalSimulator.m_DataAccess.Simulation.Dynamic.ShadowClones.FromLinkedPortal;
+				for (int i = 0; i < cloneList.Count(); ++i)
 				{
-					// Trace to the object.
-					UTIL_PhyscannonTraceLine( start, pObject->WorldSpaceCenter(), pOwner, &tr );
-
-					if( tr.m_pEnt && tr.m_pEnt == pObject && !(pObject->IsEFlagSet(EFL_NO_PHYSCANNON_INTERACTION)) )
+					if (cloneList[i]->GetClonedEntity() == pRealEntity)
 					{
+						pPortalA = pPortal;
+						break;
+					}
+				}
+			}
+
+			if (pPortalA)
+			{
+				VMatrix matThisToLinked = pPortalA->MatrixThisToLinked();
+
+				if (sv_portalbase_debug_physcannon_portal_punt_clone.GetBool() && g_pDeveloper->GetInt())
+				{
+					Vector virtualPlayerPos;
+					UTIL_Portal_PointTransform(matThisToLinked, start, virtualPlayerPos);
+
+					Vector realPos = pRealEntity->WorldSpaceCenter();
+
+					NDebugOverlay::Box(realPos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 255, 64, 5.0f);
+					NDebugOverlay::Cross3D(realPos, 6.0f, 255, 0, 255, true, 5.0f);
+					NDebugOverlay::Text(realPos, "REAL ENTITY (clone punt)", false, 5.0f);
+
+					NDebugOverlay::Box(virtualPlayerPos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 255, 0, 64, 5.0f);
+					NDebugOverlay::Cross3D(virtualPlayerPos, 6.0f, 255, 255, 0, true, 5.0f);
+					NDebugOverlay::Text(virtualPlayerPos, "VIRTUAL PLAYER POS (punt)", false, 5.0f);
+
+					NDebugOverlay::Line(realPos, virtualPlayerPos, 255, 128, 0, true, 5.0f);
+
+					DevMsg("[PhysCannon Punt] CLONE PUNT | ent=%s | realPos=(%.0f,%.0f,%.0f) | virtualPlayerPos=(%.0f,%.0f,%.0f)\n",
+						pRealEntity->GetClassname(),
+						realPos.x, realPos.y, realPos.z,
+						virtualPlayerPos.x, virtualPlayerPos.y, virtualPlayerPos.z);
+				}
+
+				// Transform punt direction as if player were on the other side  
+				UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+
+				CProp_Portal* pPortalB = pPortalA->m_hLinkedPortal;
+				m_bPortalPunt = true;
+				m_vPortalPuntHitPoint = pPortalA->GetAbsOrigin();
+				m_vPortalPuntLinkedExit = pPortalB->GetAbsOrigin();
+
+				pEntity = pRealEntity;
+				tr.m_pEnt = pRealEntity;
+			}
+		}
+	}
+
+	// If the entity we've hit is invalid, try a traceline instead
+	if (!bValid)
+	{
+		Ray_t rayA;
+		rayA.Init(start, end);
+		float fMustBeCloserThan = 2.0f;
+		CProp_Portal* pPuntPortal = UTIL_Portal_FirstAlongRay(rayA, fMustBeCloserThan);
+
+		if (pPuntPortal && pPuntPortal->IsActivedAndLinked())
+		{
+			float fPortalFraction = UTIL_IntersectRayWithPortal(rayA, pPuntPortal);
+			if (fPortalFraction >= 0.0f)
+			{
+				Vector vPortalHitPoint = start + (end - start) * fPortalFraction;
+				VMatrix matThisToLinked = pPuntPortal->MatrixThisToLinked();
+
+				Ray_t rayPostPortal;
+				rayPostPortal.Init(vPortalHitPoint, end);
+
+				Ray_t rayB;
+				UTIL_Portal_RayTransform(matThisToLinked, rayPostPortal, rayB);
+
+				Vector vBeamBStart = rayB.m_Start;
+				Vector vBeamBEnd = rayB.m_Start + rayB.m_Delta;
+
+				trace_t trB;
+				UTIL_PhyscannonTraceHull(vBeamBStart, vBeamBEnd, -Vector(8, 8, 8), Vector(8, 8, 8), pOwner, &trB);
+
+				if (trB.fraction != 1.0f && trB.m_pEnt &&
+					!trB.m_pEnt->IsEFlagSet(EFL_NO_PHYSCANNON_INTERACTION) &&
+					!((trB.m_pEnt->GetMoveType() != MOVETYPE_VPHYSICS) && (trB.m_pEnt->m_takedamage == DAMAGE_NO)))
+				{
+					tr = trB;
+					pEntity = trB.m_pEnt;
+					bValid = true;
+					UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+
+					m_bPortalPunt = true;
+					m_vPortalPuntHitPoint = vPortalHitPoint;
+					m_vPortalPuntLinkedExit = vBeamBStart;
+				}
+				else
+				{
+					UTIL_PhyscannonTraceLine(vBeamBStart, vBeamBEnd, pOwner, &trB);
+					if (trB.fraction != 1.0f && trB.m_pEnt &&
+						!trB.m_pEnt->IsEFlagSet(EFL_NO_PHYSCANNON_INTERACTION))
+					{
+						tr = trB;
+						pEntity = trB.m_pEnt;
 						bValid = true;
-						pEntity = pObject;
+						UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+
+						m_bPortalPunt = true;
+						m_vPortalPuntHitPoint = vPortalHitPoint;
+						m_vPortalPuntLinkedExit = vBeamBStart;
 					}
 				}
 			}
 		}
-		else
-		{
-			bValid = true;
-			pEntity = tr.m_pEnt;
-		}
 	}
 
-	if ( ToPortalPlayer( pOwner )->IsHeldObjectOnOppositeSideOfPortal() )
+	if (!m_bPortalPunt && ToPortalPlayer(pOwner)->IsHeldObjectOnOppositeSideOfPortal())
 	{
-		CProp_Portal *pPortal = ToPortalPlayer( pOwner )->GetHeldObjectPortal();
-		UTIL_Portal_VectorTransform( pPortal->MatrixThisToLinked(), forward, forward );
+		CProp_Portal* pPortal = ToPortalPlayer(pOwner)->GetHeldObjectPortal();
+		UTIL_Portal_VectorTransform(pPortal->MatrixThisToLinked(), forward, forward);
 	}
 
 	if( !bValid )
@@ -2389,6 +2639,44 @@ void CWeaponPhysCannon::PrimaryAttack( void )
 		DryFire();
 		return;
 	}
+
+	if (sv_portalbase_debug_physcannon_portal_punt.GetBool() && g_pDeveloper->GetInt() && m_bPortalPunt)
+	{
+		// Line: launch pos -> portal entry hit point (yellow)  
+		NDebugOverlay::Line(start, m_vPortalPuntHitPoint, 255, 255, 0, true, 5.0f);
+		NDebugOverlay::Box(m_vPortalPuntHitPoint, Vector(-4, -4, -4), Vector(4, 4, 4), 255, 255, 0, 64, 5.0f);
+		NDebugOverlay::Text(m_vPortalPuntHitPoint, "portal hit (punt)", false, 5.0f);
+		// Line: launch pos -> object launch point (cyan)  
+		NDebugOverlay::Line(start, tr.endpos, 0, 255, 255, true, 5.0f);
+		NDebugOverlay::Box(tr.endpos, Vector(-4, -4, -4), Vector(4, 4, 4), 0, 255, 255, 64, 5.0f);
+		NDebugOverlay::Text(tr.endpos, "object launch pt (punt)", false, 5.0f);
+	}
+
+	if (sv_portalbase_debug_physcannon_portal_punt.GetBool() && g_pDeveloper->GetInt())
+	{
+		// Direction from player to entity — if dot(forward, toEntity) < 0, force is going toward player  
+		Vector toEntity = tr.endpos - start;
+		VectorNormalize(toEntity);
+		float fDot = DotProduct(forward, toEntity);
+
+		DevMsg("[PhysCannon Punt] entity: %s | m_bPortalPunt: %d\n",
+			pEntity->GetClassname(), (int)m_bPortalPunt);
+		DevMsg("[PhysCannon Punt] forward: (%.2f, %.2f, %.2f)\n",
+			forward.x, forward.y, forward.z);
+		DevMsg("[PhysCannon Punt] toEntity: (%.2f, %.2f, %.2f) | dot: %.3f%s\n",
+			toEntity.x, toEntity.y, toEntity.z, fDot,
+			(fDot < 0.0f) ? " <<< TOWARD PLAYER" : "");
+		DevMsg("[PhysCannon Punt] start: (%.2f, %.2f, %.2f) | tr.endpos: (%.2f, %.2f, %.2f)\n",
+			start.x, start.y, start.z, tr.endpos.x, tr.endpos.y, tr.endpos.z);
+
+		if (m_bPortalPunt)
+		{
+			DevMsg("[PhysCannon Punt] portal hit: (%.2f, %.2f, %.2f) | linked exit: (%.2f, %.2f, %.2f)\n",
+				m_vPortalPuntHitPoint.x, m_vPortalPuntHitPoint.y, m_vPortalPuntHitPoint.z,
+				m_vPortalPuntLinkedExit.x, m_vPortalPuntLinkedExit.y, m_vPortalPuntLinkedExit.z);
+		}
+	}
+
 
 	// See if we hit something
 	if ( pEntity->GetMoveType() != MOVETYPE_VPHYSICS )
@@ -2633,92 +2921,194 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	return true;
 }
 
-void CWeaponPhysCannon::FindObjectTrace( CBasePlayer *pPlayer, trace_t *pTraceResult )
+void CWeaponPhysCannon::FindObjectTrace(CBasePlayer* pPlayer, trace_t* pTraceResult)
 {
 	Vector forward;
-	pPlayer->EyeVectors( &forward );
+	pPlayer->EyeVectors(&forward);
 
-	// Setup our positions
-	Vector	start = pPlayer->Weapon_ShootPosition();
-	float	testLength = TraceLength() * 4.0f;
-	Vector	end = start + forward * testLength;
+	// Setup our positions  
+	Vector start = pPlayer->Weapon_ShootPosition();
+	float testLength = TraceLength() * 4.0f;
+	Vector end = start + forward * testLength;
 
-	if( IsMegaPhysCannon() && hl2_episodic.GetBool() )
+	if (IsMegaPhysCannon() && hl2_episodic.GetBool())
 	{
-		Vector vecAutoAimDir = pPlayer->GetAutoaimVector( 1.0f, testLength );
+		Vector vecAutoAimDir = pPlayer->GetAutoaimVector(1.0f, testLength);
 		end = start + vecAutoAimDir * testLength;
 	}
 
-	// Try to find an object by looking straight ahead
-	UTIL_PhyscannonTraceLine( start, end, pPlayer, pTraceResult );
+	// Beam A: try to find an object by looking straight ahead  
+	UTIL_PhyscannonTraceLine(start, end, pPlayer, pTraceResult);
 
-	// Try again with a hull trace
-	if ( !pTraceResult->DidHitNonWorldEntity() )
+	// Beam A: try again with a hull trace  
+	if (!pTraceResult->DidHitNonWorldEntity())
 	{
-		UTIL_PhyscannonTraceHull( start, end, -Vector(4,4,4), Vector(4,4,4), pPlayer, pTraceResult );
+		UTIL_PhyscannonTraceHull(start, end, -Vector(4, 4, 4), Vector(4, 4, 4), pPlayer, pTraceResult);
 	}
+
+	// Beam A hit nothing — check if it passes through an open linked portal  
+	if (!pTraceResult->DidHitNonWorldEntity())
+	{
+		Ray_t rayA;
+		rayA.Init(start, end);
+
+		// fMustBeCloserThan starts at 2.0 (> 1.0) so any portal intersection qualifies  
+		float fMustBeCloserThan = 2.0f;
+		CProp_Portal* pPortal = UTIL_Portal_FirstAlongRay(rayA, fMustBeCloserThan);
+
+		if (pPortal && pPortal->IsActivedAndLinked())
+		{
+			float fPortalFraction = UTIL_IntersectRayWithPortal(rayA, pPortal);
+			if (fPortalFraction >= 0.0f)
+			{
+				Vector vPortalHitPoint = start + (end - start) * fPortalFraction;
+
+				VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+
+				// Build the post-portal ray segment (from portal hit point to original end)  
+				Ray_t rayPostPortal;
+				rayPostPortal.Init(vPortalHitPoint, end);
+
+				// Transform it into the linked portal's exit space — this is Beam B  
+				Ray_t rayB;
+				UTIL_Portal_RayTransform(matThisToLinked, rayPostPortal, rayB);
+
+				Vector vBeamBStart = rayB.m_Start;
+				Vector vBeamBEnd = rayB.m_Start + rayB.m_Delta;
+
+				// Beam B: line trace  
+				trace_t trB;
+				UTIL_PhyscannonTraceLine(vBeamBStart, vBeamBEnd, pPlayer, &trB);
+
+				// Beam B: hull trace fallback  
+				if (!trB.DidHitNonWorldEntity())
+				{
+					UTIL_PhyscannonTraceHull(vBeamBStart, vBeamBEnd,
+						-Vector(4, 4, 4), Vector(4, 4, 4), pPlayer, &trB);
+				}
+
+				if (trB.DidHitNonWorldEntity())
+				{
+					*pTraceResult = trB;
+					// Combine fractions: player->portal + portal_exit->object, relative to testLength  
+					pTraceResult->fraction = trB.fraction * (1.0f - fPortalFraction) + fPortalFraction;
+					m_bPortalPull = true;
+					m_vecPortalPullTarget = vBeamBStart;
+					m_pPortalPullPortal = pPortal;
+					return;
+				}
+			}
+		}
+	}
+
+	m_bPortalPull = false;
 }
 
 
-CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
+CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject(void)
 {
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	
-	Assert( pPlayer );
-	if ( pPlayer == NULL )
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+
+	Assert(pPlayer);
+	if (pPlayer == NULL)
 		return OBJECT_NOT_FOUND;
-	
+
 	Vector forward;
-	pPlayer->EyeVectors( &forward );
+	pPlayer->EyeVectors(&forward);
 
-	// Setup our positions
-	Vector	start = pPlayer->Weapon_ShootPosition();
-	float	testLength = TraceLength() * 4.0f;
-	Vector	end = start + forward * testLength;
+	// Setup our positions    
+	Vector  start = pPlayer->Weapon_ShootPosition();
+	float   testLength = TraceLength() * 4.0f;
+	Vector  end = start + forward * testLength;
 	trace_t tr;
-	FindObjectTrace( pPlayer, &tr );
-	CBaseEntity *pEntity = tr.m_pEnt ? tr.m_pEnt->GetRootMoveParent() : NULL;
-	bool	bAttach = false;
-	bool	bPull = false;
+	FindObjectTrace(pPlayer, &tr);
 
-	// If we hit something, pick it up or pull it
-	if ( ( tr.fraction != 1.0f ) && ( tr.m_pEnt ) && ( tr.m_pEnt->IsWorld() == false ) )
+	CBaseEntity* pEntity = tr.m_pEnt ? tr.m_pEnt->GetRootMoveParent() : NULL;
+	bool bAttach = false;
+	bool bPull = false;
+
+	// --- Shadow clone resolution (direct trace) ---    
 	{
-		// Attempt to attach if within range
-		if ( tr.fraction <= 0.25f )
+		CBaseEntity* pOriginal = pEntity;
+		pEntity = ResolveToRealEntity(pOriginal);
+		if (pEntity != pOriginal)
+		{
+			// Direct trace hit a shadow clone — project player pos through portal    
+			SetupClonePortalPull(pEntity, start);
+		}
+	}
+
+	// If we hit something, pick it up or pull it    
+	if ((tr.fraction != 1.0f) && (tr.m_pEnt) && (tr.m_pEnt->IsWorld() == false))
+	{
+		// Attempt to attach if within range    
+		if (tr.fraction <= 0.25f)
 		{
 			bAttach = true;
+
+			if (sv_portalbase_debug_physcannon_portal_grab.GetBool() && g_pDeveloper->GetInt())
+			{
+				NDebugOverlay::Line(start, tr.endpos, 0, 255, 0, true, 5.0f);
+				NDebugOverlay::Cross3D(tr.endpos, 5.0f, 0, 255, 0, true, 5.0f);
+				NDebugOverlay::Box(tr.endpos, Vector(-6, -6, -6), Vector(6, 6, 6), 0, 255, 0, 64, 5.0f);
+				NDebugOverlay::Text(tr.endpos,
+					UTIL_VarArgs("DIRECT GRAB | frac=%.2f | portalPull=%d", tr.fraction, m_bPortalPull),
+					false, 5.0f);
+			}
 		}
-		else if ( tr.fraction > 0.25f )
+		else if (tr.fraction > 0.25f)
 		{
 			bPull = true;
 		}
 	}
-	
 
-	// Find anything within a general cone in front
-	CBaseEntity *pConeEntity = NULL;
-	if ( !IsMegaPhysCannon() )
+	// Find anything within a general cone in front    
+	CBaseEntity* pConeEntity = NULL;
+	if (!IsMegaPhysCannon())
 	{
 		if (!bAttach && !bPull)
 		{
-			pConeEntity = FindObjectInCone( start, forward, physcannon_cone.GetFloat() );
+			pConeEntity = FindObjectInCone(start, forward, physcannon_cone.GetFloat());
 		}
 	}
 	else
 	{
-		pConeEntity = MegaPhysCannonFindObjectInCone( start, forward, 
-			physcannon_cone.GetFloat(), physcannon_ball_cone.GetFloat(), bAttach || bPull );
+		pConeEntity = MegaPhysCannonFindObjectInCone(start, forward,
+			physcannon_cone.GetFloat(), physcannon_ball_cone.GetFloat(), bAttach || bPull);
 	}
 
-	if ( pConeEntity )
+	if (pConeEntity)
 	{
-		pEntity = pConeEntity;
+		// --- Shadow clone resolution (cone) ---    
+		CBaseEntity* pOriginalCone = pConeEntity;
+		pEntity = ResolveToRealEntity(pConeEntity);
 
-		// If the object is near, grab it. Else, pull it a bit.
-		if ( pEntity->WorldSpaceCenter().DistToSqr( start ) <= (testLength * testLength) )
+		if (pEntity != pOriginalCone)
+		{
+			// Cone hit a shadow clone — project player pos through portal    
+			SetupClonePortalPull(pEntity, start);
+		}
+		else
+		{
+			// Cone found a real entity on the player's side — clear stale portal pull state    
+			if (m_bPortalPull)
+				m_bPortalPull = false;
+		}
+
+		// If the object is near, grab it. Else, pull it a bit.    
+		if (pEntity->WorldSpaceCenter().DistToSqr(start) <= (testLength * testLength))
 		{
 			bAttach = true;
+
+			if (sv_portalbase_debug_physcannon_portal_conegrab.GetBool() && g_pDeveloper->GetInt())
+			{
+				NDebugOverlay::Line(start, pEntity->WorldSpaceCenter(), 0, 255, 255, true, 5.0f);
+				NDebugOverlay::Cross3D(pEntity->WorldSpaceCenter(), 5.0f, 0, 255, 255, true, 5.0f);
+				NDebugOverlay::Box(pEntity->WorldSpaceCenter(), Vector(-8, -8, -8), Vector(8, 8, 8), 0, 255, 255, 64, 5.0f);
+				NDebugOverlay::Text(pEntity->WorldSpaceCenter(),
+					UTIL_VarArgs("CONE GRAB | %s | portalPull=%d", pEntity->GetClassname(), m_bPortalPull),
+					false, 5.0f);
+			}
 		}
 		else
 		{
@@ -2726,61 +3116,165 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 		}
 	}
 
-	if ( CanPickupObject( pEntity ) == false )
+	if (CanPickupObject(pEntity) == false)
 	{
-		CBaseEntity *pNewObject = Pickup_OnFailedPhysGunPickup( pEntity, start );
+		CBaseEntity* pNewObject = Pickup_OnFailedPhysGunPickup(pEntity, start);
 
-		if ( pNewObject && CanPickupObject( pNewObject ) )
+		if (pNewObject && CanPickupObject(pNewObject))
 		{
 			pEntity = pNewObject;
 		}
 		else
 		{
-			// Make a noise to signify we can't pick this up
-			if ( !m_flLastDenySoundPlayed )
+			if (!m_flLastDenySoundPlayed)
 			{
 				m_flLastDenySoundPlayed = true;
-				WeaponSound( SPECIAL3 );
+				WeaponSound(SPECIAL3);
 			}
-
 			return OBJECT_NOT_FOUND;
 		}
 	}
 
-	// Check to see if the object is constrained + needs to be ripped off...
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( !Pickup_OnAttemptPhysGunPickup( pEntity, pOwner, PICKED_UP_BY_CANNON ) )
+	// Check to see if the object is constrained + needs to be ripped off...    
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (!Pickup_OnAttemptPhysGunPickup(pEntity, pOwner, PICKED_UP_BY_CANNON))
 		return OBJECT_BEING_DETACHED;
 
-	if ( bAttach )
+	if (bAttach)
 	{
-		return AttachObject( pEntity, tr.endpos ) ? OBJECT_FOUND : OBJECT_NOT_FOUND;
+		CPortal_Player* pPortalPlayer = ToPortalPlayer(pPlayer);
+		if (m_bPortalPull)
+		{
+			pPortalPlayer->SetHeldObjectOnOppositeSideOfPortal(true);
+			pPortalPlayer->SetHeldObjectPortal(m_pPortalPullPortal);
+		}
+		else
+		{
+			// Clear stale flag left over from a previous hand-grab through portal    
+			pPortalPlayer->SetHeldObjectOnOppositeSideOfPortal(false);
+		}
+
+		if (sv_portalbase_debug_physcannon_portal_attach.GetBool() && g_pDeveloper->GetInt())
+		{
+			Vector entCenter = pEntity->WorldSpaceCenter();
+			bool bIsPortalGrab = ToPortalPlayer(pPlayer)->IsHeldObjectOnOppositeSideOfPortal();
+
+			// General attach overlay (orange line + colored box)  
+			NDebugOverlay::Line(start, entCenter, 255, 128, 0, true, 5.0f);
+			NDebugOverlay::Box(entCenter, Vector(-12, -12, -12), Vector(12, 12, 12),
+				bIsPortalGrab ? 255 : 0,
+				bIsPortalGrab ? 0 : 255,
+				0, 80, 5.0f);
+			NDebugOverlay::Text(entCenter,
+				UTIL_VarArgs("ATTACH | %s\nportalGrab=%d | portalPull=%d\ntr.endpos=(%.0f,%.0f,%.0f)",
+					pEntity->GetClassname(), bIsPortalGrab, m_bPortalPull,
+					tr.endpos.x, tr.endpos.y, tr.endpos.z),
+				false, 5.0f);
+
+			// Clone grab path: player -> Portal A -> real entity  
+			if (m_bPortalPull)
+			{
+				Vector portalPos = m_pPortalPullPortal->GetAbsOrigin();
+
+				NDebugOverlay::Box(entCenter, Vector(-8, -8, -8), Vector(8, 8, 8), 0, 128, 255, 64, 5.0f);
+				NDebugOverlay::Cross3D(entCenter, 6.0f, 0, 128, 255, true, 5.0f);
+				NDebugOverlay::Text(entCenter, "CLONE GRAB (real entity)", false, 5.0f);
+
+				NDebugOverlay::Line(start, portalPos, 0, 128, 255, true, 5.0f);
+				NDebugOverlay::Line(portalPos, entCenter, 0, 200, 255, true, 5.0f);
+
+				DevMsg("[PhysCannon] CLONE GRAB | ent=%s | realPos=(%.0f,%.0f,%.0f) | portalA=(%.0f,%.0f,%.0f)\n",
+					pEntity->GetClassname(),
+					entCenter.x, entCenter.y, entCenter.z,
+					portalPos.x, portalPos.y, portalPos.z);
+			}
+		}
+
+		return AttachObject(pEntity, tr.endpos) ? OBJECT_FOUND : OBJECT_NOT_FOUND;
 	}
 
-	if ( !bPull )
+	if (!bPull)
 		return OBJECT_NOT_FOUND;
 
-	// FIXME: This needs to be run through the CanPickupObject logic
-	IPhysicsObject *pObj = pEntity->VPhysicsGetObject();
-	if ( !pObj )
+	// FIXME: This needs to be run through the CanPickupObject logic    
+	IPhysicsObject* pObj = pEntity->VPhysicsGetObject();
+	if (!pObj)
 		return OBJECT_NOT_FOUND;
 
-	// If we're too far, simply start to pull the object towards us
-	Vector	pullDir = start - pEntity->WorldSpaceCenter();
-	VectorNormalize( pullDir );
+	// Pull toward virtual player position (portal side) if pulling through a portal or shadow clone,    
+	// otherwise pull toward the player directly.    
+	Vector pullTarget = m_bPortalPull ? m_vecPortalPullTarget : start;
+	Vector pullDir = pullTarget - pEntity->WorldSpaceCenter();
+	VectorNormalize(pullDir);
 	pullDir *= IsMegaPhysCannon() ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
-	
-	float mass = PhysGetEntityMass( pEntity );
-	if ( mass < 50.0f )
+
+	float mass = PhysGetEntityMass(pEntity);
+	if (mass < 50.0f)
 	{
-		pullDir *= (mass + 0.5) * (1/50.0f);
+		pullDir *= (mass + 0.5) * (1 / 50.0f);
 	}
 
-	// Nudge it towards us
-	pObj->ApplyForceCenter( pullDir );
+	pObj->ApplyForceCenter(pullDir);
 	return OBJECT_NOT_FOUND;
 }
 
+// Sets up m_bPortalPull / m_pPortalPullPortal / m_vecPortalPullTarget  
+// by projecting the player's shoot position through the portal,  
+// as if the player were standing behind Portal B.  
+void CWeaponPhysCannon::SetupClonePortalPull(CBaseEntity* pRealEntity, const Vector& playerStart)
+{
+	// Find Portal A (player's side) — the portal whose FromLinkedPortal clone list  
+	// contains a clone of pRealEntity  
+	CProp_Portal* pPortalA = NULL;
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+	CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();
+	for (int p = 0; p < iPortalCount && !pPortalA; ++p)
+	{
+		CProp_Portal* pPortal = pPortals[p];
+		if (!pPortal || !pPortal->IsActivedAndLinked())
+			continue;
+
+		auto& cloneList = pPortal->m_PortalSimulator.m_DataAccess.Simulation.Dynamic.ShadowClones.FromLinkedPortal;
+		for (int i = 0; i < cloneList.Count(); ++i)
+		{
+			if (cloneList[i]->GetClonedEntity() == pRealEntity)
+			{
+				pPortalA = pPortal;
+				break;
+			}
+		}
+	}
+
+	if (!pPortalA)
+		return;
+
+	Vector virtualPlayerPos;
+	UTIL_Portal_PointTransform(pPortalA->MatrixThisToLinked(), playerStart, virtualPlayerPos);
+
+	m_bPortalPull = true;
+	m_pPortalPullPortal = pPortalA;
+	m_vecPortalPullTarget = virtualPlayerPos;
+
+	if (sv_portalbase_debug_physcannon_portal_clonepull.GetBool() && g_pDeveloper->GetInt())
+	{
+		Vector realPos = pRealEntity->WorldSpaceCenter();
+
+		NDebugOverlay::Box(realPos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 255, 64, 5.0f);
+		NDebugOverlay::Cross3D(realPos, 6.0f, 255, 0, 255, true, 5.0f);
+		NDebugOverlay::Text(realPos, "REAL ENTITY (clone pull)", false, 5.0f);
+
+		NDebugOverlay::Box(virtualPlayerPos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 255, 0, 64, 5.0f);
+		NDebugOverlay::Cross3D(virtualPlayerPos, 6.0f, 255, 255, 0, true, 5.0f);
+		NDebugOverlay::Text(virtualPlayerPos, "VIRTUAL PLAYER POS", false, 5.0f);
+
+		NDebugOverlay::Line(realPos, virtualPlayerPos, 255, 128, 0, true, 5.0f);
+
+		DevMsg("[PhysCannon] CLONE PULL | ent=%s | realPos=(%.0f,%.0f,%.0f) | virtualPlayerPos=(%.0f,%.0f,%.0f)\n",
+			pRealEntity->GetClassname(),
+			realPos.x, realPos.y, realPos.z,
+			virtualPlayerPos.x, virtualPlayerPos.y, virtualPlayerPos.z);
+	}
+}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -2909,6 +3403,22 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	}
 
  	CBaseEntity *pEntity = GetAttached();
+
+	//mygamepedia: if you find you drop objects when go through portals, try this
+	/*
+	if (!pEntity)
+		Msg("NO ENT\n");
+
+	if (ComputeError() > flError)
+		Msg("ComputeError() > flError\n");
+
+	if (pPlayer->GetGroundEntity() == pEntity)
+		Msg("pPlayer->GetGroundEntity() == pEntity\n");
+
+	if (pEntity && !pEntity->VPhysicsGetObject())
+		Msg("!pEntity->VPhysicsGetObject()\n");
+	*/
+
 	if ( !pEntity || ComputeError() > flError || pPlayer->GetGroundEntity() == pEntity || !pEntity->VPhysicsGetObject() )
 	{
 		return false;
@@ -2934,16 +3444,23 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	}
 	AngleVectors( playerAngles, &forward, &right, &up );
 
-	if ( g_pGameRules->MegaPhyscannonActive() )
+	if ( g_pGameRules->MegaPhyscannonActive())
 	{
-		Vector los = ( pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition() );
-		VectorNormalize( los );
+		CPortal_Player* pPortalPlayerCheck = ToPortalPlayer(pPlayer);
+		bool bHeldThroughPortal = pPortalPlayerCheck &&
+			pPortalPlayerCheck->IsHeldObjectOnOppositeSideOfPortal();
 
-		float flDot = DotProduct( los, forward );
+		if (!bHeldThroughPortal)
+		{
+			Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
+			VectorNormalize(los);
 
-		//Let go of the item if we turn around too fast.
-		if ( flDot <= 0.35f )
-			return false;
+			float flDot = DotProduct(los, forward);
+
+			//Let go of the item if we turn around too fast.  
+			if (flDot <= 0.35f)
+				return false;
+		}
 	}
 	
 
@@ -3269,8 +3786,9 @@ void CWeaponPhysCannon::CheckForTarget( void )
 
 	if ( ( tr.fraction != 1.0f ) && ( tr.m_pEnt != NULL ) )
 	{
-		float dist = (tr.endpos - tr.startpos).Length();
-		if ( dist <= TraceLength() )
+		//mygamepedia: use fraction check, since tr.fraction is already correct for both the normal and portal cases
+		//this fixes claws when they want to be open while the physcannon still can't grab (portal case)
+		if (tr.fraction <= 0.25f)
 		{
 			// FIXME: Try just having the elements always open when pointed at a physics object
 			if ( CanPickupObject( tr.m_pEnt ) || Pickup_ForcePhysGunOpen( tr.m_pEnt, pOwner ) )
@@ -3689,7 +4207,7 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 		Vector	center = pObject->WorldSpaceCenter();
 
 		//Do repulse effect
-		DoEffect( EFFECT_LAUNCH, &center );
+		DoEffect(EFFECT_LAUNCH, &center, pObject);
 	}
 
 	// Stop our looping sound
@@ -4004,6 +4522,8 @@ void CWeaponPhysCannon::StopEffects( bool stopSound )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::StartEffects( void )
 {
+	return;
+
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( pOwner == NULL )
 		return;
@@ -4358,47 +4878,180 @@ void CWeaponPhysCannon::DoEffectHolding( )
 //-----------------------------------------------------------------------------
 // Launch effects
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
+void CWeaponPhysCannon::DoEffectLaunch(Vector* pos, CBaseEntity* pPuntEntity)
 {
-	Assert( pos );
-	if ( pos == NULL )
+	Assert(pos);
+	if (pos == NULL || pPuntEntity == NULL)
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner == NULL )
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (pOwner == NULL || pOwner->GetActiveWeapon() == NULL)
 		return;
 
-	Vector	endpos = *pos;
+	Vector endpos = *pos;
 
-	// Check to store off our view model index
-	CBeam *pBeam = CBeam::BeamCreate( IsMegaPhysCannon() ? MEGACANNON_BEAM_SPRITE : PHYSCANNON_BEAM_SPRITE, 8 );
+	// --- Portal traversal check ---  
+	Vector shootPos = pOwner->Weapon_ShootPosition();
+	Vector eyeDir;
+	pOwner->EyeVectors(&eyeDir);
 
-	if ( pBeam != NULL )
+	Ray_t rayBeam;
+	rayBeam.Init(shootPos, shootPos + eyeDir * MAX_TRACE_LENGTH);
+
+	trace_t tr;
+	UTIL_TraceRay(rayBeam, MASK_SOLID, pOwner, COLLISION_GROUP_NONE, &tr);
+
+	Vector vBeam1EndPos(0, 0, 0);
+	vBeam1EndPos = tr.endpos;
+
+	float fEndFraction;
+	CProp_Portal* pPortal = NULL;
+
+	CTraceFilterNoOwnerTest traceFilter(pOwner, COLLISION_GROUP_NONE);
+	pPortal = UTIL_Portal_TraceRay_Beam(rayBeam, MASK_SHOT, &traceFilter, &fEndFraction);
+	
+	//debug overlays
+	if (sv_portalbase_debug_physcannon_effect_launch.GetBool() && g_pDeveloper->GetInt())
 	{
-		pBeam->PointEntInit( endpos, this );
-		pBeam->SetEndAttachment( 1 );
-		pBeam->SetWidth( 6.4 );
-		pBeam->SetEndWidth( 12.8 );
-		pBeam->SetBrightness( 255 );
-		pBeam->SetColor( 255, 255, 255 );
-		pBeam->LiveForTime( 0.1f );
-		pBeam->RelinkBeam();
-		pBeam->SetNoise( 2 );
+		// DEBUG: shoot origin (green cross + box)  
+		NDebugOverlay::Cross3D(shootPos, 4.0f, 0, 255, 0, true, 5.0f);
+		NDebugOverlay::Box(shootPos, Vector(-4, -4, -4), Vector(4, 4, 4), 0, 255, 0, 64, 5.0f);
+		NDebugOverlay::Text(shootPos, "shootPos", false, 5.0f);
 	}
 
-	Vector	shotDir = ( endpos - pOwner->Weapon_ShootPosition() );
-	VectorNormalize( shotDir );
+	if (pPortal)
+	{
+		float fPortalFraction = UTIL_IntersectRayWithPortal(rayBeam, pPortal);
+		Vector vecIntersectionStart = rayBeam.m_Start + rayBeam.m_Delta * fPortalFraction;
 
-	//End hit
-	//FIXME: Probably too big
-	CPVSFilter filter( endpos );
-	te->GaussExplosion( filter, 0.0f, endpos - ( shotDir * 4.0f ), RandomVector(-1.0f, 1.0f), 0 );
-	
-	if ( m_hBlastSprite != NULL )
+		Vector vecIntersectionEnd;
+		VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+		UTIL_Portal_PointTransform(matThisToLinked, vecIntersectionStart, vecIntersectionEnd);
+
+
+		//debug overlays
+		if (sv_portalbase_debug_physcannon_effect_launch.GetBool() && g_pDeveloper->GetInt())
+		{
+			// DEBUG: portal entry point (yellow cross + box)  
+			NDebugOverlay::Cross3D(vecIntersectionStart, 6.0f, 255, 255, 0, true, 5.0f);
+			NDebugOverlay::Box(vecIntersectionStart, Vector(-6, -6, -6), Vector(6, 6, 6), 255, 255, 0, 64, 5.0f);
+			NDebugOverlay::Text(vecIntersectionStart, "portal entry (vecIntersectionStart)", false, 5.0f);
+
+			// DEBUG: portal exit point (cyan cross + box)  
+			NDebugOverlay::Cross3D(vecIntersectionEnd, 6.0f, 0, 255, 255, true, 5.0f);
+			NDebugOverlay::Box(vecIntersectionEnd, Vector(-6, -6, -6), Vector(6, 6, 6), 0, 255, 255, 64, 5.0f);
+			NDebugOverlay::Text(vecIntersectionEnd, "portal exit (vecIntersectionEnd)", false, 5.0f);
+
+			// DEBUG: punt entity position (red cross + box)  
+			Vector entPos = pPuntEntity->GetAbsOrigin();
+			NDebugOverlay::Cross3D(entPos, 6.0f, 255, 0, 0, true, 5.0f);
+			NDebugOverlay::Box(entPos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 0, 64, 5.0f);
+			NDebugOverlay::Text(entPos, "pPuntEntity (endpos)", false, 5.0f);
+
+			// DEBUG: beam segment lines  
+			// Segment 1: shootPos --> portal entry (green)  
+			NDebugOverlay::Line(shootPos, vecIntersectionStart, 0, 255, 0, true, 5.0f);
+			// Segment 2: portal exit --> punt entity (cyan)  
+			NDebugOverlay::Line(vecIntersectionEnd, entPos, 0, 255, 255, true, 5.0f);
+		}
+
+		// Beam 1: physcannon attachment --> portal entry  
+		// End hit
+		CPVSFilter filter(vecIntersectionStart);
+
+		// Don't send this to the owning player, they already had it predicted
+		if (IsPredicted())
+		{
+			filter.UsePredictionRules();
+		}
+
+		CEffectData	data;
+		data.m_vOrigin = vecIntersectionStart;
+		data.m_nDamageType = 1; //no sparks
+#ifdef CLIENT_DLL
+		data.m_hEntity = GetRefEHandle();
+#else
+		data.m_nEntIndex = entindex();
+#endif
+		//create on client to fix beam start pos (vm teleported by portal on server)
+		te->DispatchEffect(filter, 0.0, data.m_vOrigin, "PhyscannonImpact", data);
+
+		Vector vecBeam2End;
+
+		// Transform the player's eye direction through the portal  
+		Vector transformedEyeDir;
+		UTIL_Portal_VectorTransform(matThisToLinked, eyeDir, transformedEyeDir);
+
+		CTraceFilterOnlyHitsThis beam2Filter(pPuntEntity);
+		trace_t trBeam2;
+		UTIL_TraceLine(
+			vecIntersectionEnd,
+			vecIntersectionEnd + transformedEyeDir * MAX_TRACE_LENGTH,
+			MASK_SHOT,
+			&beam2Filter,
+			&trBeam2
+		);
+		vecBeam2End = (trBeam2.m_pEnt != NULL) ? trBeam2.endpos : pPuntEntity->GetAbsOrigin();
+
+		// Beam 2: portal exit --> held entity  
+		CBeam* pBeam2 = CBeam::BeamCreate(IsMegaPhysCannon() ? MEGACANNON_BEAM_PORTAL_SPRITE : PHYSCANNON_BEAM_PORTAL_SPRITE, 8);
+		if (pBeam2 != NULL)
+		{
+
+			pBeam2->PointsInit(vecIntersectionEnd, vecBeam2End);
+			pBeam2->SetWidth(6.4);
+			pBeam2->SetEndWidth(12.8);
+			pBeam2->SetBrightness(255);
+			pBeam2->SetColor(255, 255, 255);
+			pBeam2->LiveForTime(0.1f);
+			pBeam2->RelinkBeam();
+			pBeam2->SetNoise(2);
+		}
+
+		Vector shotDir = vecIntersectionStart - shootPos;
+		VectorNormalize(shotDir);
+		CPVSFilter portalFilter(vecIntersectionStart);
+		te->GaussExplosion(portalFilter, 0.0f, vecBeam2End - (shotDir * 4.0f), RandomVector(-1.0f, 1.0f), 0);
+	}
+	else
+	{
+		//debug info
+		if (sv_portalbase_debug_physcannon_effect_launch.GetBool() && g_pDeveloper->GetInt())
+		{
+			// DEBUG: endpos (red cross + box)  
+			NDebugOverlay::Cross3D(endpos, 6.0f, 255, 0, 0, true, 5.0f);
+			NDebugOverlay::Box(endpos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 0, 64, 5.0f);
+			NDebugOverlay::Text(endpos, "endpos (no portal)", false, 5.0f);
+
+			// DEBUG: direct beam line (white)  
+			NDebugOverlay::Line(shootPos, endpos, 255, 255, 255, true, 5.0f);
+		}
+
+		CBeam* pBeam = CBeam::BeamCreate(IsMegaPhysCannon() ? MEGACANNON_BEAM_PORTAL_SPRITE : PHYSCANNON_BEAM_PORTAL_SPRITE, 8);
+		if (pBeam != NULL)
+		{
+			pBeam->PointEntInit(endpos, this);
+			pBeam->SetEndAttachment(1);
+			pBeam->SetWidth(6.4);
+			pBeam->SetEndWidth(12.8);
+			pBeam->SetBrightness(255);
+			pBeam->SetColor(255, 255, 255);
+			pBeam->LiveForTime(0.1f);
+			pBeam->RelinkBeam();
+			pBeam->SetNoise(2);
+		}
+
+		Vector shotDir = endpos - pOwner->Weapon_ShootPosition();
+		VectorNormalize(shotDir);
+		CPVSFilter pvsFilt(endpos);
+		te->GaussExplosion(pvsFilt, 0.0f, endpos - (shotDir * 4.0f), RandomVector(-1.0f, 1.0f), 0);
+	}
+
+	if (m_hBlastSprite != NULL)
 	{
 		m_hBlastSprite->TurnOn();
-		m_hBlastSprite->SetScale( 2.0f, 0.1f );
-		m_hBlastSprite->SetBrightness( 0.0f, 0.1f );
+		m_hBlastSprite->SetScale(2.0f, 0.1f);
+		m_hBlastSprite->SetBrightness(0.0f, 0.1f);
 	}
 }
 
@@ -4406,63 +5059,141 @@ void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
 // Purpose: 
 // Input  : *pos - 
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::DoMegaEffectLaunch( Vector *pos )
+void CWeaponPhysCannon::DoMegaEffectLaunch(Vector* pos, CBaseEntity* pPuntEntity)
 {
-	Assert( pos );
-	if ( pos == NULL )
+	Assert(pos);
+	if (pos == NULL || pPuntEntity == NULL)
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner == NULL )
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (pOwner == NULL)
 		return;
 
-	Vector	endpos = *pos;
+	Vector endpos = *pos;
 
-	// Check to store off our view model index
-	CBaseViewModel *vm = pOwner->GetViewModel();
-	
-	int numBeams = random->RandomInt( 1, 2 );
+	// --- Portal traversal check ---  
+	Vector shootPos = pOwner->Weapon_ShootPosition();
+	Vector eyeDir;
+	pOwner->EyeVectors(&eyeDir);
 
-	CBeam *pBeam = CBeam::BeamCreate( IsMegaPhysCannon() ? MEGACANNON_BEAM_SPRITE : PHYSCANNON_BEAM_SPRITE, 0.8 );
+	Ray_t rayBeam;
+	rayBeam.Init(shootPos, shootPos + eyeDir * MAX_TRACE_LENGTH);
 
-	if ( pBeam != NULL )
+	float fEndFraction;
+	CProp_Portal* pPortal = NULL;
+	CTraceFilterNoOwnerTest traceFilter(pOwner, COLLISION_GROUP_NONE);
+	pPortal = UTIL_Portal_TraceRay_Beam(rayBeam, MASK_SHOT, &traceFilter, &fEndFraction);
+
+	if (sv_portalbase_debug_physcannon_effect_launch_mega.GetBool() && g_pDeveloper->GetInt())
 	{
-		pBeam->PointEntInit( endpos, vm );
-		pBeam->SetEndAttachment( 1 );
-		pBeam->SetWidth( 2 );
-		pBeam->SetEndWidth( 12 );
-		pBeam->SetBrightness( 255 );
-		pBeam->SetColor( 255, 255, 255 );
-		pBeam->LiveForTime( 0.1f );
-		pBeam->RelinkBeam();
-		pBeam->SetNoise( 0 );
+		NDebugOverlay::Cross3D(shootPos, 4.0f, 0, 255, 0, true, 5.0f);
+		NDebugOverlay::Box(shootPos, Vector(-4, -4, -4), Vector(4, 4, 4), 0, 255, 0, 64, 5.0f);
+		NDebugOverlay::Text(shootPos, "shootPos", false, 5.0f);
 	}
 
-	for ( int i = 0; i < numBeams; i++ )
+	if (pPortal)
 	{
-		pBeam = CBeam::BeamCreate( IsMegaPhysCannon() ? MEGACANNON_BEAM_SPRITE : PHYSCANNON_BEAM_SPRITE, 0.8 );
+		float fPortalFraction = UTIL_IntersectRayWithPortal(rayBeam, pPortal);
+		Vector vecIntersectionStart = rayBeam.m_Start + rayBeam.m_Delta * fPortalFraction;
 
-		if ( pBeam != NULL )
+		Vector vecIntersectionEnd;
+		VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
+		UTIL_Portal_PointTransform(matThisToLinked, vecIntersectionStart, vecIntersectionEnd);
+
+		// Beam 2 end: trace from portal exit in transformed eye direction, only hitting pPuntEntity  
+		Vector transformedEyeDir;
+		UTIL_Portal_VectorTransform(matThisToLinked, eyeDir, transformedEyeDir);
+
+		CTraceFilterOnlyHitsThis beam2Filter(pPuntEntity);
+		trace_t trBeam2;
+		UTIL_TraceLine(
+			vecIntersectionEnd,
+			vecIntersectionEnd + transformedEyeDir * MAX_TRACE_LENGTH,
+			MASK_SHOT,
+			&beam2Filter,
+			&trBeam2
+		);
+		Vector vecBeam2End = (trBeam2.m_pEnt != NULL) ? trBeam2.endpos : pPuntEntity->GetAbsOrigin();
+
+		if (sv_portalbase_debug_physcannon_effect_launch_mega.GetBool() && g_pDeveloper->GetInt())
 		{
-			pBeam->PointEntInit( endpos, vm );
-			pBeam->SetEndAttachment( 1 );
-			pBeam->SetWidth( 2 );
-			pBeam->SetEndWidth( random->RandomInt( 1, 2 ) );
-			pBeam->SetBrightness( 255 );
-			pBeam->SetColor( 255, 255, 255 );
-			pBeam->LiveForTime( 0.1f );
-			pBeam->RelinkBeam();
-			pBeam->SetNoise( random->RandomInt( 8, 12 ) );
-		}
-	}
-	
-	Vector	shotDir = ( endpos - pOwner->Weapon_ShootPosition() );
-	VectorNormalize( shotDir );
+			NDebugOverlay::Cross3D(vecIntersectionStart, 5.0f, 255, 255, 0, true, 5.0f);
+			NDebugOverlay::Box(vecIntersectionStart, Vector(-5, -5, -5), Vector(5, 5, 5), 255, 255, 0, 64, 5.0f);
+			NDebugOverlay::Text(vecIntersectionStart, "portal entry", false, 5.0f);
 
-	//End hit
-	//FIXME: Probably too big
-	CPVSFilter filter( endpos );
-	te->GaussExplosion( filter, 0.0f, endpos - ( shotDir * 4.0f ), RandomVector(-1.0f, 1.0f), 0 );
+			NDebugOverlay::Cross3D(vecIntersectionEnd, 5.0f, 0, 255, 255, true, 5.0f);
+			NDebugOverlay::Box(vecIntersectionEnd, Vector(-5, -5, -5), Vector(5, 5, 5), 0, 255, 255, 64, 5.0f);
+			NDebugOverlay::Text(vecIntersectionEnd, "portal exit", false, 5.0f);
+
+			NDebugOverlay::Cross3D(vecBeam2End, 6.0f, 255, 0, 0, true, 5.0f);
+			NDebugOverlay::Box(vecBeam2End, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 0, 64, 5.0f);
+			NDebugOverlay::Text(vecBeam2End, "beam2 end", false, 5.0f);
+
+			NDebugOverlay::Line(shootPos, vecIntersectionStart, 255, 255, 255, true, 5.0f);
+			NDebugOverlay::Line(vecIntersectionEnd, vecBeam2End, 0, 200, 255, true, 5.0f);
+		}
+
+		// Beam 1: weapon -> portal entry via MegaPhyscannonImpact (m_nDamageType=1 skips explosion)  
+		CEffectData data;
+		data.m_vOrigin = vecIntersectionStart;
+		data.m_nEntIndex = entindex();
+		data.m_nDamageType = 1;
+		DispatchEffect("MegaPhyscannonImpact", data);
+
+		// Beam 2: portal exit -> impact point (server-side, point-to-point, mirrors mega beam params)  
+		int numBeams = random->RandomInt(1, 2);
+
+		CBeam* pBeam2 = CBeam::BeamCreate(MEGACANNON_BEAM_PORTAL_SPRITE, 0.8);
+		if (pBeam2 != NULL)
+		{
+			pBeam2->PointsInit(vecIntersectionEnd, vecBeam2End);
+			pBeam2->SetWidth(12);
+			pBeam2->SetEndWidth(2);
+			pBeam2->SetBrightness(255);
+			pBeam2->SetColor(255, 255, 255);
+			pBeam2->LiveForTime(0.1f);
+			pBeam2->RelinkBeam();
+			pBeam2->SetNoise(0);
+		}
+
+		for (int i = 0; i < numBeams; i++)
+		{
+			pBeam2 = CBeam::BeamCreate(MEGACANNON_BEAM_PORTAL_SPRITE, 0.8);
+			if (pBeam2 != NULL)
+			{
+				pBeam2->PointsInit(vecIntersectionEnd, vecBeam2End);
+				pBeam2->SetWidth((float)random->RandomInt(1, 2));
+				pBeam2->SetEndWidth(2);
+				pBeam2->SetBrightness(255);
+				pBeam2->SetColor(255, 255, 255);
+				pBeam2->LiveForTime(0.1f);
+				pBeam2->RelinkBeam();
+				pBeam2->SetNoise(random->RandomInt(8, 12));
+			}
+		}
+
+		Vector shotDir = vecIntersectionStart - shootPos;
+		VectorNormalize(shotDir);
+		CPVSFilter portalFilter(vecBeam2End);
+		te->GaussExplosion(portalFilter, 0.0f, vecBeam2End - (shotDir * 4.0f), RandomVector(-1.0f, 1.0f), 0);
+	}
+	else
+	{
+		if (sv_portalbase_debug_physcannon_effect_launch_mega.GetBool() && g_pDeveloper->GetInt())
+		{
+			NDebugOverlay::Cross3D(endpos, 6.0f, 255, 0, 0, true, 5.0f);
+			NDebugOverlay::Box(endpos, Vector(-8, -8, -8), Vector(8, 8, 8), 255, 0, 0, 64, 5.0f);
+			NDebugOverlay::Text(endpos, "endpos (no portal)", false, 5.0f);
+			NDebugOverlay::Line(shootPos, endpos, 255, 255, 255, true, 5.0f);
+		}
+
+		// Non-portal case: dispatch MegaPhyscannonImpact normally (m_nDamageType=0 -> with explosion)  
+		CEffectData data;
+		data.m_vOrigin = endpos;
+		data.m_nEntIndex = entindex();
+		data.m_nDamageType = 0;
+		DispatchEffect("MegaPhyscannonImpact", data);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4575,7 +5306,7 @@ void CWeaponPhysCannon::DoEffectNone( void )
 // Input  : effectType - 
 //			*pos - 
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::DoMegaEffect( int effectType, Vector *pos )
+void CWeaponPhysCannon::DoMegaEffect(int effectType, Vector *pos, CBaseEntity* pEntity)
 {
 	switch( effectType )
 	{
@@ -4592,7 +5323,7 @@ void CWeaponPhysCannon::DoMegaEffect( int effectType, Vector *pos )
 		break;
 
 	case EFFECT_LAUNCH:
-		DoMegaEffectLaunch( pos );
+		DoMegaEffectLaunch(pos, pEntity);
 		break;
 
 	default:
@@ -4605,17 +5336,29 @@ void CWeaponPhysCannon::DoMegaEffect( int effectType, Vector *pos )
 // Purpose: 
 // Input  : effectType - 
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::DoEffect( int effectType, Vector *pos )
+void CWeaponPhysCannon::DoEffect(int effectType, Vector *pos, CBaseEntity* pEntity)
 {
 	// Make sure we're active
 	StartEffects();
 
 	m_EffectState = effectType;
 
+#ifdef CLIENT_DLL
+	// Save predicted state
+	m_nOldEffectState = m_EffectState;
+#endif
+
+	if (effectType == EFFECT_LAUNCH)
+	{
+		DoEffectLaunch(pos, pEntity);
+	}
+
+	return;
+
 	// Do different effects when upgraded
 	if ( IsMegaPhysCannon() )
 	{
-		DoMegaEffect( effectType, pos );
+		DoMegaEffect(effectType, pos, pEntity);
 		return;
 	}
 
@@ -4634,7 +5377,7 @@ void CWeaponPhysCannon::DoEffect( int effectType, Vector *pos )
 		break;
 
 	case EFFECT_LAUNCH:
-		DoEffectLaunch( pos );
+		DoEffectLaunch(pos, pEntity);
 		break;
 
 	default:
@@ -4973,4 +5716,18 @@ float PlayerPickupGetHeldObjectMass( CBaseEntity *pPickupControllerEntity, IPhys
 void GrabController_SetPortalPenetratingEntity( CGrabController *pController, CBaseEntity *pPenetrated )
 {
 	pController->SetPortalPenetratingEntity( pPenetrated );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Mirrors UpdateGrabControllerTargetPosition but uses GetGrabControllerForPhysCannon instead of GetGrabControllerForPlayer.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void UpdatePhysCannonGrabControllerTargetPosition(CBasePlayer* pPlayer, Vector* vPosition, QAngle* qAngles)
+{
+	CGrabController* pGrabController = GetGrabControllerForPhysCannon(pPlayer->GetActiveWeapon());
+	if (!pGrabController)
+		return;
+
+	pGrabController->UpdateObject(pPlayer, 12);
+	pGrabController->GetTargetPosition(vPosition, qAngles);
 }

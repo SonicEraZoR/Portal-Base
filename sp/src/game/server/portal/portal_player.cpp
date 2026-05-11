@@ -180,7 +180,7 @@ void CPortal_Player::Spawn(void)
 }
 
 /*
-I think it makes the player make rebel hurt sounds when hit
+//I think it makes the player make rebel hurt sounds when hit
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1160,12 +1160,12 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	bool bIsTurret = false;
 
-	if ( pAttacker && FClassnameIs( pAttacker, "npc_portal_turret_floor" ) )
+	if (pAttacker && pAttacker->IsPortalTurret())
 		bIsTurret = true;
 
 	// Refuse damage from prop_glados_core.
-	if ( (pAttacker && FClassnameIs( pAttacker, "prop_glados_core" )) ||
-		(pInflictor && FClassnameIs( pInflictor, "prop_glados_core" ))  )
+	if ( (pAttacker && pAttacker->IsGladosCore()) ||
+		(pInflictor && pInflictor->IsGladosCore())  )
 	{
 		inputInfoCopy.SetDamage(0.0f);
 	}
@@ -1200,7 +1200,13 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	// Copy the multidamage damage origin over what the base class wrote, because
 	// that gets translated correctly though portals.
-	m_DmgOrigin = inputInfo.GetDamagePosition();
+
+	//mygamepedia: do so only if not poision dmg, or the screen effect will not work
+	Vector dmgPos = inputInfo.GetDamagePosition();
+	if (dmgPos != vec3_origin)
+	{
+		m_DmgOrigin = dmgPos;
+	}
 
 	if ( GetHealth() < 100 )
 	{
@@ -1525,24 +1531,6 @@ void CPortal_Player::PickTeam( void )
 	}
 }
 
-ConVar sv_portalbase_use_stunstick_for_battery("sv_portalbase_use_stunstick_for_armor", "1", FCVAR_NONE);
-
-//-----------------------------------------------------------------------------
-// Allow stunstick by player touch if convar allow for tests. - MyGamepedia
-//-----------------------------------------------------------------------------
-bool CPortal_Player::Weapon_CanUse(CBaseCombatWeapon* pWeapon)
-{
-#ifndef HL2MP	
-	if (pWeapon->ClassMatches("weapon_stunstick") && sv_portalbase_use_stunstick_for_battery.GetBool())
-	{
-		if (ApplyBattery(0.5))
-			UTIL_Remove(pWeapon);
-		return false;
-	}
-#endif
-
-	return CBasePlayer::Weapon_CanUse(pWeapon); //CBasePlayer!!! Not BaseClass so we don't run similar logic again
-}
 
 CON_COMMAND( startadmiregloves, "Starts the admire gloves animation." )
 {

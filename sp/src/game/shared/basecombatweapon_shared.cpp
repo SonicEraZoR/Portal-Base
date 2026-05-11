@@ -1006,7 +1006,10 @@ void CBaseCombatWeapon::RescindReloadHudHint()
 void CBaseCombatWeapon::SetPickupTouch( void )
 {
 #if !defined( CLIENT_DLL )
-	SetTouch(&CBaseCombatWeapon::DefaultTouch);
+	//mygamepedia: with env_touch_area, wpn pick up always handled by it, no need for DefaultTouch
+	//don't remove as it could cause double pick up
+	if (!sv_portalbase_item_touch_area.GetBool())
+		SetTouch(&CBaseCombatWeapon::DefaultTouch);
 
 	if ( gpGlobals->maxClients > 1 )
 	{

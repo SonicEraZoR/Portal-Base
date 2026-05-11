@@ -1641,7 +1641,9 @@ void CTempEnts::Sprite_Smoke( C_LocalTempEntity *pTemp, float scale )
 //-----------------------------------------------------------------------------
 void CTempEnts::EjectBrass( const Vector &pos1, const QAngle &angles, const QAngle &gunAngles, int type )
 {
-	if ( cl_ejectbrass.GetBool() == false )
+	//mygamepedia: we're using srv side shells now, keep it disabled by def
+	//i invert it because this cvar seems to be saved by clients somehow
+	if ( cl_ejectbrass.GetBool() != false )
 		return;
 
 	const model_t *pModel = m_pShells[type];

@@ -543,19 +543,25 @@ bool CBaseCombatCharacter::FInViewCone( const Vector &vecSpot )
 
 #ifdef PORTAL
 //=========================================================
-// FInViewCone - returns true is the passed ent is in
-// the caller's forward view cone. The dot product is performed
-// in 2d, making the view cone infinitely tall. 
+// Purpose: The same as FInViewCone, but with portal checking.
+// Input: 
+// - CBaseEntity *pEntity - the entity to check against the view cone
+// - bool bRecursive - whether to check through portals recursively (i.e., chains of portals)
+// Output: Returns the portal through which the entity is visible, or NULL if not visible through any
+// - MyGamepedia
 //=========================================================
-CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( CBaseEntity *pEntity )
+CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal(CBaseEntity *pEntity, bool bRecursive)
 {
+	//mygamepedia: recursive may break something, use true if you are sure that you want it
+	if (bRecursive)
+		return FInViewConeThroughPortalRecursive(pEntity->WorldSpaceCenter());
+
 	return FInViewConeThroughPortal( pEntity->WorldSpaceCenter() );
 }
 
 //=========================================================
-// FInViewCone - returns true is the passed Vector is in
-// the caller's forward view cone. The dot product is performed
-// in 2d, making the view cone infinitely tall. 
+// Purpose: Returns the portal through which the given point is visible, or NULL if not visible through any portal.
+// Doesn't include recursive portal checking (i.e., chains of portals).
 //=========================================================
 CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( const Vector &vecSpot )
 {
@@ -644,6 +650,135 @@ CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( const Vector &vecS
 	}
 
 	return pBestPortal;
+}
+
+//=========================================================
+// Purpose: Returns the portal through which the given point is visible, or NULL if not visible through any portal.
+// Includes recursive portal checking (i.e., chains of portals).
+// - MyGamepedia
+//=========================================================
+CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortalRecursive(const Vector& vecSpot)  
+{  
+	//count all portals we have in level, no portals - return
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+	if (iPortalCount == 0)  
+		return NULL;
+  
+	//this character eye pos
+	const Vector ptEyePosition = EyePosition();  
+  
+	float fDistToBeat = 1e20; //arbitrarily high number
+	CProp_Portal* pBestPortal = NULL;  
+  
+	CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();  //collect all portals in level
+  
+	//check all portals to see if any are in viewcone and could see the target spot through them (potentially recursively)
+	for (int iPortal = 0; iPortal < iPortalCount; ++iPortal)  
+	{  
+		CProp_Portal* pPortal = pPortals[iPortal];  
+  
+		//skip if not active and linked
+		if (!pPortal->IsActivedAndLinked())
+			continue;
+
+		// When very close to the portal, FInViewCone's 2D math breaks down  
+		// (near-zero vector after zeroing Z). The portal fills most of the  
+		// view at this range, so skip the pre-filter.  
+		float flDistToPortalSqr = (pPortal->GetAbsOrigin() - ptEyePosition).LengthSqr();
+		if (flDistToPortalSqr >= (PORTAL_HALF_HEIGHT * PORTAL_HALF_HEIGHT) && !FInViewCone(pPortal))
+			continue;
+
+		// The facing direction is the eye to the portal to set up a proper FOV through the relatively small portal hole
+		Vector facingDir = pPortal->GetAbsOrigin() - ptEyePosition;  
+  
+		//skip if the portal isn't facing the eye
+		if (facingDir.Dot(pPortal->m_plane_Origin.normal) > 0.0f)  
+			continue;  
+  
+		//skip if the point is behind the linked portal
+		if ((vecSpot - pPortal->m_hLinkedPortal->GetAbsOrigin()).Dot(pPortal->m_hLinkedPortal->m_plane_Origin.normal) < 0.0f)  
+			continue;  
+  
+		//we have a valid portal, get the linked portal for recursion and distance checking
+		CProp_Portal* pLinkedPortal = pPortal->m_hLinkedPortal.Get();  
+  
+		//3D — no longer zeroing Z  
+		float fPortalDist = VectorNormalize(facingDir);  
+  
+		//get the worst case FOV from the portal's corners (now in 3D)  
+		float fFOVThroughPortal = 1.0f;  
+		for (int i = 0; i < 4; ++i)  
+		{  
+			Vector vEyeToCorner = pPortal->m_vPortalCorners[i] - ptEyePosition;  
+			VectorNormalize(vEyeToCorner);  
+  
+			//use the dot product of the eye-to-corner vector and the 
+			//facing direction as the FOV metric, since the portal 
+			//corners can effectively reduce FOV more than distance
+			float flCornerDot = DotProduct(vEyeToCorner, facingDir);  
+			if (flCornerDot < fFOVThroughPortal)  
+				fFOVThroughPortal = flCornerDot;  
+		}  
+  
+		//check if portals can see each other (required for recursion depth > 1)  
+		bool bPortalsCanSeeEachOther = false;  
+
+		Vector vecEntryToLinked = pPortal->GetAbsOrigin() - pLinkedPortal->GetAbsOrigin();  
+		Vector vecLinkedToEntry = pLinkedPortal->GetAbsOrigin() - pPortal->GetAbsOrigin();  
+
+		//portals are roughly facing each other(based on plane normals)
+		bPortalsCanSeeEachOther =  
+				((vecEntryToLinked.Dot(pLinkedPortal->m_plane_Origin.normal) > 0.0f) &&  
+				(vecLinkedToEntry.Dot(pPortal->m_plane_Origin.normal) > 0.0f));    
+  
+		//check up to 2 portal transitions (limited depth, not true recursion)
+		Vector vCurrentSpot = vecSpot;  
+		for (int level = 0; level < 2; ++level)  
+		{  
+			//if we're more than 1 portal deep, require that portals can see each other to continue checking, 
+			//otherwise we get weird cases where you can see a portal through a portal but not see the second 
+			//portal through the first because the first isn't facing the second
+			if (level > 0 && !bPortalsCanSeeEachOther)  
+				break;  
+  
+			//translate the target spot across the portal
+			Vector vTranslatedVecSpot;  
+			UTIL_Portal_PointTransform(pLinkedPortal->MatrixThisToLinked(), vCurrentSpot, vTranslatedVecSpot);  
+			vCurrentSpot = vTranslatedVecSpot;  
+  
+			//3D — no longer zeroing Z  
+			Vector los = (vTranslatedVecSpot - ptEyePosition);  
+			float fSpotDist = VectorNormalize(los);  
+  
+			//skip if this candidate is farther than the best one found so far
+			if (fSpotDist > fDistToBeat)  
+				continue;  
+  
+			//skip if the point is significantly closer than the portal (invalid through-portal LOS)
+			if (fPortalDist > fSpotDist + 32.0f)  
+				continue;  
+  
+			//check if the translated point is in view cone, using the tougher FOV 
+			//of either the standard FOV or FOV clipped to the portal hole
+			float flDot = DotProduct(los, facingDir);  
+  
+			//if the point is in view cone through this portal, return this portal as the one through which the point is visible.
+			if (flDot > MAX(fFOVThroughPortal, m_flFieldOfView))  
+			{
+				//if this is a recursive check, we need to make sure the original portal 
+				//can see the translated point, otherwise we can get cases where you can see 
+				//a point through a chain of portals but not see the point through the first portal in the chain
+				float fActualDist = ptEyePosition.DistToSqr(vTranslatedVecSpot);  
+				if (fActualDist < fDistToBeat)  
+				{  
+					fDistToBeat = fActualDist;  
+					pBestPortal = pPortal;  
+				}  
+			}  
+		}    
+	}  
+  
+	return pBestPortal;  
 }
 #endif
 

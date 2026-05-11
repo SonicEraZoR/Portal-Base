@@ -38,4 +38,7 @@ bool PhysCannonAccountableForObject( CBaseCombatWeapon *pPhysCannon, CBaseEntity
 
 void GrabController_SetPortalPenetratingEntity( CGrabController *pController, CBaseEntity *pPenetrated );
 
+//mygamepedia: helper func to fix physcannon and portal teleport issues
+void UpdatePhysCannonGrabControllerTargetPosition(CBasePlayer* pPlayer, Vector* vPosition, QAngle* qAngles);
+
 #endif // WEAPON_PHYSCANNON_H

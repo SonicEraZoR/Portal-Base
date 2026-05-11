@@ -33,6 +33,8 @@
 #include "ai_behavior_follow.h"
 #include "ai_behavior_lead.h"
 #include "gameinterface.h"
+#include "prop_portal_shared.h"  
+#include "portal_util_shared.h"  
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
@@ -990,6 +992,7 @@ class CTriggerLook : public CTriggerOnce
 {
 	DECLARE_CLASS( CTriggerLook, CTriggerOnce );
 public:
+	CTriggerLook();
 
 	EHANDLE m_hLookTarget;
 	float m_flFieldOfView;
@@ -1000,11 +1003,15 @@ public:
 	bool m_bTimeoutFired;		// True if the OnTimeout output fired since the last StartTouch.
 	EHANDLE m_hActivator;		// The entity that triggered us.
 
+	bool m_bIncludePortalsView; //mygamepedia: we may not want to include portals in some cases, let it be optional
+
 	void Spawn( void );
 	void Touch( CBaseEntity *pOther );
 	void StartTouch(CBaseEntity *pOther);
 	void EndTouch( CBaseEntity *pOther );
 	int	 DrawDebugTextOverlays(void);
+
+	virtual bool KeyValue(const char* szKeyName, const char* szValue);
 
 	DECLARE_DATADESC();
 
@@ -1023,6 +1030,7 @@ BEGIN_DATADESC( CTriggerLook )
 	DEFINE_FIELD( m_flLookTimeTotal, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flLookTimeLast, FIELD_TIME ),
 	DEFINE_KEYFIELD( m_flTimeoutDuration, FIELD_FLOAT, "timeout" ),
+	DEFINE_FIELD(m_bIncludePortalsView, FIELD_BOOLEAN),
 	DEFINE_FIELD( m_bTimeoutFired, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_hActivator, FIELD_EHANDLE ),
 
@@ -1036,6 +1044,35 @@ BEGIN_DATADESC( CTriggerLook )
 
 END_DATADESC()
 
+//------------------------------------------------------------------------------
+// Purpose: Constructor
+//------------------------------------------------------------------------------
+CTriggerLook::CTriggerLook()
+{
+	m_bIncludePortalsView = true; //mygamepedia: we want to include by def
+}
+
+//------------------------------------------------------------------------------
+// Purpose: Keyvalue handler - MyGamepedia
+//------------------------------------------------------------------------------
+bool CTriggerLook::KeyValue(const char* szKeyName, const char* szValue)
+{
+	if (FStrEq(szKeyName, "includeportalsview")) //Should it include portals view when checking if looking at the target ?
+	{
+		if (FStrEq(szValue, "0")) //disable
+		{
+			m_bIncludePortalsView = false;
+		}
+		else if (FStrEq(szValue, "1")) //enable
+		{
+			m_bIncludePortalsView = true;
+		}
+
+		return true;
+	}
+
+	return BaseClass::KeyValue(szKeyName, szValue);
+}
 
 //------------------------------------------------------------------------------
 // Purpose:
@@ -1146,8 +1183,89 @@ void CTriggerLook::Touch(CBaseEntity *pOther)
 		Vector vTargetDir = m_hLookTarget->GetAbsOrigin() - pOther->EyePosition();
 		VectorNormalize(vTargetDir);
 
-		float fDotPr = DotProduct(vLookDir,vTargetDir);
-		if (fDotPr > m_flFieldOfView)
+		float fDotPr = DotProduct(vLookDir, vTargetDir);
+
+		bool bIsLooking = (fDotPr > m_flFieldOfView); //mygamepedia: does it look at the target directly ?
+
+		//mygamepedia: this is a new logic so the trigger can keep portals view in mind
+		//not looking at it directly ? now it's time to check if looking through a portal 
+
+		//TODO: this may need more tests when you see portal B in portal A and see target in portal B
+		if (!bIsLooking && m_bIncludePortalsView)
+		{
+			int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+			if (iPortalCount > 0)
+			{
+				Vector ptEyePosition = pOther->EyePosition();
+				Vector vecTargetOrigin = m_hLookTarget->GetAbsOrigin();
+				CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base(); //collect all portals
+
+				for (int i = 0; i < iPortalCount && !bIsLooking; ++i)
+				{
+					CProp_Portal* pPortal = pPortals[i];
+
+					// Portal must be active and linked  
+					if (!pPortal || !pPortal->IsActivedAndLinked())
+						continue;
+
+					// The portal must be facing the player (player on front side)  
+					Vector vecPortalToEye = ptEyePosition - pPortal->GetAbsOrigin();
+					if (vecPortalToEye.Dot(pPortal->m_plane_Origin.normal) < 0.0f)
+						continue;
+
+					//skip if no linked portal
+					CProp_Portal* pLinkedPortal = pPortal->m_hLinkedPortal.Get();
+					if (!pLinkedPortal)
+						continue;
+
+					// The target must be in front of the linked portal (on exit side)  
+					Vector vecTargetToLinked = vecTargetOrigin - pLinkedPortal->GetAbsOrigin();
+					if (vecTargetToLinked.Dot(pLinkedPortal->m_plane_Origin.normal) < 0.0f)
+						continue;
+
+					// Check if portals can see each other (required for recursion depth > 1)  
+					// Entry portal must be on linked portal's front side AND vice versa  
+					bool bPortalsCanSeeEachOther = false;
+
+					Vector vecEntryToLinked = pPortal->GetAbsOrigin() - pLinkedPortal->GetAbsOrigin();
+					Vector vecLinkedToEntry = pLinkedPortal->GetAbsOrigin() - pPortal->GetAbsOrigin();
+
+					bPortalsCanSeeEachOther =
+							(vecEntryToLinked.Dot(pLinkedPortal->m_plane_Origin.normal) > 0.0f) &&
+							(vecLinkedToEntry.Dot(pPortal->m_plane_Origin.normal) > 0.0f);
+
+					// Iteratively check each recursion level (2 - two portals)
+					Vector vCurrentTransformedTarget = vecTargetOrigin;
+					for (int level = 0; level < 2; ++level)
+					{
+						// Recursion levels > 0 require portals to see each other  
+						if (level > 0 && !bPortalsCanSeeEachOther)
+							break;
+
+						// Transform target one more level through the portal pair.  
+						// Each application of pLinkedPortal->MatrixThisToLinked() maps the  
+						// target from the linked portal's side back to the entry portal's  
+						// side, giving the apparent position at this recursion depth.  
+						Vector vNewTransformed;
+						UTIL_Portal_PointTransform(pLinkedPortal->MatrixThisToLinked(), vCurrentTransformedTarget, vNewTransformed);
+						vCurrentTransformedTarget = vNewTransformed;
+
+						// Check if the player is looking toward the apparent target position  
+						Vector vPortalTargetDir = vCurrentTransformedTarget - ptEyePosition;
+						VectorNormalize(vPortalTargetDir);
+
+						float fPortalDotPr = DotProduct(vLookDir, vPortalTargetDir);
+						if (fPortalDotPr > m_flFieldOfView)
+						{
+							bIsLooking = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		if (bIsLooking)
 		{
 			// Is it the first time I'm looking?
 			if (m_flLookTimeTotal == -1)
@@ -1168,7 +1286,7 @@ void CTriggerLook::Touch(CBaseEntity *pOther)
 		}
 		else
 		{
-			m_flLookTimeTotal	= -1;
+			m_flLookTimeTotal = -1;
 		}
 	}
 }

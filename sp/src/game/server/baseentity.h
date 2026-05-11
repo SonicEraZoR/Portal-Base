@@ -951,6 +951,8 @@ public:
 	virtual bool	IsPortalGun() { return false; } //true for weapon_portalgun
 	virtual bool	IsPhyscannon() { return false; } //true for weapon_physcannon
 	virtual bool	IsItem() { return false; } //true for CItem
+	virtual bool	IsPortalTurret() { return false; } //true for npc_portal_turret_floor
+	virtual bool	IsGladosCore() { return false; } //true for prop_glados_core
 	virtual bool	IsPortalNonTeleportable() { return false; } //replaces hardcoded compare by str g_pszPortalNonTeleportable with per class bool
 	virtual bool	IsNetClient( void ) const { return false; }
 	virtual bool	IsTemplate( void ) { return false; }
@@ -1738,6 +1740,8 @@ public:
 #endif
 
 	int								m_fDataObjectTypes;
+
+	CNetworkVar(bool, m_bAllowToFadeInView);
 
 	// So it can get at the physics methods
 	friend class CCollisionEvent;

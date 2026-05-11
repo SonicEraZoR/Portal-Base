@@ -144,8 +144,9 @@ public:
 	virtual bool		FInViewCone( const Vector &vecSpot );
 
 #ifdef PORTAL
-	virtual CProp_Portal*	FInViewConeThroughPortal( CBaseEntity *pEntity );
-	virtual CProp_Portal*	FInViewConeThroughPortal( const Vector &vecSpot );
+	virtual CProp_Portal*	FInViewConeThroughPortal(CBaseEntity *pEntity, bool bRecursive = false);
+	virtual CProp_Portal*	FInViewConeThroughPortal(const Vector &vecSpot);
+	virtual CProp_Portal*	FInViewConeThroughPortalRecursive(const Vector& vecSpot);
 #endif
 
 	virtual bool		FInAimCone( CBaseEntity *pEntity );

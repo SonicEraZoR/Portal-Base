@@ -62,6 +62,7 @@
 #include "env_debughistory.h"
 #include "tier1/utlstring.h"
 #include "utlhashtable.h"
+#include "portal_player.h"
 
 #if defined( TF_DLL )
 #include "tf_gamerules.h"
@@ -1867,6 +1868,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FIELD( m_bSimulatedEveryTick, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bAnimatedEveryTick, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bAlternateSorting, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bAllowToFadeInView, FIELD_BOOLEAN), //mygamepedia: flag in case if we want to remove prop even while in view
 	DEFINE_KEYFIELD( m_spawnflags, FIELD_INTEGER, "spawnflags" ),
 	DEFINE_FIELD( m_nTransmitStateOwnedCounter, FIELD_CHARACTER ),
 	DEFINE_FIELD( m_angAbsRotation, FIELD_VECTOR ),
@@ -7205,9 +7207,14 @@ bool CBaseEntity::SUB_AllowedToFade( void )
 
 	// on Xbox, allow these to fade out
 #ifndef _XBOX
+	//mygamepedia: used by shells as we want to remove them asap due to their amount
+	if (m_bAllowToFadeInView)
+		return true;
+
 	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
 
-	if ( pPlayer && pPlayer->FInViewCone( this ) )
+	//mygamepedia: also check if the player can see me in portals
+	if (pPlayer && (pPlayer->FInViewConeThroughPortal(this, true) || pPlayer->FInViewCone(this)))
 		return false;
 #endif
 

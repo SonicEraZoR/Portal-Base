@@ -48,6 +48,7 @@ public:
 
 	virtual QAngle	PreferredCarryAngles( void ) { return QAngle( 180, -90, 180 ); }
 	virtual bool	HasPreferredCarryAnglesForPlayer( CBasePlayer *pPlayer ) { return true; }
+	virtual bool	IsGladosCore() { return true; }
 
 	void	InputPanic( inputdata_t &inputdata );
 	void	InputStartTalking( inputdata_t &inputdata );

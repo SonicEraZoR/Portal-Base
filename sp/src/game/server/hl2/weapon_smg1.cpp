@@ -221,6 +221,11 @@ void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 {
 	switch( pEvent->event )
 	{
+	case 6001: //mygamepedia: Eject a brass shell from attachment 1
+	{
+		EjectBrassPhysics(0);
+		break;
+	}
 	case EVENT_WEAPON_SMG1:
 		{
 			Vector vecShootOrigin, vecShootDir;

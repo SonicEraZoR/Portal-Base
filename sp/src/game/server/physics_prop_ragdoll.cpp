@@ -20,6 +20,7 @@
 #include "AI_Criteria.h"
 #include "ragdoll_shared.h"
 #include "hierarchy.h"
+#include "death_pose.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -693,7 +694,7 @@ void CRagdollProp::SetOverlaySequence( Activity activity )
 	}
 }
 
-void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const Vector &forcePos, matrix3x4_t *pPrevBones, matrix3x4_t *pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll )
+void CRagdollProp::InitRagdoll(const Vector& forceVector, int forceBone, const Vector& forcePos, matrix3x4_t* pPrevBones, matrix3x4_t* pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll, bool bDeathPose)
 {
 	SetCollisionGroup( collisionGroup );
 
@@ -716,6 +717,7 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	params.forceVector = forceVector;
 	params.forceBoneIndex = forceBone;
 	params.forcePosition = forcePos;
+	params.pCurrentBones = bDeathPose ? pPrevBones : pBoneToWorld;
 	params.pCurrentBones = pBoneToWorld;
 	params.jointFrictionScale = 1.0;
 	params.allowStretch = HasSpawnFlags(SF_RAGDOLLPROP_ALLOW_STRETCH);
@@ -1374,6 +1376,48 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 
 	float fPreviousCycle = clamp(pAnimating->GetCycle()-( dt * ( 1 / fSequenceDuration ) ),0.f,1.f);
 	float fCurCycle = pAnimating->GetCycle();
+
+	int deathpose = ACT_INVALID;
+	int deathframe = 0;
+	if (pAnimating->IsNPC())
+	{
+		CAI_BaseNPC* npc = (CAI_BaseNPC*)pAnimating;
+		if (npc)
+		{
+			deathpose = Activity(npc->GetDeathPose());
+			deathframe = npc->GetDeathPoseFrame();
+		}
+	}
+
+	if (deathpose != ACT_INVALID)
+	{
+		int currentSequence = pAnimating->GetSequence();
+
+		//Force pAnimating to position the deathpose
+		pAnimating->SetSequence(deathpose);
+		pAnimating->SetCycle((float)deathframe / MAX_DEATHPOSE_FRAMES);
+
+		//Store the position
+		pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
+
+		//Restore the current sequence and cycle
+		pAnimating->SetSequence(currentSequence);
+
+		pAnimating->SetCycle(fCurCycle);
+		pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
+	}
+
+	else
+	{
+		// Get current bones positions
+		pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
+		// Get previous bones positions
+		pAnimating->SetCycle(fPreviousCycle);
+		pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
+		// Restore current cycle
+		pAnimating->SetCycle(fCurCycle);
+	}
+
 	// Get current bones positions
 	pAnimating->SetupBones( pBoneToWorldNext, BONE_USED_BY_ANYTHING );
 	// Get previous bones positions
@@ -1455,7 +1499,7 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	}
 	else
 	{
-		pRagdoll->InitRagdoll( info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true );
+		pRagdoll->InitRagdoll(info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true, true, deathpose != ACT_INVALID);
 	}
 
 	// Are we dissolving?

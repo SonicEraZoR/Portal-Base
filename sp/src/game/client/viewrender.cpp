@@ -4328,7 +4328,7 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 	const ClientWorldListInfo_t& info = *m_pWorldListInfo;
 
 #ifdef PORTAL //if we're in the portal mod, we need to make a detour so we can render portal views using stencil areas
-	if( ShouldDrawPortals() ) //no recursive stencil views during skybox rendering (although we might be drawing a skybox while already in a recursive stencil view)
+	if (ShouldDrawPortals() && !(m_DrawFlags & (DF_RENDER_REFLECTION | DF_RENDER_REFRACTION ))) //no recursive stencil views during skybox rendering (although we might be drawing a skybox while already in a recursive stencil view)
 	{
 		int iDrawFlagsBackup = m_DrawFlags;
 
