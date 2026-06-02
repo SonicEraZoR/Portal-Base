@@ -254,8 +254,27 @@ void CPortal_Player::PreThink( void )
 	SetLocalAngles( vOldAngles );
 }
 
+ConVar	sv_portalbase_save_glitch("sv_portalbase_save_glitch", "0",
+	FCVAR_NONE,
+	"When off, fixes the save glitch that causes the player to use portal area collision while outside of that area.");
+
 void CPortal_Player::PostThink( void )
 {
+	//MyGamepedia:
+	//validate portal environment state every tick to fix save glitch.
+	//if the player is no longer inside the portal hole (e.g. after a save/load  
+	//while grazing the portal edge), release ownership so the stuck state clears,
+	//the same way used by Portal 2 game to fix consistency issues
+	if (!sv_portalbase_save_glitch.GetBool() && m_hPortalEnvironment.Get() != NULL)  
+	{  
+		CProp_Portal *pPortal = m_hPortalEnvironment.Get();  
+		if ( !pPortal->m_PortalSimulator.EntityIsInPortalHole( this ) )  
+		{
+			//PortalSimulator_ReleasedOwnershipOfEntity will set m_hPortalEnvironment = NULL  
+			pPortal->m_PortalSimulator.ReleaseOwnershipOfEntity( this );  
+		}  
+	}  
+	
 	BaseClass::PostThink();
 
 	// this needs to be here and not in CHL2_Player because otherwise it won't work on player's shadowclone

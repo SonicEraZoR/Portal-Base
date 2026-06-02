@@ -614,6 +614,10 @@ float CWeaponPortalgun::TraceFirePortal( bool bPortal2, const Vector &vTraceStar
 	return VerifyPortalPlacement( CProp_Portal::FindPortal( m_iPortalLinkageGroupID, bPortal2 ), vFinalPosition, qFinalAngles, iPlacedBy, bTest );
 }
 
+ConVar	sv_portalbase_edge_glitch("sv_portalbase_edge_glitch", "0",
+	FCVAR_NONE,
+	"When off, fixes the edge glitch that causes the player to use virtual portal player camera position for portal shoot, while the player isn't in a portal hole.");
+
 float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool bTest /*= false*/ )
 {
 	bool bPlayer = false;
@@ -659,8 +663,21 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 			float fPortalDist = vPortalForward.Dot( vEyeToPortalCenter );
 			if( fPortalDist > 0.0f )
 			{
-				// Eye is behind the portal
-				matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				if (!sv_portalbase_edge_glitch.GetBool())
+				{
+					if (pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole( pPlayer ))  
+					{  
+						//MyGamepedia: eye is ACTUALLY behind the portal
+						matThisToLinked = pPlayerPortal->MatrixThisToLinked();  
+					}
+					else
+					{
+						pPlayerPortal = NULL;
+					}
+				}
+				else
+					// Eye is behind the portal
+					matThisToLinked = pPlayerPortal->MatrixThisToLinked();
 			}
 			else
 			{

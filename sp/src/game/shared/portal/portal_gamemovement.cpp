@@ -375,7 +375,7 @@ void CPortalGameMovement::AirMove( void )
 		wishspeed = mv->m_flMaxSpeed;
 	}
 
-	if (sv_portalbase_use_hl2_movement.GetBool()) //mygamepedia: orig p1 uses hardcoded val, hl2 uses cvar
+	if (!sv_portalbase_use_hl2_movement.GetBool()) //mygamepedia: orig p1 uses hardcoded val, hl2 uses cvar
 	{
 		AirAccelerate(wishdir, wishspeed, 15.0f);
 	}
