@@ -62,6 +62,17 @@ static void Physics_TraceEntity( CBaseEntity* pBaseEntity, const Vector &vecAbsS
 	}
 	else
 	{
+		if (pBaseEntity->IsSpecialProjectile())
+		{
+			CBaseEntity* pOwner = pBaseEntity->GetOwnerEntity();
+			if (pOwner && pOwner->IsPlayer())
+			{
+				CTraceFilterSkipTwoEntities filter(pBaseEntity, pOwner, COLLISION_GROUP_NONE);
+				UTIL_TraceEntity(pBaseEntity, vecAbsStart, vecAbsEnd, mask, &filter, ptr);
+				return;
+			}
+		}
+
 		UTIL_TraceEntity( pBaseEntity, vecAbsStart, vecAbsEnd, mask, ptr );
 	}
 }

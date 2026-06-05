@@ -131,6 +131,10 @@ void CWeaponPistol::Precache( void )
 	BaseClass::Precache();
 }
 
+ConVar sv_portalbase_hardcoded_ejectbrassphysics_for_pistol("sv_portalbase_hardcoded_ejectbrassphysics_for_pistol", "1", 
+	FCVAR_NONE, 
+	"Hardcodes pistol's shell created by viewmodel, set to 0 to disable.");
+
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
@@ -142,7 +146,8 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 	{
 		case 6001:
 		{
-			EjectBrassPhysics(0); //mygamepedia: Eject a brass shell from attachment 1
+			if (sv_portalbase_hardcoded_ejectbrassphysics_for_pistol.GetBool())
+				EjectBrassPhysics(0); //mygamepedia: Eject a brass shell from attachment 1
 			break;
 		}
 		case EVENT_WEAPON_PISTOL_FIRE:

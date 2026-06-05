@@ -11,9 +11,12 @@
 #include "toolframework_client.h"
 #include "toolframework/itoolframework.h"
 #include "vstdlib/IKeyValuesSystem.h"
+#include "portal/PortalRender.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+static bool s_bNextNPCFlashSuppressInFirstPerson = false; //mygamepedia: HACK! Needed so we don't change signature
 
 
 // Used for debugging to make sure all particle effects get freed when we exit.
@@ -225,6 +228,9 @@ CSimpleEmitter::CSimpleEmitter( const char *pDebugName ) : CParticleEffect( pDeb
 {
 	m_flNearClipMin	= 16.0f;
 	m_flNearClipMax	= 64.0f;
+
+	m_bViewModelOnly = false;
+	m_bSuppressInFirstPerson = false;
 }
 
 
@@ -386,6 +392,12 @@ void CSimpleEmitter::SimulateParticles( CParticleSimulateIterator *pIterator )
 
 void CSimpleEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 {
+	if (m_bViewModelOnly && g_pPortalRender->IsRenderingPortal())
+		return;
+
+	if (m_bSuppressInFirstPerson && !C_BasePlayer::ShouldDrawLocalPlayer() && !g_pPortalRender->IsRenderingPortal())
+		return;
+
 	const SimpleParticle *pParticle = (const SimpleParticle *)pIterator->GetFirst();
 	while ( pParticle )
 	{

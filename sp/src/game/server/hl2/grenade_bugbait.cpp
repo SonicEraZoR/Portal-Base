@@ -17,6 +17,7 @@
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "prop_portal.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -119,6 +120,9 @@ void CGrenadeBugBait::Spawn( void )
 
 	m_pSporeTrail->m_vecEndColor		= Vector( 0, 0, 0 );
 	*/
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 //-----------------------------------------------------------------------------

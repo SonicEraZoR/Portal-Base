@@ -28,6 +28,7 @@ extern ConVar sv_portalbase_item_touch_area;
 	#include "hud_crosshair.h"
 	#include "PortalRender.h"
 	#include "c_te_effect_dispatch.h"
+	#include "eventlist.h"
 
 #else
 
@@ -421,6 +422,28 @@ void CWeaponPortalBase::FireBullets(const FireBulletsInfo_t &info)
 
 
 #define NUM_MUZZLE_FLASH_TYPES 4
+
+//-----------------------------------------------------------------------------
+// Purpose: Create NPC muzzle effect version for the player on wpn's world model.
+// For how it works, read the s_bNextNPCFlashSuppressInFirstPerson comments.
+// If you're going to add custom wpns, I let you know that you don't need to add
+// muzzle flashes for world models manually, as the system causes it automatically,
+// you only need "muzzle" attachment in both vm and wm, and call effects via 
+// "{ event AE_MUZZLEFLASH 0 "MUZZLENAME" }" in your vm.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+bool CWeaponPortalBase::OnFireEvent(C_BaseViewModel* pViewModel, const Vector& origin, const QAngle& angles, int event, const char* options)
+{
+	if (event == AE_MUZZLEFLASH)
+	{
+		extern bool s_bNextNPCFlashSuppressInFirstPerson;
+		s_bNextNPCFlashSuppressInFirstPerson = IsCarriedByLocalPlayer();
+		DispatchMuzzleEffect(options, false);
+		s_bNextNPCFlashSuppressInFirstPerson = false;  
+	}
+
+	return BaseClass::OnFireEvent(pViewModel, origin, angles, event, options);
+}
 
 void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &clip )
 {

@@ -18,6 +18,7 @@
 #include "fx.h"
 #include "c_pixel_visibility.h"
 #include "particles_ez.h"
+#include "portal/PortalRender.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -197,6 +198,9 @@ void CTrailParticles::Setup( const Vector &origin, const Vector *direction, floa
 
 void CTrailParticles::RenderParticles( CParticleRenderIterator *pIterator )
 {
+	if (m_bSuppressInFirstPerson && !C_BasePlayer::ShouldDrawLocalPlayer() && !g_pPortalRender->IsRenderingPortal())
+		return;
+
 	const TrailParticle *pParticle = (const TrailParticle*)pIterator->GetFirst();
 	while ( pParticle )
 	{

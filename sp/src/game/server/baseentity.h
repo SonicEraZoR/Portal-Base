@@ -1386,6 +1386,8 @@ public:
 	virtual bool IsDeflectable() { return false; }
 	virtual void Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir ) {}
 
+	virtual bool IsSpecialProjectile() { return false; } //grenade_ar2, rpg_missile, grenade_bugbait
+
 //	void Relink() {}
 
 public:

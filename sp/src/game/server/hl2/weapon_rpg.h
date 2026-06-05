@@ -58,6 +58,7 @@ public:
 	
 	virtual float	GetDamage() { return m_flDamage; }
 	virtual void	SetDamage(float flDamage) { m_flDamage = flDamage; }
+	virtual bool	IsSpecialProjectile() { return true; } //mygamepedia: helps to resolve the case when it touches the player owner smh
 
 	unsigned int PhysicsSolidMaskForEntity( void ) const;
 

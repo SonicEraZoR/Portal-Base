@@ -30,6 +30,8 @@
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "prop_portal.h"
+	#include "portal_player.h"
 #endif
 
 #ifdef HL2_DLL
@@ -174,6 +176,9 @@ void CMissile::Spawn( void )
 	m_flGracePeriodEndsAt = 0;
 
 	AddFlag( FL_OBJECT );
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 
@@ -1609,6 +1614,8 @@ bool CWeaponRPG::WeaponShouldBeLowered( void )
 	return BaseClass::WeaponShouldBeLowered();
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1627,7 +1634,7 @@ void CWeaponRPG::PrimaryAttack( void )
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CPortal_Player *pOwner = ToPortalPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
@@ -1636,7 +1643,35 @@ void CWeaponRPG::PrimaryAttack( void )
 
 	pOwner->EyeVectors( &vForward, &vRight, &vUp );
 
-	Vector	muzzlePoint = pOwner->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector muzzlePoint = pOwner->Weapon_ShootPosition() + vForward * 12.0f + vRight * 6.0f + vUp * -3.0f;
+	Vector vecEye = pOwner->EyePosition();
+ 
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal
+	CProp_Portal* pPlayerPortal = pOwner->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - muzzlePoint;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pOwner)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, muzzlePoint, muzzlePoint);
+				UTIL_Portal_PointTransform(matThisToLinked, vecEye, vecEye);
+				UTIL_Portal_VectorTransform(matThisToLinked, vForward, vForward);
+				UTIL_Portal_VectorTransform(matThisToLinked, vRight, vRight);
+				UTIL_Portal_VectorTransform(matThisToLinked, vUp, vUp);
+			}
+		}
+	}
 
 	QAngle vecAngles;
 	VectorAngles( vForward, vecAngles );
@@ -1646,7 +1681,6 @@ void CWeaponRPG::PrimaryAttack( void )
 
 	// If the shot is clear to the player, give the missile a grace period
 	trace_t	tr;
-	Vector vecEye = pOwner->EyePosition();
 	UTIL_TraceLine( vecEye, vecEye + vForward * 128, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 	if ( tr.fraction == 1.0 )
 	{

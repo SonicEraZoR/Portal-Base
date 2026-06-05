@@ -38,6 +38,8 @@ public:
 	void		Event_Killed( const CTakeDamageInfo &info );
 	void		UpdateOnRemove();
 
+	virtual bool	IsSpecialProjectile() { return true; } //mygamepedia: helps to resolve the case when it touches the player owner smh
+
 public:
 	void EXPORT				Detonate(void);
 	CGrenadeAR2(void);

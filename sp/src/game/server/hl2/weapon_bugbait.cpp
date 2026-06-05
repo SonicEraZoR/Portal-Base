@@ -13,6 +13,9 @@
 #include "antlion_maker.h"
 #include "grenade_bugbait.h"
 #include "gamestats.h"
+#include "portal_player.h"  
+#include "prop_portal_shared.h"  
+#include "portal_util_shared.h"  
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -275,43 +278,74 @@ void CWeaponBugBait::SecondaryAttack( void )
 	}
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
 //-----------------------------------------------------------------------------
-void CWeaponBugBait::ThrowGrenade( CBasePlayer *pPlayer )
+void CWeaponBugBait::ThrowGrenade( CBasePlayer* pPlayer )
 {
-	Vector	vForward, vRight, vUp, vThrowPos, vThrowVel;
-	
-	pPlayer->EyeVectors( &vForward, &vRight, &vUp );
+	Vector vForward, vRight, vUp, vThrowPos, vThrowVel;
+
+	pPlayer->EyeVectors(&vForward, &vRight, &vUp);
 
 	vThrowPos = pPlayer->EyePosition();
-
 	vThrowPos += vForward * 18.0f;
 	vThrowPos += vRight * 12.0f;
 
-	pPlayer->GetVelocity( &vThrowVel, NULL );
+	pPlayer->GetVelocity(&vThrowVel, NULL);
 	vThrowVel += vForward * 1000;
+
+	// Store eye position for grace period trace (may be transformed below)  
+	Vector vEye = pPlayer->EyePosition();
+ 
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal 
+	CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+	CProp_Portal* pPlayerPortal = pPortalPlayer->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vThrowPos;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPortalPlayer)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vThrowPos, vThrowPos);
+				UTIL_Portal_PointTransform(matThisToLinked, vEye, vEye);
+				UTIL_Portal_VectorTransform(matThisToLinked, vForward, vForward);
+				UTIL_Portal_VectorTransform(matThisToLinked, vThrowVel, vThrowVel);
+			}
+		}
+	}
 
 	pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-	CGrenadeBugBait *pGrenade = BugBaitGrenade_Create( vThrowPos, vec3_angle, vThrowVel, QAngle(600,random->RandomInt(-1200,1200),0), pPlayer );
+	CGrenadeBugBait* pGrenade = BugBaitGrenade_Create(vThrowPos, vec3_angle, vThrowVel, QAngle(600, random->RandomInt(-1200, 1200), 0), pPlayer);
 
-	if ( pGrenade != NULL )
+	if (pGrenade != NULL)
 	{
-		// If the shot is clear to the player, give the missile a grace period
-		trace_t	tr;
-		UTIL_TraceLine( pPlayer->EyePosition(), pPlayer->EyePosition() + ( vForward * 128 ), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-		
-		if ( tr.fraction == 1.0 )
+		trace_t tr;
+		UTIL_TraceLine(vEye, vEye + (vForward * 128), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+		if (tr.fraction == 1.0)
 		{
-			pGrenade->SetGracePeriod( 0.1f );
+			pGrenade->SetGracePeriod(0.1f);
 		}
+
+		pGrenade->SetOwnerEntity(GetOwner());
 	}
 
 	m_bRedraw = true;
 }
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEvent - 

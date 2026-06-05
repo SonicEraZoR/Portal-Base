@@ -86,6 +86,10 @@ public:
 	bool m_bSilentDropAndPickup;
 
 	void SuppressCrosshair( bool bState ) { m_bSuppressingCrosshair = bState; }
+
+	Vector	PortalWeapon_ShootPosition(void);
+	Vector	PortalEyePosition(void);
+	bool	GetPortalShootTransform(VMatrix& matOut);
 	
 private:
 	CSoundPatch		*m_pWooshSound;

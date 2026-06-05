@@ -836,7 +836,7 @@ void CBaseCombatWeapon::EjectBrassPhysics(int iType)
 
 		//get attach orig + ang and vm rotation we get from client
 		//I want to note that it doesn't look accurate if you view self in portals,
-		//but it's not critical, I don't think people will note
+		//but it's not critical, I don't think people will note, the same thing can be seen in Gmod
 		vOrigin = Vector(pCmd->fViewModelAttachOriginX, pCmd->fViewModelAttachOriginY, pCmd->fViewModelAttachOriginZ);
 		vAng = QAngle(pCmd->fViewModelAttachAnglesX, pCmd->fViewModelAttachAnglesY, pCmd->fViewModelAttachAnglesZ);
 		vRot = QAngle(pCmd->fViewModelCalcAnglesX, pCmd->fViewModelCalcAnglesY, pCmd->fViewModelCalcAnglesZ);
@@ -855,12 +855,10 @@ void CBaseCombatWeapon::EjectBrassPhysics(int iType)
 	{
 		pModel = AllocPooledString("models/weapons/rifleshell.mdl");
 	}
-
 	else if (iType == 2)
 	{
 		pModel = AllocPooledString("models/weapons/shotgun_shell.mdl");
 	}
-
 	else
 	{
 		pModel = AllocPooledString("models/weapons/shell.mdl");
@@ -880,7 +878,7 @@ void CBaseCombatWeapon::EjectBrassPhysics(int iType)
 	pShell->Activate();
 	pShell->SetMoveType(MOVETYPE_VPHYSICS);
 	pShell->SetCollisionGroup(COLLISION_GROUP_WEAPON); //npcs should not collide with shells
-	pShell->m_bAllowToFadeInView = true; //let it die asap, or we risk with teleporting ents reach
+	pShell->m_bAllowToFadeInView = true; //let it die asap, or we risk with teleporting ents limit reach
 
 	Vector	dir;
 
@@ -901,6 +899,9 @@ void CBaseCombatWeapon::EjectBrassPhysics(int iType)
 		vAng.y = vAng.y + 90;
 		pShell->Teleport(NULL, &vAng, NULL);
 	}
+
+	//fix object not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(pShell);
 
 	pShell->SetNextThink(gpGlobals->curtime + 2.0f + RandomFloat(0.0f, 1.0f)); // Add an extra 0-1 secs of life	
 	pShell->SetThink(&CBaseEntity::SUB_FadeOut);

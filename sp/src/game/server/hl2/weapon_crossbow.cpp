@@ -29,6 +29,8 @@
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "portal_player.h" 
+	#include "prop_portal_shared.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -200,6 +202,9 @@ void CCrossbowBolt::Spawn( void )
 
 	// Make us glow until we've hit the wall
 	m_nSkin = BOLT_SKIN_GLOW;
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 
@@ -706,6 +711,8 @@ void CWeaponCrossbow::ItemPostFrame( void )
 	BaseClass::ItemPostFrame();
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -726,15 +733,39 @@ void CWeaponCrossbow::FireBolt( void )
 		return;
 	}
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CPortal_Player *pOwner = ToPortalPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
 
 	pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
 
-	Vector vecAiming	= pOwner->GetAutoaimVector( 0 );
+	Vector vecAiming	= static_cast<CBasePlayer*>(pOwner)->GetAutoaimVector( 0 ); //mygamepedia: cast base player or it won't compile
 	Vector vecSrc		= pOwner->Weapon_ShootPosition();
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal
+	CProp_Portal* pPlayerPortal = pOwner->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pOwner)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecAiming, vecAiming);
+			}
+		}
+	}
 
 	QAngle angAiming;
 	VectorAngles( vecAiming, angAiming );

@@ -254,26 +254,54 @@ void CPortal_Player::PreThink( void )
 	SetLocalAngles( vOldAngles );
 }
 
-ConVar	sv_portalbase_save_glitch("sv_portalbase_save_glitch", "0",
-	FCVAR_NONE,
-	"When off, fixes the save glitch that causes the player to use portal area collision while outside of that area.");
+//ConVar	sv_portalbase_save_glitch("sv_portalbase_save_glitch", "0",
+//	FCVAR_NONE,
+//	"When off, fixes the save glitch that causes the player to use portal area collision while outside of that area.");
 
-void CPortal_Player::PostThink( void )
+void CPortal_Player::PostThink(void)
 {
 	//MyGamepedia:
 	//validate portal environment state every tick to fix save glitch.
 	//if the player is no longer inside the portal hole (e.g. after a save/load  
 	//while grazing the portal edge), release ownership so the stuck state clears,
-	//the same way used by Portal 2 game to fix consistency issues
-	if (!sv_portalbase_save_glitch.GetBool() && m_hPortalEnvironment.Get() != NULL)  
-	{  
-		CProp_Portal *pPortal = m_hPortalEnvironment.Get();  
-		if ( !pPortal->m_PortalSimulator.EntityIsInPortalHole( this ) )  
+	//the same way used by Valve for Portal 2 game to fix consistency issues
+	/*
+	if (!sv_portalbase_save_glitch.GetBool() && m_hPortalEnvironment.Get() != NULL)
+	{
+		CProp_Portal* pPortal = m_hPortalEnvironment.Get();
+		bool bShouldRelease = false;
+
+		if (pPortal->m_PortalSimulator.OwnsEntity(this))
 		{
-			//PortalSimulator_ReleasedOwnershipOfEntity will set m_hPortalEnvironment = NULL  
-			pPortal->m_PortalSimulator.ReleaseOwnershipOfEntity( this );  
-		}  
-	}  
+			// Only check for save glitch when the player's center is behind the portal plane.  
+			// If in front, ownership is correct (player is approaching the portal).  
+			const VPlane& portalPlane = pPortal->m_PortalSimulator.m_DataAccess.Placement.PortalPlane;
+			float fDistFromPlane = portalPlane.m_Normal.Dot(WorldSpaceCenter()) - portalPlane.m_Dist;
+
+			if (fDistFromPlane < 0.0f)
+			{
+				// Player's center is behind the portal plane.  
+				// UTIL_Portal_EntityIsInPortalHole checks OBB vs portal quad (not the 500-unit  
+				// deep hole volume), so it returns false when the player is fully behind the plane.  
+				if (!UTIL_Portal_EntityIsInPortalHole(pPortal, this))
+					bShouldRelease = true;
+			}
+		}
+		else
+		{
+			// Simulator doesn't own us but m_hPortalEnvironment is set — desync after save/load.  
+			bShouldRelease = true;
+		}
+
+		if (bShouldRelease)
+		{
+			if (pPortal->m_PortalSimulator.OwnsEntity(this))
+				pPortal->m_PortalSimulator.ReleaseOwnershipOfEntity(this);
+			m_hPortalEnvironment = NULL; // Always clear directly; don't rely on the callback.  
+		}
+	}
+	*/
+
 	
 	BaseClass::PostThink();
 
@@ -330,6 +358,63 @@ void CPortal_Player::PostThink( void )
 		Teleport( &vNewPos, NULL, &vForward );
 		m_bStuckOnPortalCollisionObject = false;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Vector CPortal_Player::PortalWeapon_ShootPosition(void)
+{
+	return PortalEyePosition();
+}
+
+extern ConVar sv_portalbase_edge_glitch;
+
+//-----------------------------------------------------------------------------
+// Purpose: The same as EyePosition(), but transforms the position to the linked portal's space if the player is looking through a portal.
+//-----------------------------------------------------------------------------
+Vector CPortal_Player::PortalEyePosition(void)
+{
+	Vector vEyePos = EyePosition();
+
+	CProp_Portal* pPlayerPortal = m_hPortalEnvironment.Get();
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		float fPortalDist = vPortalForward.Dot(ptPortalCenter - vEyePos);
+		if (fPortalDist > 0.0f && UTIL_Portal_EntityIsInPortalHole(pPlayerPortal, this))
+		{
+			VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+			UTIL_Portal_PointTransform(matThisToLinked, vEyePos, vEyePos);
+		}
+	}
+
+	return vEyePos;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CPortal_Player::GetPortalShootTransform(VMatrix& matOut)
+{
+	CProp_Portal* pPlayerPortal = m_hPortalEnvironment.Get();
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		float fPortalDist = vPortalForward.Dot(ptPortalCenter - EyePosition());
+		if (fPortalDist > 0.0f && UTIL_Portal_EntityIsInPortalHole(pPlayerPortal, this))
+		{
+			matOut = pPlayerPortal->MatrixThisToLinked();
+			return true;
+		}
+	}
+	return false;
 }
 
 void CPortal_Player::UpdatePortalPlaneSounds( void )

@@ -11,6 +11,9 @@
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
+#include "portal/PortalSimulation.h"  
+#include "prop_portal.h"
+#include "prop_portal_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -134,6 +137,9 @@ void CGrenadeFrag::Spawn( void )
 	m_combineSpawned	= false;
 	m_punted			= false;
 
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
+	
 	BaseClass::Spawn();
 }
 

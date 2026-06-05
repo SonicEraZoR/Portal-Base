@@ -55,6 +55,7 @@ CLIENTEFFECT_REGISTER_END()
 ConVar muzzleflash_light( "muzzleflash_light", "1", FCVAR_ARCHIVE );
 
 extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType );
+extern bool s_bNextNPCFlashSuppressInFirstPerson;
 
 
 //===================================================================
@@ -314,6 +315,9 @@ void FX_MuzzleEffectAttached(
 	Assert( pSimple );
 	if ( pSimple == NULL )
 		return;
+
+	if (s_bNextNPCFlashSuppressInFirstPerson)
+		pSimple->SetSuppressInFirstPerson(true);
 	
 	// Lock our bounding box
 	pSimple->GetBinding().SetBBox( -( Vector( 16, 16, 16 ) * scale ), ( Vector( 16, 16, 16 ) * scale ) );

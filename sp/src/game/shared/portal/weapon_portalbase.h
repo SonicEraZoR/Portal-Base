@@ -104,6 +104,8 @@ public:
 
 		virtual int		CalcOverrideModelIndex();
 
+		virtual bool	OnFireEvent(C_BaseViewModel* pViewModel, const Vector& origin, const QAngle& angles, int event, const char* options);
+
 	#else
 
 		virtual void	Spawn();

@@ -618,66 +618,55 @@ ConVar	sv_portalbase_edge_glitch("sv_portalbase_edge_glitch", "0",
 	FCVAR_NONE,
 	"When off, fixes the edge glitch that causes the player to use virtual portal player camera position for portal shoot, while the player isn't in a portal hole.");
 
-float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool bTest /*= false*/ )
+float CWeaponPortalgun::FirePortal(bool bPortal2, Vector* pVector /*= 0*/, bool bTest /*= false*/)
 {
 	bool bPlayer = false;
 	Vector vEye;
 	Vector vDirection;
 	Vector vTracerOrigin;
 
-	CBaseEntity *pOwner = GetOwner();
+	CBaseEntity* pOwner = GetOwner();
 
-	if ( pOwner && pOwner->IsPlayer() )
+	if (pOwner && pOwner->IsPlayer())
 	{
 		bPlayer = true;
 	}
 
-	if( bPlayer )
+	if (bPlayer)
 	{
-		CPortal_Player *pPlayer = (CPortal_Player *)pOwner;
+		CPortal_Player* pPlayer = (CPortal_Player*)pOwner;
 
-		if ( !bTest && pPlayer )
+		if (!bTest && pPlayer)
 		{
 			pPlayer->SetAnimation(PLAYER_ATTACK1);
 		}
 
 		Vector forward, right, up;
-		AngleVectors( pPlayer->EyeAngles(), &forward, &right, &up );
-		pPlayer->EyeVectors( &vDirection, NULL, NULL );
+		AngleVectors(pPlayer->EyeAngles(), &forward, &right, &up);
+		pPlayer->EyeVectors(&vDirection, NULL, NULL);
 		vEye = pPlayer->EyePosition();
 
 		// Check if the players eye is behind the portal they're in and translate it
 		VMatrix matThisToLinked;
-		CProp_Portal *pPlayerPortal = pPlayer->m_hPortalEnvironment;
+		CProp_Portal* pPlayerPortal = pPlayer->m_hPortalEnvironment;
 
-		if ( pPlayerPortal )
+		if (pPlayerPortal)
 		{
 			Vector ptPortalCenter;
 			Vector vPortalForward;
 
 			ptPortalCenter = pPlayerPortal->GetAbsOrigin();
-			pPlayerPortal->GetVectors( &vPortalForward, NULL, NULL );
+			pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
 
 			Vector vEyeToPortalCenter = ptPortalCenter - vEye;
 
-			float fPortalDist = vPortalForward.Dot( vEyeToPortalCenter );
-			if( fPortalDist > 0.0f )
+			float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPlayer)))
 			{
-				if (!sv_portalbase_edge_glitch.GetBool())
-				{
-					if (pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole( pPlayer ))  
-					{  
-						//MyGamepedia: eye is ACTUALLY behind the portal
-						matThisToLinked = pPlayerPortal->MatrixThisToLinked();  
-					}
-					else
-					{
-						pPlayerPortal = NULL;
-					}
-				}
-				else
-					// Eye is behind the portal
-					matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				// Eye is behind the portal
+				matThisToLinked = pPlayerPortal->MatrixThisToLinked();
 			}
 			else
 			{
@@ -685,17 +674,17 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 			}
 		}
 
-		if ( pPlayerPortal )
+		if (pPlayerPortal)
 		{
-			UTIL_Portal_VectorTransform( matThisToLinked, forward, forward );
-			UTIL_Portal_VectorTransform( matThisToLinked, right, right );
-			UTIL_Portal_VectorTransform( matThisToLinked, up, up );
-			UTIL_Portal_VectorTransform( matThisToLinked, vDirection, vDirection );
-			UTIL_Portal_PointTransform( matThisToLinked, vEye, vEye );
+			UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+			UTIL_Portal_VectorTransform(matThisToLinked, right, right);
+			UTIL_Portal_VectorTransform(matThisToLinked, up, up);
+			UTIL_Portal_VectorTransform(matThisToLinked, vDirection, vDirection);
+			UTIL_Portal_PointTransform(matThisToLinked, vEye, vEye);
 
-			if ( pVector )
+			if (pVector)
 			{
-				UTIL_Portal_VectorTransform( matThisToLinked, *pVector, *pVector );
+				UTIL_Portal_VectorTransform(matThisToLinked, *pVector, *pVector);
 			}
 		}
 
@@ -709,18 +698,18 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 		// This portalgun is not held by the player-- Fire using the muzzle attachment
 		Vector vecShootOrigin;
 		QAngle angShootDir;
-		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
+		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
 		vEye = vecShootOrigin;
 		vTracerOrigin = vecShootOrigin;
-		AngleVectors( angShootDir, &vDirection, NULL, NULL );
+		AngleVectors(angShootDir, &vDirection, NULL, NULL);
 	}
 
-	if ( !bTest )
+	if (!bTest)
 	{
-		SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 	}
 
-	if ( pVector )
+	if (pVector)
 	{
 		vDirection = *pVector;
 	}
@@ -730,31 +719,31 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 	Vector vFinalPosition;
 	QAngle qFinalAngles;
 
-	PortalPlacedByType ePlacedBy = ( bPlayer ) ? ( PORTAL_PLACED_BY_PLAYER ) : ( PORTAL_PLACED_BY_PEDESTAL );
+	PortalPlacedByType ePlacedBy = (bPlayer) ? (PORTAL_PLACED_BY_PLAYER) : (PORTAL_PLACED_BY_PEDESTAL);
 
 	trace_t tr;
-	float fPlacementSuccess = TraceFirePortal( bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, ePlacedBy, bTest );
+	float fPlacementSuccess = TraceFirePortal(bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, ePlacedBy, bTest);
 
-	if ( sv_portal_placement_never_fail.GetBool() )
+	if (sv_portal_placement_never_fail.GetBool())
 	{
 		fPlacementSuccess = 1.0f;
 	}
 
-	if ( !bTest )
+	if (!bTest)
 	{
-		CProp_Portal *pPortal = CProp_Portal::FindPortal( m_iPortalLinkageGroupID, bPortal2, true );
+		CProp_Portal* pPortal = CProp_Portal::FindPortal(m_iPortalLinkageGroupID, bPortal2, true);
 
 		// If it was a failure, put the effect at exactly where the player shot instead of where the portal bumped to
-		if ( fPlacementSuccess < 0.5f )
+		if (fPlacementSuccess < 0.5f)
 			vFinalPosition = tr.endpos;
 
-		pPortal->PlacePortal( vFinalPosition, qFinalAngles, fPlacementSuccess, true );
+		pPortal->PlacePortal(vFinalPosition, qFinalAngles, fPlacementSuccess, true);
 
 		float fDelay;
 
-		ConVar *beta_quickinfo = cvar->FindVar("beta_quickinfo");
+		ConVar* beta_quickinfo = cvar->FindVar("beta_quickinfo");
 
-//		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
+		//		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
 		if (beta_quickinfo_show_portal_delay.GetBool() && beta_quickinfo->GetBool())
 		{
 			fDelay = m_fPortalPlacementDelay;
@@ -763,12 +752,12 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 		{
 			fDelay = clamp(vTracerOrigin.DistTo(tr.endpos) / ((bPlayer) ? (BLAST_SPEED) : (BLAST_SPEED_NON_PLAYER)), 0.0f, sv_portal_projectile_delay.GetFloat());
 		}
-		
-		QAngle qFireAngles;
-		VectorAngles( vDirection, qFireAngles );
-		DoEffectBlast( pPortal->m_bIsPortal2, ePlacedBy, vTracerOrigin, vFinalPosition, qFireAngles, fDelay );
 
-		pPortal->SetContextThink( &CProp_Portal::DelayedPlacementThink, gpGlobals->curtime + fDelay, s_pDelayedPlacementContext ); 
+		QAngle qFireAngles;
+		VectorAngles(vDirection, qFireAngles);
+		DoEffectBlast(pPortal->m_bIsPortal2, ePlacedBy, vTracerOrigin, vFinalPosition, qFireAngles, fDelay);
+
+		pPortal->SetContextThink(&CProp_Portal::DelayedPlacementThink, gpGlobals->curtime + fDelay, s_pDelayedPlacementContext);
 		pPortal->m_vDelayedPosition = vFinalPosition;
 		pPortal->m_hPlacedBy = this;
 	}
