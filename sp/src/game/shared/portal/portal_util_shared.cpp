@@ -1433,11 +1433,29 @@ float UTIL_Portal_DistanceThroughPortalSqr( const CProp_Portal *pPortal, const V
 	return vPoint1.DistToSqr( pPortal->GetAbsOrigin() ) + pPortalLinked->GetAbsOrigin().DistToSqr( vPoint2 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: The same as UTIL_Portal_ShortestDistanceSqr(), but returns the actual distance (not squared).
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 float UTIL_Portal_ShortestDistance( const Vector &vPoint1, const Vector &vPoint2, CProp_Portal **pShortestDistPortal_Out /*= NULL*/, bool bRequireStraightLine /*= false*/ )
 {
 	return FastSqrt( UTIL_Portal_ShortestDistanceSqr( vPoint1, vPoint2, pShortestDistPortal_Out, bRequireStraightLine ) );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Finds the shortest squared distance between two world-space points, 
+//			accounting for portal shortcuts. It iterates every active, linked portal pair 
+//			and checks whether traveling through a portal produces a shorter path than 
+//			going directly. If a portal shortcut is shorter, it returns that shorter 
+//			distance and (optionally) which portal to enter.
+// Input :	&vPoint1 - Start point.
+//			&vPoint2 - End point.
+//			**pShortestDistPortal_Out - Optional. If non-NULL, receives a pointer to the portal that provides the shortest path.
+//			bRequireStraightLine - If true, only counts portal paths where the line goes straight through the portal quad without wrapping around its edge. Defaults to false.
+// Output:	A float value, the squared distance of the shortest 
+//			path (direct or through a portal). Returns direct squared distance if no portal shortcut is shorter.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 float UTIL_Portal_ShortestDistanceSqr( const Vector &vPoint1, const Vector &vPoint2, CProp_Portal **pShortestDistPortal_Out /*= NULL*/, bool bRequireStraightLine /*= false*/ )
 {
 	float fMinDist = vPoint1.DistToSqr( vPoint2 );	
@@ -1563,6 +1581,10 @@ float UTIL_Portal_ShortestDistanceSqr( const Vector &vPoint1, const Vector &vPoi
 			}
 		}
 	}
+
+	//mygamepedia: fixes the bug when the closest portal stays null
+	if (pShortestDistPortal_Out)
+		*pShortestDistPortal_Out = pShortestDistPortal;
 
 	return fMinDist;
 }

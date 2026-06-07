@@ -26,6 +26,7 @@
 #include "decals.h"
 #include "func_break.h"
 #include "prop_portal.h"
+#include "weapon_portalbasecombatweapon.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
@@ -501,9 +502,9 @@ void CCrossbowBolt::InputEnableMotion(inputdata_t& inputdata)
 // CWeaponCrossbow
 //-----------------------------------------------------------------------------
 
-class CWeaponCrossbow : public CBaseHLCombatWeapon
+class CWeaponCrossbow : public CBasePortalCombatWeapon
 {
-	DECLARE_CLASS( CWeaponCrossbow, CBaseHLCombatWeapon );
+	DECLARE_CLASS( CWeaponCrossbow, CBasePortalCombatWeapon);
 public:
 
 	CWeaponCrossbow( void );
@@ -546,15 +547,20 @@ private:
 		CHARGER_STATE_OFF,
 	};
 
-	void	CreateChargerEffects( void );
+	//void	CreateChargerEffects( void );
 	void	SetChargerState( ChargerState_t state );
 	void	DoLoadEffect( void );
 
 private:
 	
 	// Charger effects
-	ChargerState_t		m_nChargeState;
-	CHandle<CSprite>	m_hChargerSprite;
+	//CHandle<CSprite>	m_hChargerSprite;
+
+	//mygamepedia: networked vars we use on client for sprites states,
+	//we are not a multiplayer game, otherwise we would need to use prediction instead
+	CNetworkVar(int, m_nChargeState);
+	CNetworkVar(int, m_nBlastCountVM);
+	CNetworkVar(int, m_nBlastCountWR);
 
 	bool				m_bInZoom;
 	bool				m_bMustReload;
@@ -579,6 +585,9 @@ LINK_ENTITY_TO_CLASS( weapon_crossbow, CWeaponCrossbow );
 PRECACHE_WEAPON_REGISTER( weapon_crossbow );
 
 IMPLEMENT_SERVERCLASS_ST( CWeaponCrossbow, DT_WeaponCrossbow )
+	SendPropInt(SENDINFO(m_nChargeState)),
+	SendPropInt(SENDINFO(m_nBlastCountVM)),
+	SendPropInt(SENDINFO(m_nBlastCountWR)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CWeaponCrossbow )
@@ -586,7 +595,10 @@ BEGIN_DATADESC( CWeaponCrossbow )
 	DEFINE_FIELD( m_bInZoom,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bMustReload,	FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_nChargeState,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_hChargerSprite,	FIELD_EHANDLE ),
+	//DEFINE_FIELD( m_hChargerSprite,	FIELD_EHANDLE ), //mygamepedia: for main and portal view, we use client sprite (see the code)
+
+	DEFINE_FIELD(m_nBlastCountVM, FIELD_INTEGER),
+	DEFINE_FIELD(m_nBlastCountWR, FIELD_INTEGER),
 
 END_DATADESC()
 
@@ -879,6 +891,7 @@ void CWeaponCrossbow::ToggleZoom( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+/*
 void CWeaponCrossbow::CreateChargerEffects( void )
 {
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
@@ -897,6 +910,7 @@ void CWeaponCrossbow::CreateChargerEffects( void )
 		m_hChargerSprite->TurnOff();
 	}
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -939,8 +953,13 @@ void CWeaponCrossbow::DoLoadEffect( void )
 	data.m_nEntIndex = pViewModel->entindex();
 	data.m_nAttachmentIndex = 1;
 
-	DispatchEffect( "CrossbowLoad", data );
+	//DispatchEffect( "CrossbowLoad", data );
 
+	//tell the client to draw the sprite
+	m_nBlastCountVM++;
+	m_nBlastCountWR++;
+
+	/*
 	CSprite *pBlast = CSprite::SpriteCreate( CROSSBOW_GLOW_SPRITE2, GetAbsOrigin(), false );
 
 	if ( pBlast )
@@ -951,6 +970,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		pBlast->SetScale( 0.2f );
 		pBlast->FadeOutFromSpawn();
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -960,7 +980,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 {
 	// Make sure we're setup
-	CreateChargerEffects();
+	//CreateChargerEffects();
 
 	// Don't do this twice
 	if ( state == m_nChargeState )
@@ -981,12 +1001,13 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 
 	case CHARGER_STATE_START_CHARGE:
 		{
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 32, 0.5f );
 			m_hChargerSprite->SetScale( 0.025f, 0.5f );
 			m_hChargerSprite->TurnOn();
+			*/
 		}
 
 		break;
@@ -994,12 +1015,13 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 	case CHARGER_STATE_READY:
 		{
 			// Get fully charged
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 80, 1.0f );
 			m_hChargerSprite->SetScale( 0.1f, 0.5f );
 			m_hChargerSprite->TurnOn();
+			*/
 		}
 
 		break;
@@ -1008,11 +1030,11 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 		{
 			SetSkin( BOLT_SKIN_NORMAL );
 			
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
+			m_hChargerSprite->TurnOff();*/
 		}
 
 		break;
@@ -1021,11 +1043,11 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 		{
 			SetSkin( BOLT_SKIN_NORMAL );
 
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
+			m_hChargerSprite->TurnOff();*/
 		}
 		break;
 

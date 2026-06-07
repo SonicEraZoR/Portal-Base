@@ -288,6 +288,14 @@ bool CGrenadeBugBait::ActivateBugbaitTargets( CBaseEntity *pOwner, Vector vecOri
 //-----------------------------------------------------------------------------
 void CGrenadeBugBait::ThinkBecomeSolid( void )
 {
+	//mygamepedia: before we are solid, clean portal that owns us
+	//solves bug caused by early simulator
+	//LET ME KNOW IF IT'S STILL IN THE GAME!
+	CProp_Portal* pPortal = UTIL_IntersectEntityExtentsWithPortalOBB(this);
+	CPortalSimulator* pSimulator = CPortalSimulator::GetSimulatorThatOwnsEntity(this);
+	if (pPortal == NULL && pSimulator != NULL)
+		pSimulator->ReleaseOwnershipOfEntity(this);
+
 	SetThink( NULL );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 }

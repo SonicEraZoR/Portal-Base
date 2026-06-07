@@ -71,6 +71,7 @@ CSimpleGlowEmitter::CSimpleGlowEmitter( const char *pDebugName, const Vector &so
 	m_queryHandle = 0;
 	m_wasTested = 0;
 	m_isVisible = 0;
+	m_bSuppressInFirstPerson = false;
 	m_startTime = gpGlobals->curtime;
 	m_flDeathTime = flDeathTime;
 }
@@ -166,6 +167,7 @@ CTrailParticles::CTrailParticles( const char *pDebugName ) : CSimpleEmitter( pDe
 {
 	m_fFlags			= 0;
 	m_flVelocityDampen	= 0.0f;
+	m_bSuppressInFirstPerson = false;
 }
 
 //-----------------------------------------------------------------------------

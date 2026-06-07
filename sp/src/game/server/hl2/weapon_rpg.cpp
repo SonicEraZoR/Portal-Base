@@ -476,6 +476,14 @@ void CMissile::IgniteThink( void )
 	AngleVectors( GetLocalAngles(), &vecForward );
 	SetAbsVelocity( vecForward * RPG_SPEED );
 
+	//mygamepedia: before we are solid, clean portal that owns us
+	//solves bug caused by early simulator
+	//LET ME KNOW IF IT'S STILL IN THE GAME!
+	CProp_Portal* pPortal = UTIL_IntersectEntityExtentsWithPortalOBB(this);
+	CPortalSimulator* pSimulator = CPortalSimulator::GetSimulatorThatOwnsEntity(this);
+	if (pPortal == NULL && pSimulator != NULL)
+		pSimulator->ReleaseOwnershipOfEntity(this);
+
 	SetThink( &CMissile::SeekThink );
 	SetNextThink( gpGlobals->curtime );
 
@@ -512,182 +520,472 @@ void CMissile::GetShootPosition( CLaserDot *pLaserDot, Vector *pShootPosition )
 	}
 }
 
-	
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 #define	RPG_HOMING_SPEED	0.125f
 
-void CMissile::ComputeActualDotPosition( CLaserDot *pLaserDot, Vector *pActualDotPosition, float *pHomingSpeed )
+ConVar sv_portalbase_rpg_missile_portal_logic("sv_portalbase_rpg_missile_portal_logic", "1",
+	FCVAR_NONE, "If this is off, RPG missile will ignore the portals and will not pick the shortest path.");
+
+ConVar sv_portalbase_debug_rpg_missile_portal_logic("sv_portalbase_debug_rpg_missile_portal_logic", "0",
+	FCVAR_NONE, "Tracks most of the math and displays debug boxes and lines.");
+	
+//-----------------------------------------------------------------------------
+// Purpose: Computes actual dot position. In Portal Base, we also include portals and search for the shortest path.
+// Input:	*pLaserDot - laser dot we target.
+//			*pActualDotPosition - vector value we store result in.
+//			*pHomingSpeed - value that gets RPG_HOMING_SPEED.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void CMissile::ComputeActualDotPosition( CLaserDot *pLaserDot, Vector *pActualDotPosition, float *pHomingSpeed )  
 {
-	*pHomingSpeed = RPG_HOMING_SPEED;
-	if ( pLaserDot->GetTargetEntity() )
+	/*
+	mygamepedia:
+	So, how all portal logic works ? The main idea is to use virtual
+	pos of laser dot, instead of real, if the portal path will be
+	shorter than direct path, but if direct path is short, just use
+	real laser dot pos. It's very straight forward for
+	pLaserDot->GetTargetEntity() branch, but it isn't when we follow
+	the laser dot pos, as rpg_missile flies to laser dot pos + 256 units.
+	Also, once the missile flies past and gets >512 units from the dot AND
+	is farther from the shooter than the laser is long - the condition is false, 
+	and it switches to directly chasing the dot position. It's lots of math,
+	that I don't understand, so DeepWiki (Devin (AI)) did most of the code for me,
+	almost every step is explained by it, so if you understand the math - feel free!
+	The code was tested a lot with 2 linked open portals, and it works pretty well.
+	If something breaks - you have the numbers every think and visuals.
+	Short break down on what it does:
+	1. Takes the laser dot's real position.
+	2. Checks if the path through the portal is shorter.
+	3. If the portal is shorter:
+	Replaces the laser dot's real position with a virtual position,
+	as if the dot were behind the entrance portal.
+	4. Checks if the player's laser itself passes through the portal.
+	5. If it does:
+	Transforms the laser start position
+	so that laserStart and laserDot are in the same space.
+	6. Calculates the laser's direction.
+	7. Finds the closest point on the laser beam to the missile.
+	8. If the missile is still moving normally along the beam:
+	Aims 256 units ahead along the beam.
+	9. If the missile has already passed the dot / is too close / 256 units don't fit:
+	Aims directly at the dot.
+	*/
+
+	*pHomingSpeed = RPG_HOMING_SPEED; 
+
+	//the laser dot is locked onto a specific entity (e.g. a Strider). 
+	//Chase its world-space position directly.  
+	if (pLaserDot->GetTargetEntity())
 	{
-		*pActualDotPosition = pLaserDot->GetChasePosition();
+		Vector vChasePos = pLaserDot->GetChasePosition();
+
+		// Portal-aware redirect: if flying through a portal gives a shorter  
+		// path to the chase position, steer toward the virtual (transformed)  
+		// position on the missile's side of the portal entrance instead.  
+		if (sv_portalbase_rpg_missile_portal_logic.GetBool())
+		{
+			Vector vMissilePos = GetAbsOrigin();
+
+			CProp_Portal* pBestPortal = NULL;
+			CProp_Portal* pLinkedPortal = NULL;
+			float flDirectDist = vMissilePos.DistTo(vChasePos);
+			// bRequireStraightLine=true: only consider portals the path  
+			// actually passes through, not nearby portals.  
+			float flPortalDist = UTIL_Portal_ShortestDistance(vMissilePos, vChasePos, &pBestPortal, true);
+
+			bool   bUsingPortal = false;
+			Vector vVirtualChasePos = vChasePos;
+
+			if (pBestPortal && flPortalDist < flDirectDist)
+			{
+				pLinkedPortal = pBestPortal->m_hLinkedPortal.Get();
+				if (pLinkedPortal)
+				{
+					// Transform the chase position from the exit portal's space  
+					// into the entry portal's space so the missile steers toward  
+					// the portal entrance rather than flying past it.  
+					UTIL_Portal_PointTransform(pLinkedPortal->MatrixThisToLinked(), vChasePos, vVirtualChasePos);
+					vChasePos = vVirtualChasePos;
+					bUsingPortal = true;
+				}
+			}
+
+			if (sv_portalbase_debug_rpg_missile_portal_logic.GetBool())
+			{
+				Msg("[RPG] TargetEntity branch | portal=%d | chasePos=(%.1f,%.1f,%.1f) virtualChasePos=(%.1f,%.1f,%.1f)\n",
+					bUsingPortal,
+					pLaserDot->GetChasePosition().x, pLaserDot->GetChasePosition().y, pLaserDot->GetChasePosition().z,
+					vVirtualChasePos.x, vVirtualChasePos.y, vVirtualChasePos.z);
+				Msg("[RPG]   missile=(%.1f,%.1f,%.1f) flDirectDist=%.1f flPortalDist=%.1f\n",
+					vMissilePos.x, vMissilePos.y, vMissilePos.z,
+					flDirectDist, flPortalDist);
+
+				// Yellow box: real chase position  
+				NDebugOverlay::Box(pLaserDot->GetChasePosition(), Vector(-8, -8, -8), Vector(8, 8, 8),
+					255, 255, 0, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+
+				if (bUsingPortal)
+				{
+					// Cyan box: virtual (portal-transformed) chase position  
+					NDebugOverlay::Box(vVirtualChasePos, Vector(-8, -8, -8), Vector(8, 8, 8),
+						0, 255, 255, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+
+					// White line: missile -> entry portal center  
+					NDebugOverlay::Line(vMissilePos, pBestPortal->GetAbsOrigin(),
+						255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+
+					// White line: exit portal center -> real chase position  
+					NDebugOverlay::Line(pLinkedPortal->GetAbsOrigin(), pLaserDot->GetChasePosition(),
+						255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+
+					// Red line: missile -> real chase pos (NOT the path being used)  
+					NDebugOverlay::Line(vMissilePos, pLaserDot->GetChasePosition(),
+						255, 0, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+
+					// Green line: missile -> virtual chase pos (the path being used)  
+					NDebugOverlay::Line(vMissilePos, vVirtualChasePos,
+						0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+				}
+				else
+				{
+					// Green line: missile -> real chase pos (direct path, the one being used)  
+					NDebugOverlay::Line(vMissilePos, pLaserDot->GetChasePosition(),
+						0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+				}
+			}
+		}
+
+		*pActualDotPosition = vChasePos;
 		return;
 	}
-
-	Vector vLaserStart;
-	GetShootPosition( pLaserDot, &vLaserStart );
-
-	//Get the laser's vector
-	Vector vLaserDir;
-	VectorSubtract( pLaserDot->GetChasePosition(), vLaserStart, vLaserDir );
-	
-	//Find the length of the current laser
-	float flLaserLength = VectorNormalize( vLaserDir );
-	
-	//Find the length from the missile to the laser's owner
-	float flMissileLength = GetAbsOrigin().DistTo( vLaserStart );
-
-	//Find the length from the missile to the laser's position
-	Vector vecTargetToMissile;
-	VectorSubtract( GetAbsOrigin(), pLaserDot->GetChasePosition(), vecTargetToMissile ); 
-	float flTargetLength = VectorNormalize( vecTargetToMissile );
-
-	// See if we should chase the line segment nearest us
-	if ( ( flMissileLength < flLaserLength ) || ( flTargetLength <= 512.0f ) )
-	{
-		*pActualDotPosition = UTIL_PointOnLineNearestPoint( vLaserStart, pLaserDot->GetChasePosition(), GetAbsOrigin() );
-		*pActualDotPosition += ( vLaserDir * 256.0f );
-	}
-	else
-	{
-		// Otherwise chase the dot
-		*pActualDotPosition = pLaserDot->GetChasePosition();
-	}
-
-//	NDebugOverlay::Line( pLaserDot->GetChasePosition(), vLaserStart, 0, 255, 0, true, 0.05f );
-//	NDebugOverlay::Line( GetAbsOrigin(), *pActualDotPosition, 255, 0, 0, true, 0.05f );
-//	NDebugOverlay::Cross3D( *pActualDotPosition, -Vector(4,4,4), Vector(4,4,4), 255, 0, 0, true, 0.05f );
+  
+	Vector vRealDotPos = pLaserDot->GetChasePosition(); // actual world position of the laser dot  
+	Vector vDotPos     = vRealDotPos;                   // working dot position; may be replaced with a portal-virtual position below  
+	Vector vMissilePos = GetAbsOrigin();  
+  
+	// --- Portal path detection (missile -> dot) ---  
+	// Declare portal state variables here so they are accessible in the debug section at the bottom.  
+	CProp_Portal *pBestPortal   = NULL;  // entry portal (the one the missile would fly into)  
+	CProp_Portal *pLinkedPortal = NULL;  // exit portal (the one near the laser dot)  
+	bool   bUsingPortal   = false;  
+	Vector vVirtualDotPos = vRealDotPos; // dot position transformed to the missile's side of the portal  
+	float  flDirectDist   = 0.0f;  
+	float  flPortalDist   = 0.0f;  
+  
+	if ( sv_portalbase_rpg_missile_portal_logic.GetBool() )  
+	{  
+		// Compare the straight-line distance to the dot against the shortest path through any portal.  
+		// bRequireStraightLine=true ensures we only consider portals the path actually passes through,  
+		// avoiding false positives from nearby portals that are not on the flight path.  
+		flDirectDist = vMissilePos.DistTo( vDotPos );  
+		flPortalDist = UTIL_Portal_ShortestDistance( vMissilePos, vDotPos, &pBestPortal, true );  
+  
+		if ( pBestPortal && flPortalDist < flDirectDist )  
+		{  
+			pLinkedPortal = pBestPortal->m_hLinkedPortal.Get();  
+			if ( pLinkedPortal )  
+			{  
+				// Transform the dot position from the exit portal's space into the entry portal's space.  
+				// This creates a "virtual" dot position on the missile's side of the portal,  
+				// so the missile steers toward the portal entrance rather than flying directly at the dot.  
+				UTIL_Portal_PointTransform( pLinkedPortal->MatrixThisToLinked(), vDotPos, vVirtualDotPos );  
+				vDotPos      = vVirtualDotPos;  
+				bUsingPortal = true;  
+			}  
+		}  
+	}  
+  
+	// World position of the weapon/player that fired the RPG.  
+	Vector vLaserStart;  
+	GetShootPosition( pLaserDot, &vLaserStart );  
+  
+	if ( sv_portalbase_rpg_missile_portal_logic.GetBool() )  
+	{  
+		// Check if the laser beam itself crosses a portal (i.e. shooter and dot are on opposite sides).  
+		// If so, transform vLaserStart to the dot's side so the beam direction is consistent  
+		// with the missile's coordinate space.  
+		//  
+		// IMPORTANT: We check shooter→dot (not missile→shooter). Checking missile→shooter would  
+		// incorrectly trigger the transform whenever the missile is near any portal entrance,  
+		// even when the beam does not cross a portal — causing the beam direction to flip.  
+		CProp_Portal *pShooterDotPortal    = NULL;  
+		float flShooterDotDirectDist = vLaserStart.DistTo( vDotPos );  
+		float flShooterDotPortalDist = UTIL_Portal_ShortestDistance( vLaserStart, vDotPos, &pShooterDotPortal, true );  
+  
+		if ( pShooterDotPortal && flShooterDotPortalDist < flShooterDotDirectDist )  
+		{  
+			// The beam crosses a portal. Transform the shooter position to the dot's side  
+			// so that vLaserDir (computed below) points in the correct direction.  
+			CProp_Portal *pLinkedShooterDotPortal = pShooterDotPortal->m_hLinkedPortal.Get();  
+			if ( pLinkedShooterDotPortal )  
+			{  
+				Vector vOldLaserStart = vLaserStart;  
+				Vector vVirtualLaserStart;  
+				UTIL_Portal_PointTransform( pLinkedShooterDotPortal->MatrixThisToLinked(), vLaserStart, vVirtualLaserStart );  
+				vLaserStart = vVirtualLaserStart;  
+  
+				if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+				{  
+					Msg( "[RPG]   vLaserStart transformed: (%.1f,%.1f,%.1f) -> (%.1f,%.1f,%.1f)\n",  
+						vOldLaserStart.x, vOldLaserStart.y, vOldLaserStart.z,  
+						vVirtualLaserStart.x, vVirtualLaserStart.y, vVirtualLaserStart.z );  
+				}  
+			}  
+		}  
+		else if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+		{  
+			Msg( "[RPG]   vLaserStart NOT transformed (shooter+dot on same side). shooterDotDirect=%.1f shooterDotPortal=%.1f\n",  
+				flShooterDotDirectDist, flShooterDotPortalDist );  
+		}  
+	}  
+  
+	// Direction vector of the laser beam, pointing from shooter toward the dot (normalized).  
+	Vector vLaserDir;  
+	VectorSubtract( vDotPos, vLaserStart, vLaserDir );  
+  
+	// Total length of the laser beam from shooter to dot.  
+	float flLaserLength = VectorNormalize( vLaserDir );  
+  
+	// Distance from the missile to the shooter (laser owner).  
+	float flMissileLength = vMissilePos.DistTo( vLaserStart );  
+  
+	// Distance from the missile to the laser dot.  
+	Vector vecTargetToMissile;  
+	VectorSubtract( vMissilePos, vDotPos, vecTargetToMissile );  
+	float flTargetLength = VectorNormalize( vecTargetToMissile );  
+  
+	// Nearest point on the laser beam line to the missile's current position.  
+	// Used as the anchor for the 256-unit lead target in beam-track mode.  
+	Vector vNearestPoint = UTIL_PointOnLineNearestPoint( vLaserStart, vDotPos, vMissilePos );  
+  
+	// How much beam remains from the nearest point to the dot, measured along vLaserDir.  
+	// If this is less than 256, the lead target (nearest point + 256 * vLaserDir) would land  
+	// past the dot, causing the missile to overshoot. In that case, chase the dot directly.  
+	float flRemainingBeam = DotProduct( vDotPos - vNearestPoint, vLaserDir );  
+  
+	// How far the missile is "past" the dot along the beam direction.  
+	// Positive means the missile has already flown past the dot; beam-track would push  
+	// the target even further away, so we fall through to direct-dot chase instead.  
+	float flMissilePastDot = DotProduct( vMissilePos - vDotPos, vLaserDir );  
+  
+	if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+	{  
+		Msg( "[RPG]   flMissilePastDot=%.2f (>0 means missile is past dot along beam)\n", flMissilePastDot );  
+	}  
+  
+	// Beam-track mode: steer the missile along the laser beam toward the dot.  
+	// Conditions to use beam-track:  
+	//   1. The missile is still within the beam's range, OR close enough to the dot (<=512 units).  
+	//   2. The missile has not yet passed the dot along the beam direction.  
+	//   3. There is at least 256 units of beam remaining ahead of the nearest point,  
+	//      so the lead target lands before the dot (not past it).  
+	if ( ( ( flMissileLength < flLaserLength ) || ( flTargetLength <= 512.0f ) )  
+		&& flMissilePastDot <= 0.0f  
+		&& flRemainingBeam >= 256.0f )  
+	{  
+		// Aim 256 units ahead of the nearest beam point. This "lead" keeps the missile  
+		// moving forward along the beam and allows smooth steering when the laser is moved.  
+		*pActualDotPosition = vNearestPoint + ( vLaserDir * 256.0f );  
+  
+		if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+		{  
+			Msg( "[RPG] ComputeActualDotPosition: BEAM-TRACK branch | portal=%d | actualDotPos=(%.1f,%.1f,%.1f)\n",  
+				bUsingPortal,  
+				(*pActualDotPosition).x, (*pActualDotPosition).y, (*pActualDotPosition).z );  
+		}  
+	}  
+	else  
+	{  
+		// Direct-dot mode: missile is past the dot, too close, or the lead would overshoot.  
+		// Chase the dot (or virtual dot) position directly.  
+		*pActualDotPosition = vDotPos;  
+  
+		if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+		{  
+			Msg( "[RPG] ComputeActualDotPosition: DIRECT-DOT branch | portal=%d | actualDotPos=(%.1f,%.1f,%.1f)\n",  
+				bUsingPortal,  
+				(*pActualDotPosition).x, (*pActualDotPosition).y, (*pActualDotPosition).z );  
+		}  
+	}  
+  
+	if ( sv_portalbase_debug_rpg_missile_portal_logic.GetBool() )  
+	{  
+		Msg( "[RPG]   missile=(%.1f,%.1f,%.1f) realDot=(%.1f,%.1f,%.1f) virtualDot=(%.1f,%.1f,%.1f)\n",  
+			vMissilePos.x, vMissilePos.y, vMissilePos.z,  
+			vRealDotPos.x, vRealDotPos.y, vRealDotPos.z,  
+			vVirtualDotPos.x, vVirtualDotPos.y, vVirtualDotPos.z );  
+  
+		Msg( "[RPG]   flDirectDist=%.1f flPortalDist=%.1f\n", flDirectDist, flPortalDist );  
+  
+		// Yellow box: real laser dot position (always shown)  
+		NDebugOverlay::Box( vRealDotPos, Vector(-8,-8,-8), Vector(8,8,8),  
+			255, 255, 0, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+  
+		if ( bUsingPortal )  
+		{  
+			// Cyan box: virtual laser dot position (portal-transformed)  
+			NDebugOverlay::Box( vVirtualDotPos, Vector(-8,-8,-8), Vector(8,8,8),  
+				0, 255, 255, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+  
+			// White line: missile -> ENTER portal center  
+			NDebugOverlay::Line( vMissilePos, pBestPortal->GetAbsOrigin(),  
+				255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+  
+			// White line: EXIT portal center -> real laser dot  
+			NDebugOverlay::Line( pLinkedPortal->GetAbsOrigin(), vRealDotPos,  
+				255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+  
+			// Red line: missile -> real dot (NOT the path being used)  
+			NDebugOverlay::Line( vMissilePos, vRealDotPos,  
+				255, 0, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+  
+			// Green line: missile -> virtual dot (the path being used)  
+			NDebugOverlay::Line( vMissilePos, vVirtualDotPos,  
+				0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+		}  
+		else  
+		{  
+			// Green line: missile -> real dot (direct path, the one being used)  
+			NDebugOverlay::Line( vMissilePos, vRealDotPos,  
+				0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );  
+		}  
+	}  
+  
+//	NDebugOverlay::Line( pLaserDot->GetChasePosition(), vLaserStart, 0, 255, 0, true, 0.05f );  
+//	NDebugOverlay::Line( GetAbsOrigin(), *pActualDotPosition, 255, 0, 0, true, 0.05f );  
+//	NDebugOverlay::Cross3D( *pActualDotPosition, -Vector(4,4,4), Vector(4,4,4), 255, 0, 0, true, 0.05f );  
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CMissile::SeekThink( void )
-{
-	CBaseEntity	*pBestDot	= NULL;
-	float		flBestDist	= MAX_TRACE_LENGTH;
-	float		dotDist;
-
-	// If we have a grace period, go solid when it ends
-	if ( m_flGracePeriodEndsAt )
-	{
-		if ( m_flGracePeriodEndsAt < gpGlobals->curtime )
-		{
-			RemoveSolidFlags( FSOLID_NOT_SOLID );
-			m_flGracePeriodEndsAt = 0;
-		}
+void CMissile::SeekThink( void ) 
+{  
+	CBaseEntity	*pBestDot	= NULL;  
+	float		flBestDist	= MAX_TRACE_LENGTH;  
+	float		dotDist;  
+  
+	// If we have a grace period, go solid when it ends  
+	if ( m_flGracePeriodEndsAt )  
+	{  
+		if ( m_flGracePeriodEndsAt < gpGlobals->curtime )  
+		{  
+			RemoveSolidFlags( FSOLID_NOT_SOLID );  
+			m_flGracePeriodEndsAt = 0;  
+		}  
+	}  
+  
+	//Search for all dots relevant to us  
+	for( CLaserDot *pEnt = GetLaserDotList(); pEnt != NULL; pEnt = pEnt->m_pNext )  
+	{  
+		if ( !pEnt->IsOn() )  
+			continue;  
+  
+		if ( pEnt->GetOwnerEntity() != GetOwnerEntity() )  
+			continue;  
+  
+		dotDist = (GetAbsOrigin() - pEnt->GetAbsOrigin()).Length();  
+  
+		//Find closest  
+		if ( dotDist < flBestDist )  
+		{  
+			pBestDot	= pEnt;  
+			flBestDist	= dotDist;  
+		}  
+	}  
+  
+	if( hl2_episodic.GetBool() )  
+	{  
+		if( flBestDist <= ( GetAbsVelocity().Length() * 2.5f ) && FVisible( pBestDot->GetAbsOrigin() ) )  
+		{  
+			// Scare targets  
+			CSoundEnt::InsertSound( SOUND_DANGER, pBestDot->GetAbsOrigin(), CMissile::EXPLOSION_RADIUS, 0.2f, pBestDot, SOUNDENT_CHANNEL_REPEATED_DANGER, NULL );  
+		}  
+	}  
+  
+	if ( rpg_missle_use_custom_detonators.GetBool() )  
+	{  
+		for ( int i = gm_CustomDetonators.Count() - 1; i >=0; --i )  
+		{  
+			CustomDetonator_t &detonator = gm_CustomDetonators[i];  
+			if ( !detonator.hEntity )  
+			{  
+				gm_CustomDetonators.FastRemove( i );  
+			}  
+			else  
+			{  
+				const Vector &vPos = detonator.hEntity->CollisionProp()->WorldSpaceCenter();  
+				if ( detonator.halfHeight > 0 )  
+				{  
+					if ( fabsf( vPos.z - GetAbsOrigin().z ) < detonator.halfHeight )  
+					{  
+						if ( ( GetAbsOrigin().AsVector2D() - vPos.AsVector2D() ).LengthSqr() < detonator.radiusSq )  
+						{  
+							Explode();  
+							return;  
+						}  
+					}  
+				}  
+				else  
+				{  
+					if ( ( GetAbsOrigin() - vPos ).LengthSqr() < detonator.radiusSq )  
+					{  
+						Explode();  
+						return;  
+					}  
+				}  
+			}  
+		}  
+	}  
+  
+	//If we have a dot target  
+	if ( pBestDot == NULL )  
+	{  
+		//Think as soon as possible  
+		SetNextThink( gpGlobals->curtime );  
+		return;  
 	}
 
-	//Search for all dots relevant to us
-	for( CLaserDot *pEnt = GetLaserDotList(); pEnt != NULL; pEnt = pEnt->m_pNext )
-	{
-		if ( !pEnt->IsOn() )
-			continue;
-
-		if ( pEnt->GetOwnerEntity() != GetOwnerEntity() )
-			continue;
-
-		dotDist = (GetAbsOrigin() - pEnt->GetAbsOrigin()).Length();
-
-		//Find closest
-		if ( dotDist < flBestDist )
-		{
-			pBestDot	= pEnt;
-			flBestDist	= dotDist;
-		}
-	}
-
-	if( hl2_episodic.GetBool() )
-	{
-		if( flBestDist <= ( GetAbsVelocity().Length() * 2.5f ) && FVisible( pBestDot->GetAbsOrigin() ) )
-		{
-			// Scare targets
-			CSoundEnt::InsertSound( SOUND_DANGER, pBestDot->GetAbsOrigin(), CMissile::EXPLOSION_RADIUS, 0.2f, pBestDot, SOUNDENT_CHANNEL_REPEATED_DANGER, NULL );
-		}
-	}
-
-	if ( rpg_missle_use_custom_detonators.GetBool() )
-	{
-		for ( int i = gm_CustomDetonators.Count() - 1; i >=0; --i )
-		{
-			CustomDetonator_t &detonator = gm_CustomDetonators[i];
-			if ( !detonator.hEntity )
-			{
-				gm_CustomDetonators.FastRemove( i );
-			}
-			else
-			{
-				const Vector &vPos = detonator.hEntity->CollisionProp()->WorldSpaceCenter();
-				if ( detonator.halfHeight > 0 )
-				{
-					if ( fabsf( vPos.z - GetAbsOrigin().z ) < detonator.halfHeight )
-					{
-						if ( ( GetAbsOrigin().AsVector2D() - vPos.AsVector2D() ).LengthSqr() < detonator.radiusSq )
-						{
-							Explode();
-							return;
-						}
-					}
-				}
-				else
-				{
-					if ( ( GetAbsOrigin() - vPos ).LengthSqr() < detonator.radiusSq )
-					{
-						Explode();
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	//If we have a dot target
-	if ( pBestDot == NULL )
-	{
-		//Think as soon as possible
-		SetNextThink( gpGlobals->curtime );
-		return;
-	}
-
-	CLaserDot *pLaserDot = (CLaserDot *)pBestDot;
+	CLaserDot* pLaserDot = (CLaserDot*)pBestDot;
 	Vector	targetPos;
 
-	float flHomingSpeed; 
+	float flHomingSpeed;
 	Vector vecLaserDotPosition;
-	ComputeActualDotPosition( pLaserDot, &targetPos, &flHomingSpeed );
+	ComputeActualDotPosition(pLaserDot, &targetPos, &flHomingSpeed);
 
-	if ( IsSimulatingOnAlternateTicks() )
+	if (sv_portalbase_debug_rpg_missile_portal_logic.GetBool())
+	{
+		Msg("[RPG] SeekThink: targetPos=(%.1f,%.1f,%.1f)\n",
+			targetPos.x, targetPos.y, targetPos.z);
+	}
+
+	if (IsSimulatingOnAlternateTicks())
 		flHomingSpeed *= 2;
 
 	Vector	vTargetDir;
-	VectorSubtract( targetPos, GetAbsOrigin(), vTargetDir );
-	float flDist = VectorNormalize( vTargetDir );
+	VectorSubtract(targetPos, GetAbsOrigin(), vTargetDir);
+	float flDist = VectorNormalize(vTargetDir);
 
-	if( pLaserDot->GetTargetEntity() != NULL && flDist <= 240.0f && hl2_episodic.GetBool() )
+	if (pLaserDot->GetTargetEntity() != NULL && flDist <= 240.0f && hl2_episodic.GetBool())
 	{
-		// Prevent the missile circling the Strider like a Halo in ep1_c17_06. If the missile gets within 20
-		// feet of a Strider, tighten up the turn speed of the missile so it can break the halo and strike. (sjb 4/27/2006)
-		if( pLaserDot->GetTargetEntity()->ClassMatches( "npc_strider" ) )
+		if (pLaserDot->GetTargetEntity()->ClassMatches("npc_strider"))
 		{
 			flHomingSpeed *= 1.75f;
 		}
 	}
 
-	Vector	vDir	= GetAbsVelocity();
-	float	flSpeed	= VectorNormalize( vDir );
+	Vector	vDir = GetAbsVelocity();
+	float	flSpeed = VectorNormalize(vDir);
 	Vector	vNewVelocity = vDir;
-	if ( gpGlobals->frametime > 0.0f )
+	if (gpGlobals->frametime > 0.0f)
 	{
-		if ( flSpeed != 0 )
+		if (flSpeed != 0)
 		{
-			vNewVelocity = ( flHomingSpeed * vTargetDir ) + ( ( 1 - flHomingSpeed ) * vDir );
+			// Blend current direction with target direction.  
+			// flHomingSpeed (0.125 by default) controls how sharply the missile turns each tick.  
+			vNewVelocity = (flHomingSpeed * vTargetDir) + ((1 - flHomingSpeed) * vDir);
 
-			// This computation may happen to cancel itself out exactly. If so, slam to targetdir.
-			if ( VectorNormalize( vNewVelocity ) < 1e-3 )
+			if (VectorNormalize(vNewVelocity) < 1e-3)
 			{
 				vNewVelocity = (flDist != 0) ? vTargetDir : vDir;
 			}
@@ -698,32 +996,47 @@ void CMissile::SeekThink( void )
 		}
 	}
 
+	if (sv_portalbase_debug_rpg_missile_portal_logic.GetBool())
+	{
+		Msg("[RPG] SeekThink: vDir=(%.2f,%.2f,%.2f) vTargetDir=(%.2f,%.2f,%.2f) vNewVelocity=(%.2f,%.2f,%.2f) homingSpeed=%.3f\n",
+			vDir.x, vDir.y, vDir.z,
+			vTargetDir.x, vTargetDir.y, vTargetDir.z,
+			vNewVelocity.x, vNewVelocity.y, vNewVelocity.z,
+			flHomingSpeed);
+	}
+
 	QAngle	finalAngles;
-	VectorAngles( vNewVelocity, finalAngles );
-	SetAbsAngles( finalAngles );
+	VectorAngles(vNewVelocity, finalAngles);
+	SetAbsAngles(finalAngles);
+
+	if (sv_portalbase_debug_rpg_missile_portal_logic.GetBool())
+	{
+		Msg("[RPG] SeekThink: finalAngles=(p=%.1f y=%.1f r=%.1f)\n",
+			finalAngles.x, finalAngles.y, finalAngles.z);
+	}
 
 	vNewVelocity *= flSpeed;
-	SetAbsVelocity( vNewVelocity );
-
-	if( GetAbsVelocity() == vec3_origin )
-	{
-		// Strange circumstances have brought this missile to halt. Just blow it up.
-		Explode();
-		return;
-	}
-
-	// Think as soon as possible
-	SetNextThink( gpGlobals->curtime );
-
-#ifdef HL2_EPISODIC
-
-	if ( m_bCreateDangerSounds == true )
-	{
-		trace_t tr;
-		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 0.5, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
-
-		CSoundEnt::InsertSound( SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
-	}
+	SetAbsVelocity(vNewVelocity);
+  
+	if( GetAbsVelocity() == vec3_origin )  
+	{  
+		// Strange circumstances have brought this missile to halt. Just blow it up.  
+		Explode();  
+		return;  
+	}  
+  
+	// Think as soon as possible  
+	SetNextThink( gpGlobals->curtime );  
+  
+#ifdef HL2_EPISODIC  
+  
+	if ( m_bCreateDangerSounds == true )  
+	{  
+		trace_t tr;  
+		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + GetAbsVelocity() * 0.5, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );  
+  
+		CSoundEnt::InsertSound( SOUND_DANGER, tr.endpos, 100, 0.2, this, SOUNDENT_CHANNEL_REPEATED_DANGER );  
+	}  
 #endif
 }
 
