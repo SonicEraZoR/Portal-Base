@@ -17,6 +17,7 @@
 #include "baseanimating.h"
 #include "player_pickup.h"
 #include "Sprite.h"
+#include "physics_prop_ragdoll.h"
 
 extern CBaseEntity *CreateRagGib( const char *szModel, const Vector &vecOrigin, const QAngle &vecAngles, const Vector &vecForce, float flFadeTime = 0.0, bool bShouldIgnite = false );
 
@@ -109,6 +110,7 @@ public:
 	DECLARE_CLASS( CRagGib, CBaseAnimating );
 
 	void Spawn( const char *szModel, const Vector &vecOrigin, const Vector &vecForce, float flFadeTime );
+	CRagdollProp* Spawn(const char* szModel, const Vector& vecOrigin, const Vector& vecForce, float flFadeTime, bool bShouldBurn);
 };
 
 

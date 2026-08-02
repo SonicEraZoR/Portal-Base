@@ -126,6 +126,8 @@ private:
 	Vector  m_vWorld;
 };
 
+//mygamepedia: not used anymore as we are using a new code for stickied bolts
+/*
 void CreateCrossbowBolt( const Vector &vecOrigin, const Vector &vecDirection )
 {
 	model_t *pModel = (model_t *)engine->LoadModel( "models/crossbow_bolt.mdl" );
@@ -143,6 +145,7 @@ void CreateCrossbowBolt( const Vector &vecOrigin, const Vector &vecDirection )
 		tempents->SpawnTempModel( pModel, vecOrigin - vecDirection * 8, vAngles, Vector(0, 0, 0 ), 1, FTENT_NEVERDIE );
 	}
 }
+*/
 
 void StickRagdollNow( const Vector &vecOrigin, const Vector &vecDirection )
 {
@@ -161,7 +164,7 @@ void StickRagdollNow( const Vector &vecOrigin, const Vector &vecDirection )
 	CRagdollBoltEnumerator	ragdollEnum( shotRay, vecOrigin );
 	partition->EnumerateElementsAlongRay( PARTITION_CLIENT_RESPONSIVE_EDICTS, shotRay, false, &ragdollEnum );
 	
-	CreateCrossbowBolt( vecOrigin, vecDirection );
+	//CreateCrossbowBolt( vecOrigin, vecDirection );
 }
 
 //-----------------------------------------------------------------------------

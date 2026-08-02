@@ -31,7 +31,8 @@
 
 void Host_Say( edict_t *pEdict, bool teamonly );
 
-ConVar sv_use_portal_gamerules("sv_use_portal_gamerules", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED);
+//mygamepedia: we are using fixed CPortalGameRules in portal-base, disable it if something is broken, in that case, LET ME KNOW THE ISSUE!!!
+ConVar sv_use_portal_gamerules("sv_use_portal_gamerules", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED);
 
 extern CBaseEntity*	FindPickerEntityClass( CBasePlayer *pPlayer, char *classname );
 extern bool			g_fGameOver;

@@ -23,6 +23,8 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+extern ConVar sv_portalbase_item_touch_area;
+
 class CWorldItem : public CBaseAnimating
 {
 	DECLARE_DATADESC();
@@ -92,6 +94,7 @@ BEGIN_DATADESC( CItem )
 	DEFINE_FIELD( m_vOriginalSpawnOrigin, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_vOriginalSpawnAngles, FIELD_VECTOR ),
 	DEFINE_PHYSPTR( m_pConstraint ),
+	DEFINE_FIELD(m_hTouchArea, FIELD_EHANDLE),
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
@@ -118,19 +121,36 @@ CItem::CItem()
 	m_bActivateWhenAtRest = false;
 }
 
+void CItem::UpdateOnRemove()
+{
+	if (m_hTouchArea.Get())
+		UTIL_Remove(m_hTouchArea.Get());
+
+	BaseClass::UpdateOnRemove();
+}
+
 bool CItem::CreateItemVPhysicsObject( void )
 {
 	// Create the object in the physics system
 	int nSolidFlags = GetSolidFlags() | FSOLID_NOT_STANDABLE;
-	if ( !m_bActivateWhenAtRest )
+	if (!m_bActivateWhenAtRest)
 	{
-		nSolidFlags |= FSOLID_TRIGGER;
+		if (!sv_portalbase_item_touch_area.GetBool())
+		{
+			nSolidFlags |= FSOLID_TRIGGER;
+		}
+		else if (m_hTouchArea.Get())
+		{
+			static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->EnableTouchArea();
+		}
 	}
 
-	if ( VPhysicsInitNormal( SOLID_VPHYSICS, nSolidFlags, false ) == NULL )
+	IPhysicsObject* pPhys = VPhysicsInitNormal(SOLID_VPHYSICS, nSolidFlags, false);
+
+	if (pPhys == NULL)
 	{
-		SetSolid( SOLID_BBOX );
-		AddSolidFlags( nSolidFlags );
+		SetSolid(SOLID_BBOX);
+		AddSolidFlags(nSolidFlags);
 
 		// If it's not physical, drop it to the floor
 		if (UTIL_DropToFloor(this, MASK_SOLID) == 0)
@@ -155,10 +175,10 @@ void CItem::Spawn( void )
 		return;
 	}
 
-	SetMoveType( MOVETYPE_FLYGRAVITY );
-	SetSolid( SOLID_BBOX );
-	SetBlocksLOS( false );
-	AddEFlags( EFL_NO_ROTORWASH_PUSH );
+	SetMoveType(MOVETYPE_FLYGRAVITY);
+	SetSolid(SOLID_BBOX);
+	SetBlocksLOS(false);
+	AddEFlags(EFL_NO_ROTORWASH_PUSH);
 	
 	if( IsX360() )
 	{
@@ -167,8 +187,33 @@ void CItem::Spawn( void )
 
 	// This will make them not collide with the player, but will collide
 	// against other items + weapons
-	SetCollisionGroup( COLLISION_GROUP_WEAPON );
-	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
+	SetCollisionGroup(COLLISION_GROUP_WEAPON);
+
+	//mygamepedia: we are using env_touch_area for items so the items are not triggers and pass portals, but also have
+	//the large player pickup area
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
+	}
+	else if (!IsMarkedForDeletion()) //don't if should be removed
+	{
+		CBaseEntity* pEntity = CBaseEntity::Create("env_touch_area", GetLocalOrigin(), GetLocalAngles());
+		if (pEntity)
+		{
+			CEnvTouchArea* pArea = static_cast<CEnvTouchArea*>(pEntity);
+
+			pArea->SetModel(GetModelName().ToCStr());
+			pArea->CreateItemVPhysicsObject();
+			pArea->CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
+			pArea->FollowEntity(this, false);
+			pArea->SetPickupItem(this);
+			pArea->SetPickupType(PUT_Item);
+			pArea->SetTouch(&CEnvTouchArea::ItemTouch);
+			pArea->EnableTouchArea();
+			m_hTouchArea = pArea;
+		}
+	}
+
 	SetTouch(&CItem::ItemTouch);
 
 	if ( CreateItemVPhysicsObject() == false )
@@ -231,7 +276,14 @@ extern int gEvilImpulse101;
 //-----------------------------------------------------------------------------
 void CItem::ActivateWhenAtRest( float flTime /* = 0.5f */ )
 {
-	RemoveSolidFlags( FSOLID_TRIGGER );
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		RemoveSolidFlags(FSOLID_TRIGGER);
+	}
+	else if (m_hTouchArea.Get())
+	{
+		static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->DisableTouchArea();
+	}
 	m_bActivateWhenAtRest = true;
 	SetThink( &CItem::ComeToRest );
 	SetNextThink( gpGlobals->curtime + flTime );
@@ -267,7 +319,14 @@ void CItem::ComeToRest( void )
 	if ( m_bActivateWhenAtRest )
 	{
 		m_bActivateWhenAtRest = false;
-		AddSolidFlags( FSOLID_TRIGGER );
+		if (!sv_portalbase_item_touch_area.GetBool())
+		{
+			AddSolidFlags(FSOLID_TRIGGER);
+		}
+		else if (m_hTouchArea.Get())
+		{
+			static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->EnableTouchArea();
+		}
 		SetThink( NULL );
 	}
 }
@@ -339,9 +398,9 @@ void CItem::FallThink ( void )
 //			*pPlayer - player attempting the pickup
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
+inline bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
 {
-	if ( pItem == NULL || pPlayer == NULL )
+	if (pItem == NULL || pPlayer == NULL || !pPlayer->IsPlayer())
 		return false;
 
 	// For now, always allow a vehicle riding player to pick up things they're driving over
@@ -397,19 +456,26 @@ bool CItem::ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CItem::ItemTouch( CBaseEntity *pOther )
 {
-	// Vehicles can touch items + pick them up
-	if ( pOther->GetServerVehicle() )
+	//mygamepedia: don't run touch checks that we run in touch area, unless disabled
+	if (!sv_portalbase_item_touch_area.GetBool())
 	{
-		pOther = pOther->GetServerVehicle()->GetPassenger();
-		if ( !pOther )
+		if (!pOther)
+			return;
+
+		// Vehicles can touch items + pick them up
+		if (pOther->GetServerVehicle())
+		{
+			pOther = pOther->GetServerVehicle()->GetPassenger();
+			if (!pOther)
+				return;
+		}
+
+		// if it's not a player, ignore
+		if (!pOther->IsPlayer())
 			return;
 	}
 
-	// if it's not a player, ignore
-	if ( !pOther->IsPlayer() )
-		return;
-
-	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
+	CBasePlayer *pPlayer = static_cast<CBasePlayer*>(pOther);
 
 	// Must be a valid pickup scenario (no blocking). Though this is a more expensive
 	// check than some that follow, this has to be first Obecause it's the only one
@@ -466,8 +532,16 @@ CBaseEntity* CItem::Respawn( void )
 	VPhysicsDestroyObject();
 
 	SetMoveType( MOVETYPE_NONE );
-	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_TRIGGER );
+	SetSolid( SOLID_NONE );
+
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		AddSolidFlags(FSOLID_TRIGGER);
+	}
+	else if (m_hTouchArea.Get())
+	{
+		static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->EnableTouchArea();
+	}
 
 	UTIL_SetOrigin( this, g_pGameRules->VecItemRespawnSpot( this ) );// blip to whereever you should respawn.
 	SetAbsAngles( g_pGameRules->VecItemRespawnAngles( this ) );// set the angles.
@@ -525,7 +599,14 @@ void CItem::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 	if ( reason == PICKED_UP_BY_CANNON )
 	{
 		// Expand the pickup box
-		CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT * 2 );
+		if (!sv_portalbase_item_touch_area.GetBool())
+		{
+			CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT * 2);
+		}
+		else if (m_hTouchArea.Get())
+		{
+			static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT * 2);
+		}
 
 		if( m_pConstraint != NULL )
 		{
@@ -543,5 +624,216 @@ void CItem::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 void CItem::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason )
 {
 	// Restore the pickup box to the original
-	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
+	}
+	else if (m_hTouchArea.Get())
+	{
+		static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->CollisionProp()->UseTriggerBounds(true, ITEM_PICKUP_BOX_BLOAT);
+	}
 }
+
+
+//-----------------------------------------------------------------------------
+// Env Touch Area - MyGamepedia
+//-----------------------------------------------------------------------------
+
+
+LINK_ENTITY_TO_CLASS(env_touch_area, CEnvTouchArea);
+
+BEGIN_DATADESC(CEnvTouchArea)
+
+DEFINE_FIELD(m_hPickupItem, FIELD_EHANDLE),
+DEFINE_FIELD(m_iPickupType, FIELD_SHORT),
+DEFINE_FIELD(m_bIsEnabled, FIELD_BOOLEAN),
+
+// Function Pointers
+DEFINE_ENTITYFUNC(ItemTouch),
+
+// Inputs
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
+
+END_DATADESC()
+
+
+//-----------------------------------------------------------------------------
+// Constructor 
+//-----------------------------------------------------------------------------
+CEnvTouchArea::CEnvTouchArea()
+{
+	m_iPickupType = 0;
+	m_bIsEnabled = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn. It doesn't contain full code for proper spawn, this entity should always be created with item.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::Spawn()
+{
+	SetMoveType(MOVETYPE_NONE);
+	SetSolid(SOLID_NONE);
+	SetBlocksLOS(false);
+	AddEFlags(EFL_NO_ROTORWASH_PUSH);
+	AddEffects(EF_NODRAW);
+	AddSolidFlags(FSOLID_TRIGGER);
+	m_takedamage = DAMAGE_NO;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Enabled touch area by input. Can pick up item now.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::InputEnable(inputdata_t& inputdata)
+{
+	m_bIsEnabled = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Disable touch area by input. Can't pick up item now.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::InputDisable(inputdata_t& inputdata)
+{
+	m_bIsEnabled = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Toggle touch area state by input. Disable if enabled or enable if disabled.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::InputToggle(inputdata_t& inputdata)
+{
+	(m_bIsEnabled) ? m_bIsEnabled = false : m_bIsEnabled = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A safe way to set item that will this touch area reference to. Should be a CItem and checks nullprt.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::SetPickupItem(CItem* pItem)
+{
+	if (pItem)
+		m_hPickupItem = pItem;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: A safe way to set weapon that will this touch area reference to. Should be a CBaseCombatWeapon and checks nullprt.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::SetPickupWeapon(CBaseCombatWeapon* pWeapon)
+{
+	if (pWeapon)
+		m_hPickupItem = pWeapon;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set pickup type that this touch area belongs to.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::SetPickupType(PickUpType_t PUT_Type)
+{
+	if (PUT_Type == PUT_Nothing)
+	{
+		m_iPickupType = 0;
+	}
+	else if (PUT_Type == PUT_Item)
+	{
+		m_iPickupType = 1;
+	}
+	else if (PUT_Type == PUT_Weapon)
+	{
+		m_iPickupType = 2;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Use it when you want to remove an item red for what ever reason (sets nullprt).
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::ClearPickupObject()
+{
+	m_hPickupItem = NULL;
+	SetPickupType(PUT_Nothing);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Touch item if I have a valid player.
+//-----------------------------------------------------------------------------
+void CEnvTouchArea::ItemTouch(CBaseEntity* pOther)
+{
+	if (!pOther)
+		return;
+
+	//nothing
+	if (m_iPickupType == PUT_Nothing)
+		return;
+
+	//item
+	if (m_iPickupType == PUT_Item && m_hPickupItem.Get() && m_hPickupItem.Get()->IsItem())
+	{
+		//not enabled? return
+		if (m_bIsEnabled == false)
+			return;
+
+		// Vehicles can touch items + pick them up
+		if (pOther->GetServerVehicle())
+		{
+			pOther = pOther->GetServerVehicle()->GetPassenger();
+			if (!pOther)
+				return;
+		}
+
+		// if it's not a player, ignore
+		if (!pOther->IsPlayer())
+			return;
+
+		//call touch for my item
+		static_cast<CItem*>(m_hPickupItem.Get())->ItemTouch(pOther);
+
+		return;
+	}
+
+	//weapon
+	if (m_iPickupType == PUT_Weapon && m_hPickupItem.Get() && m_hPickupItem.Get()->IsBaseCombatWeapon())
+	{
+		CBaseCombatWeapon* pWeapon = static_cast<CBaseCombatWeapon*>(m_hPickupItem.Get());
+
+		// Can't pick up dissolving weapons
+		if (pWeapon->IsDissolving())
+			return;
+
+		//call touch for my wpn
+		pWeapon->DefaultTouch(pOther);
+
+		return;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns solid mask.
+//-----------------------------------------------------------------------------
+unsigned int CEnvTouchArea::PhysicsSolidMaskForEntity(void) const
+{
+	return BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_PLAYERCLIP;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Creates physics to make it work.
+//-----------------------------------------------------------------------------
+bool CEnvTouchArea::CreateItemVPhysicsObject(void)
+{
+	// Create the object in the physics system
+	int nSolidFlags = GetSolidFlags() | FSOLID_NOT_SOLID;
+
+	IPhysicsObject* pPhys = VPhysicsInitNormal(SOLID_VPHYSICS, nSolidFlags, false);
+
+	if (pPhys == NULL)
+	{
+		SetSolid(SOLID_NONE);
+		AddSolidFlags(nSolidFlags);
+	}
+	else
+	{
+		AddSolidFlags(nSolidFlags);
+		VPhysicsGetObject()->EnableMotion(false);
+	}
+
+	return true;
+}
+

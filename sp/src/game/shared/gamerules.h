@@ -186,6 +186,11 @@ public:
 		return true; 
 	}
 
+	//mygamepedia: this allows to use rules pointer directly at some places
+	virtual bool	MegaPhyscannonActive() { return false; } 
+	virtual bool	ShouldRemoveRadio() { return false; }
+	virtual bool	IsAlyxInDarknessMode() { return false; }
+
 #ifdef CLIENT_DLL
 
 	virtual bool IsBonusChallengeTimeBased( void );
@@ -255,7 +260,7 @@ public:
 		}
 	}
 
-	virtual bool FAllowFlashlight( void ) = 0;// Are players allowed to switch on their flashlight?
+	virtual bool FAllowFlashlight(void) = 0; // Are players allowed to switch on their flashlight?
 	virtual bool FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon ) = 0;// should the player switch to this weapon?
 
 // Functions to verify the single/multiplayer status of a game

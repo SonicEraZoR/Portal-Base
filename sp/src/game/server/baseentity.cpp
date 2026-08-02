@@ -62,6 +62,7 @@
 #include "env_debughistory.h"
 #include "tier1/utlstring.h"
 #include "utlhashtable.h"
+#include "portal_player.h"
 
 #if defined( TF_DLL )
 #include "tf_gamerules.h"
@@ -575,7 +576,7 @@ void CBaseEntity::ValidateDataDescription(void)
 
 
 //-----------------------------------------------------------------------------
-// Sets the collision bounds + the size
+// Sets the collision bounds + the size. Format: backward/forward, side left/right, up/down.
 //-----------------------------------------------------------------------------
 void CBaseEntity::SetCollisionBounds( const Vector& mins, const Vector &maxs )
 {
@@ -1851,6 +1852,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 
 	DEFINE_KEYFIELD( m_flGravity, FIELD_FLOAT, "gravity" ),
 	DEFINE_KEYFIELD( m_flFriction, FIELD_FLOAT, "friction" ),
+	DEFINE_KEYFIELD(m_bStickied, FIELD_BOOLEAN, "stickied"),
 
 	// Local time is local to each object.  It doesn't need to be re-based if the clock
 	// changes.  Therefore it is saved as a FIELD_FLOAT, not a FIELD_TIME
@@ -1866,6 +1868,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_FIELD( m_bSimulatedEveryTick, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bAnimatedEveryTick, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bAlternateSorting, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_bAllowToFadeInView, FIELD_BOOLEAN), //mygamepedia: flag in case if we want to remove prop even while in view
 	DEFINE_KEYFIELD( m_spawnflags, FIELD_INTEGER, "spawnflags" ),
 	DEFINE_FIELD( m_nTransmitStateOwnedCounter, FIELD_CHARACTER ),
 	DEFINE_FIELD( m_angAbsRotation, FIELD_VECTOR ),
@@ -2568,7 +2571,7 @@ void CBaseEntity::PhysicsRelinkChildren( float dt )
 	// iterate through all children
 	for ( child = FirstMoveChild(); child != NULL; child = child->NextMovePeer() )
 	{
-		if ( child->IsSolid() || child->IsSolidFlagSet(FSOLID_TRIGGER) )
+		if ( child->IsSolid() || child->IsSolidFlagSet(FSOLID_TRIGGER))
 		{
 			child->PhysicsTouchTriggers();
 		}
@@ -2595,13 +2598,18 @@ void CBaseEntity::PhysicsRelinkChildren( float dt )
 	}
 }
 
+ConVar sv_portalbase_items_touch_triggers("sv_portalbase_items_touch_triggers", "1",
+	FCVAR_NONE,
+	"Allows pick up items touch triggers to work with oortals.");
+
 void CBaseEntity::PhysicsTouchTriggers( const Vector *pPrevAbsOrigin )
 {
 	edict_t *pEdict = edict();
 	if ( pEdict && !IsWorld() )
 	{
 		Assert(CollisionProp());
-		bool isTriggerCheckSolids = IsSolidFlagSet( FSOLID_TRIGGER );
+		bool isTriggerCheckSolids = (IsSolidFlagSet(FSOLID_TRIGGER));
+
 		bool isSolidCheckTriggers = IsSolid() && !isTriggerCheckSolids;		// NOTE: Moving triggers (items, ammo etc) are not 
 																			// checked against other triggers to reduce the number of touchlinks created
 		if ( !(isSolidCheckTriggers || isTriggerCheckSolids) )
@@ -7199,9 +7207,14 @@ bool CBaseEntity::SUB_AllowedToFade( void )
 
 	// on Xbox, allow these to fade out
 #ifndef _XBOX
+	//mygamepedia: used by shells as we want to remove them asap due to their amount
+	if (m_bAllowToFadeInView)
+		return true;
+
 	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
 
-	if ( pPlayer && pPlayer->FInViewCone( this ) )
+	//mygamepedia: also check if the player can see me in portals
+	if (pPlayer && (pPlayer->FInViewConeThroughPortal(this, true) || pPlayer->FInViewCone(this)))
 		return false;
 #endif
 

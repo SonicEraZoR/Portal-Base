@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "particles_simple.h"
 #include "particles_localspace.h"
+#include "portal/PortalRender.h"
 
 #include "tier0/memdbgon.h"
 
@@ -81,6 +82,16 @@ void CLocalSpaceEmitter::SimulateParticles( CParticleSimulateIterator *pIterator
 
 void CLocalSpaceEmitter::RenderParticles( CParticleRenderIterator *pIterator )
 {
+	//mygamepedia: don't render viewmodel particles in the portal view (e. g. muzzle flashes)
+	if ((m_fFlags & FLE_VIEWMODEL) && g_pPortalRender->IsRenderingPortal())
+	{
+		return;
+	}
+
+	//mygamepedia: don't render npc muzzle effects in main view if wpn is owned by local player 
+	if (m_bSuppressInFirstPerson && !C_BasePlayer::ShouldDrawLocalPlayer() && !g_pPortalRender->IsRenderingPortal())
+		return;
+
 	const matrix3x4_t &mLocalToWorld = GetTransformMatrix();
 	const VMatrix &mModelView = ParticleMgr()->GetModelView();
 

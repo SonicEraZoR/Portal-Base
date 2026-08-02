@@ -58,6 +58,12 @@
 
 extern short		g_sModelIndexFireball;		// holds the index for the fireball
 
+extern ConVar sv_portalbase_breakmodel_vphysics;
+
+extern CBaseEntity* BreakModelCreateSingle(CBaseEntity* pOwner, breakmodel_t* pModel, const Vector& position,
+	const QAngle& angles, const Vector& velocity, const AngularImpulse& angVelocity, int nSkin, const breakablepropparams_t& params,
+	bool bUsePropPhysicsOverride = false);
+
 int g_iGunshipEffectIndex = -1;
 
 #define GUNSHIP_ACCEL_RATE 500
@@ -2428,9 +2434,9 @@ void CNPC_CombineGunship::SelfDestruct( void )
 	StopLoopingSounds();
 	StopCannonBurst();
 
-	Vector vecVelocity = GetAbsVelocity();
-	vecVelocity.z = 0.0; // stop falling.
-	SetAbsVelocity( vecVelocity );
+	Vector vecThisVelocity = GetAbsVelocity();
+	vecThisVelocity.z = 0.0; // stop falling.
+	SetAbsVelocity(vecThisVelocity);
 
 	CBaseEntity *pBreakEnt = this;
 
@@ -2473,9 +2479,71 @@ void CNPC_CombineGunship::SelfDestruct( void )
 		CPVSFilter filter( GetAbsOrigin() );
 	 	for ( int i = 0; i < 20; i++ )
 		{
-			Vector gibVelocity = RandomVector(-100,100) * 10;
-			int iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ) );	
-			te->BreakModel( filter, 0.0, GetAbsOrigin(), vec3_angle, Vector(40,40,40), gibVelocity, iModelIndex, 400, 1, 2.5, BREAK_METAL );
+			Vector vecVelocity = RandomVector(-100,100) * 10;
+
+			//mygamepedia: portals doesn't work with simple client physics,
+			//spawn vphysics breakables if the cvar is set, and the model supports it.
+			if (!sv_portalbase_breakmodel_vphysics.GetBool())
+			{
+				int iModelIndex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("MetalChunks"));
+				te->BreakModel(filter, 0.0, GetAbsOrigin(), vec3_angle, Vector(40, 40, 40), vecVelocity, iModelIndex, 400, 1, 2.5, BREAK_METAL);
+			}
+			else
+			{
+				breakmodel_t breakModel;
+
+				Q_strncpy(breakModel.modelName,
+					g_PropDataSystem.GetRandomChunkModel("MetalChunks"),
+					sizeof(breakModel.modelName));
+
+				breakModel.health = 1;
+				breakModel.fadeTime = 2.5f + RandomFloat(0, 1.0f);
+				breakModel.fadeMinDist = 0.0f;
+				breakModel.fadeMaxDist = 0.0f;
+				breakModel.burstScale = 0.0f;
+				breakModel.collisionGroup = COLLISION_GROUP_INTERACTIVE_DEBRIS;
+				breakModel.isRagdoll = false;
+				breakModel.isMotionDisabled = false;
+				breakModel.placementName[0] = 0;
+				breakModel.placementIsBone = false;
+
+				// Random position within the breakable's bounds  
+				Vector vSize = Vector(40, 40, 40);
+				Vector gibPos = GetAbsOrigin() + Vector(
+					random->RandomFloat(-0.5, 0.5) * vSize[0],
+					random->RandomFloat(-0.5, 0.5) * vSize[1],
+					random->RandomFloat(-0.5, 0.5) * vSize[2]);
+
+				// Per-gib velocity: base direction + randomization (matching client-side BreakModel)  
+				Vector gibVelocity;
+				gibVelocity.x = vecVelocity.x + random->RandomFloat(-400.0, 400.0);
+				gibVelocity.y = vecVelocity.y + random->RandomFloat(-400.0, 400.0);
+				gibVelocity.z = vecVelocity.z + random->RandomFloat(0, 400.0); // upward bias
+
+				// Trace from center to candidate position to avoid spawning inside world brushes  
+				trace_t tr;
+				UTIL_TraceLine(GetAbsOrigin(), gibPos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+				if (tr.fraction < 1.0f)
+				{
+					// Hit a brush — place the gib on the surface, pulled back slightly  
+					// so it's not exactly flush with the brush face  
+					gibPos = tr.endpos + tr.plane.normal * 2.0f;
+				}
+
+				AngularImpulse angImpulse(
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255));
+
+				breakablepropparams_t params(GetAbsOrigin(), vec3_angle,
+					gibVelocity, angImpulse);
+				params.impactEnergyScale = 0.1f;
+				params.defBurstScale = 0.0f;
+				params.defCollisionGroup = COLLISION_GROUP_DEBRIS;
+
+				BreakModelCreateSingle(this, &breakModel, gibPos,
+					vec3_angle, gibVelocity, angImpulse, 0, params, true);
+			}
 		}
 
 		if ( m_hRagdoll )
@@ -2993,14 +3061,75 @@ int	CNPC_CombineGunship::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		}
 
 		// Move with the target
-		Vector	gibVelocity = GetAbsVelocity() + (-damageDir * 200.0f);
+		Vector	vecVelocity = GetAbsVelocity() + (-damageDir * 200.0f);
 
 		// Dump out metal gibs
 		CPVSFilter filter( GetAbsOrigin() );
 	 	for ( int i = 0; i < 10; i++ )
 		{
-			int iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel( "MetalChunks" ) );	
-			te->BreakModel( filter, 0.0, GetAbsOrigin(), vec3_angle, Vector(40,40,40), gibVelocity, iModelIndex, 400, 1, 2.5, BREAK_METAL );
+			//mygamepedia: portals doesn't work with simple client physics,
+			//spawn vphysics breakables if the cvar is set, and the model supports it.
+			if (!sv_portalbase_breakmodel_vphysics.GetBool())
+			{
+				int iModelIndex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel("MetalChunks"));
+				te->BreakModel(filter, 0.0, GetAbsOrigin(), vec3_angle, Vector(40, 40, 40), vecVelocity, iModelIndex, 400, 1, 2.5, BREAK_METAL);
+			}
+			else
+			{
+				breakmodel_t breakModel;
+
+				Q_strncpy(breakModel.modelName,
+					g_PropDataSystem.GetRandomChunkModel("MetalChunks"),
+					sizeof(breakModel.modelName));
+
+				breakModel.health = 1;
+				breakModel.fadeTime = 2.5f + RandomFloat(0, 1.0f);
+				breakModel.fadeMinDist = 0.0f;
+				breakModel.fadeMaxDist = 0.0f;
+				breakModel.burstScale = 0.0f;
+				breakModel.collisionGroup = COLLISION_GROUP_INTERACTIVE_DEBRIS;
+				breakModel.isRagdoll = false;
+				breakModel.isMotionDisabled = false;
+				breakModel.placementName[0] = 0;
+				breakModel.placementIsBone = false;
+
+				// Random position within the breakable's bounds  
+				Vector vSize = Vector(40, 40, 40);
+				Vector gibPos = GetAbsOrigin() + Vector(
+					random->RandomFloat(-0.5, 0.5) * vSize[0],
+					random->RandomFloat(-0.5, 0.5) * vSize[1],
+					random->RandomFloat(-0.5, 0.5) * vSize[2]);
+
+				// Per-gib velocity: base direction + randomization (matching client-side BreakModel)  
+				Vector gibVelocity;
+				gibVelocity.x = vecVelocity.x + random->RandomFloat(-400.0, 400.0);
+				gibVelocity.y = vecVelocity.y + random->RandomFloat(-400.0, 400.0);
+				gibVelocity.z = vecVelocity.z + random->RandomFloat(0, 400.0); // upward bias
+
+				// Trace from center to candidate position to avoid spawning inside world brushes  
+				trace_t tr;
+				UTIL_TraceLine(GetAbsOrigin(), gibPos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+				if (tr.fraction < 1.0f)
+				{
+					// Hit a brush — place the gib on the surface, pulled back slightly  
+					// so it's not exactly flush with the brush face  
+					gibPos = tr.endpos + tr.plane.normal * 2.0f;
+				}
+
+				AngularImpulse angImpulse(
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255));
+
+				breakablepropparams_t params(GetAbsOrigin(), vec3_angle,
+					gibVelocity, angImpulse);
+				params.impactEnergyScale = 0.1f;
+				params.defBurstScale = 0.0f;
+				params.defCollisionGroup = COLLISION_GROUP_DEBRIS;
+
+				BreakModelCreateSingle(this, &breakModel, gibPos,
+					vec3_angle, gibVelocity, angImpulse, 0, params, true);
+			}
 		}
 	}
 

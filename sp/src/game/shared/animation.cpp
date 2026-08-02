@@ -574,7 +574,9 @@ int GetAnimationEvent( CStudioHdr *pstudiohdr, int sequence, animevent_t *pNPCEv
 			if ( !(pevent[index].type & AE_TYPE_SERVER) )
 				 continue;
 		}
-		else if ( pevent[index].event >= EVENT_CLIENT ) //Adrian - Support the old event system
+		//mygamepedia: this line doesn't let us to use shells on server from 6001 event
+		//just add it as an exception
+		else if (pevent[index].event >= EVENT_CLIENT && pevent[index].event != 6001) //Adrian - Support the old event system
 			continue;
 	
 		bool bOverlapEvent = false;

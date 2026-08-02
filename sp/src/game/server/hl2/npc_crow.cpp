@@ -1091,6 +1091,23 @@ bool CNPC_Crow::BecomeRagdollOnClient( const Vector &force )
 	return BaseClass::BecomeRagdollOnClient( newForce );
 }
 
+//------------------------------------------------------------------------------
+// Purpose: Taked code from BecomeRagdollOnClient for proper force on server ragdoll version - MyGamepedia 
+//-----------------------------------------------------------------------------
+bool CNPC_Crow::BecomeRagdoll(const CTakeDamageInfo& info, const Vector& forceVector)
+{
+	Vector newForce = forceVector;
+	if (VPhysicsGetObject())
+	{
+		float flMass = VPhysicsGetObject()->GetMass();
+		float speed = VectorNormalize(newForce);
+		speed = MIN(speed, (CROW_RAGDOLL_SPEED_LIMIT * flMass));
+		newForce *= speed;
+	}
+
+	return BaseClass::BecomeRagdoll(info, newForce);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

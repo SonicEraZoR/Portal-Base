@@ -22,6 +22,7 @@
 #include "physicsshadowclone.h"
 #include "particle_parse.h"
 #include "rumble_shared.h"
+#include "items.h"
 
 
 #define BLAST_SPEED_NON_PLAYER 1000.0f
@@ -78,6 +79,7 @@ PRECACHE_WEAPON_REGISTER(weapon_portalgun);
 
 extern ConVar sv_portal_placement_debug;
 extern ConVar sv_portal_placement_never_fail;
+extern ConVar sv_portalbase_item_touch_area;
 ConVar beta_quickinfo_show_portal_delay("beta_quickinfo_show_portal_delay", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE);
 ConVar sv_portal_projectile_delay("sv_portal_projectile_delay", "0.5", FCVAR_REPLICATED | FCVAR_ARCHIVE, "Maximum delay after firing and before portal is placed. If set to a very high number behaviour will be the same as in normal Portal.");
 ConVar allow_portalgun_lowering_anim("allow_portalgun_lowering_anim", "0", FCVAR_GAMEDLL | FCVAR_ARCHIVE | FCVAR_REPLICATED, "Allows lowering animation (animation when you look at npc's) to play)");
@@ -87,6 +89,18 @@ void CWeaponPortalgun::Spawn( void )
 	Precache();
 
 	BaseClass::Spawn();
+
+	//mygamepedia: this is moved from BasePortalWeapon for hl2 weapons proper size
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		// Use less bloat for the collision box for this weapon. (bug 43800)
+		CollisionProp()->UseTriggerBounds(true, 20);
+	}
+	else
+	{
+		if (m_hTouchArea.Get())
+			static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->CollisionProp()->UseTriggerBounds(true, 20);
+	}
 
 	SetThink( &CWeaponPortalgun::Think );
 	SetNextThink( gpGlobals->curtime + 0.1 );
@@ -103,7 +117,7 @@ void CWeaponPortalgun::Spawn( void )
 
 //MyGamepedia: i'm not sure for what they added it, let it be optional
 ConVar	sv_portalgun_toggle_prongs("sv_portalgun_toggle_prongs", "0",
-	FCVAR_REPLICATED,
+	FCVAR_NONE,
 	"Toggle prongs on level transition or save load, 0 to prevent, 1 to toggle.");
 
 
@@ -600,50 +614,56 @@ float CWeaponPortalgun::TraceFirePortal( bool bPortal2, const Vector &vTraceStar
 	return VerifyPortalPlacement( CProp_Portal::FindPortal( m_iPortalLinkageGroupID, bPortal2 ), vFinalPosition, qFinalAngles, iPlacedBy, bTest );
 }
 
-float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool bTest /*= false*/ )
+ConVar	sv_portalbase_edge_glitch("sv_portalbase_edge_glitch", "0",
+	FCVAR_NONE,
+	"When off, fixes the edge glitch that causes the player to use virtual portal player camera position for portal shoot, while the player isn't in a portal hole.");
+
+float CWeaponPortalgun::FirePortal(bool bPortal2, Vector* pVector /*= 0*/, bool bTest /*= false*/)
 {
 	bool bPlayer = false;
 	Vector vEye;
 	Vector vDirection;
 	Vector vTracerOrigin;
 
-	CBaseEntity *pOwner = GetOwner();
+	CBaseEntity* pOwner = GetOwner();
 
-	if ( pOwner && pOwner->IsPlayer() )
+	if (pOwner && pOwner->IsPlayer())
 	{
 		bPlayer = true;
 	}
 
-	if( bPlayer )
+	if (bPlayer)
 	{
-		CPortal_Player *pPlayer = (CPortal_Player *)pOwner;
+		CPortal_Player* pPlayer = (CPortal_Player*)pOwner;
 
-		if ( !bTest && pPlayer )
+		if (!bTest && pPlayer)
 		{
 			pPlayer->SetAnimation(PLAYER_ATTACK1);
 		}
 
 		Vector forward, right, up;
-		AngleVectors( pPlayer->EyeAngles(), &forward, &right, &up );
-		pPlayer->EyeVectors( &vDirection, NULL, NULL );
+		AngleVectors(pPlayer->EyeAngles(), &forward, &right, &up);
+		pPlayer->EyeVectors(&vDirection, NULL, NULL);
 		vEye = pPlayer->EyePosition();
 
 		// Check if the players eye is behind the portal they're in and translate it
 		VMatrix matThisToLinked;
-		CProp_Portal *pPlayerPortal = pPlayer->m_hPortalEnvironment;
+		CProp_Portal* pPlayerPortal = pPlayer->m_hPortalEnvironment;
 
-		if ( pPlayerPortal )
+		if (pPlayerPortal)
 		{
 			Vector ptPortalCenter;
 			Vector vPortalForward;
 
 			ptPortalCenter = pPlayerPortal->GetAbsOrigin();
-			pPlayerPortal->GetVectors( &vPortalForward, NULL, NULL );
+			pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
 
 			Vector vEyeToPortalCenter = ptPortalCenter - vEye;
 
-			float fPortalDist = vPortalForward.Dot( vEyeToPortalCenter );
-			if( fPortalDist > 0.0f )
+			float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPlayer)))
 			{
 				// Eye is behind the portal
 				matThisToLinked = pPlayerPortal->MatrixThisToLinked();
@@ -654,17 +674,17 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 			}
 		}
 
-		if ( pPlayerPortal )
+		if (pPlayerPortal)
 		{
-			UTIL_Portal_VectorTransform( matThisToLinked, forward, forward );
-			UTIL_Portal_VectorTransform( matThisToLinked, right, right );
-			UTIL_Portal_VectorTransform( matThisToLinked, up, up );
-			UTIL_Portal_VectorTransform( matThisToLinked, vDirection, vDirection );
-			UTIL_Portal_PointTransform( matThisToLinked, vEye, vEye );
+			UTIL_Portal_VectorTransform(matThisToLinked, forward, forward);
+			UTIL_Portal_VectorTransform(matThisToLinked, right, right);
+			UTIL_Portal_VectorTransform(matThisToLinked, up, up);
+			UTIL_Portal_VectorTransform(matThisToLinked, vDirection, vDirection);
+			UTIL_Portal_PointTransform(matThisToLinked, vEye, vEye);
 
-			if ( pVector )
+			if (pVector)
 			{
-				UTIL_Portal_VectorTransform( matThisToLinked, *pVector, *pVector );
+				UTIL_Portal_VectorTransform(matThisToLinked, *pVector, *pVector);
 			}
 		}
 
@@ -678,18 +698,18 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 		// This portalgun is not held by the player-- Fire using the muzzle attachment
 		Vector vecShootOrigin;
 		QAngle angShootDir;
-		GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
+		GetAttachment(LookupAttachment("muzzle"), vecShootOrigin, angShootDir);
 		vEye = vecShootOrigin;
 		vTracerOrigin = vecShootOrigin;
-		AngleVectors( angShootDir, &vDirection, NULL, NULL );
+		AngleVectors(angShootDir, &vDirection, NULL, NULL);
 	}
 
-	if ( !bTest )
+	if (!bTest)
 	{
-		SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 	}
 
-	if ( pVector )
+	if (pVector)
 	{
 		vDirection = *pVector;
 	}
@@ -699,31 +719,31 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 	Vector vFinalPosition;
 	QAngle qFinalAngles;
 
-	PortalPlacedByType ePlacedBy = ( bPlayer ) ? ( PORTAL_PLACED_BY_PLAYER ) : ( PORTAL_PLACED_BY_PEDESTAL );
+	PortalPlacedByType ePlacedBy = (bPlayer) ? (PORTAL_PLACED_BY_PLAYER) : (PORTAL_PLACED_BY_PEDESTAL);
 
 	trace_t tr;
-	float fPlacementSuccess = TraceFirePortal( bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, ePlacedBy, bTest );
+	float fPlacementSuccess = TraceFirePortal(bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, ePlacedBy, bTest);
 
-	if ( sv_portal_placement_never_fail.GetBool() )
+	if (sv_portal_placement_never_fail.GetBool())
 	{
 		fPlacementSuccess = 1.0f;
 	}
 
-	if ( !bTest )
+	if (!bTest)
 	{
-		CProp_Portal *pPortal = CProp_Portal::FindPortal( m_iPortalLinkageGroupID, bPortal2, true );
+		CProp_Portal* pPortal = CProp_Portal::FindPortal(m_iPortalLinkageGroupID, bPortal2, true);
 
 		// If it was a failure, put the effect at exactly where the player shot instead of where the portal bumped to
-		if ( fPlacementSuccess < 0.5f )
+		if (fPlacementSuccess < 0.5f)
 			vFinalPosition = tr.endpos;
 
-		pPortal->PlacePortal( vFinalPosition, qFinalAngles, fPlacementSuccess, true );
+		pPortal->PlacePortal(vFinalPosition, qFinalAngles, fPlacementSuccess, true);
 
 		float fDelay;
 
-		ConVar *beta_quickinfo = cvar->FindVar("beta_quickinfo");
+		ConVar* beta_quickinfo = cvar->FindVar("beta_quickinfo");
 
-//		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
+		//		float fDelay = vTracerOrigin.DistTo( tr.endpos ) / ( ( bPlayer ) ? ( BLAST_SPEED ) : ( BLAST_SPEED_NON_PLAYER ) );
 		if (beta_quickinfo_show_portal_delay.GetBool() && beta_quickinfo->GetBool())
 		{
 			fDelay = m_fPortalPlacementDelay;
@@ -732,12 +752,12 @@ float CWeaponPortalgun::FirePortal( bool bPortal2, Vector *pVector /*= 0*/, bool
 		{
 			fDelay = clamp(vTracerOrigin.DistTo(tr.endpos) / ((bPlayer) ? (BLAST_SPEED) : (BLAST_SPEED_NON_PLAYER)), 0.0f, sv_portal_projectile_delay.GetFloat());
 		}
-		
-		QAngle qFireAngles;
-		VectorAngles( vDirection, qFireAngles );
-		DoEffectBlast( pPortal->m_bIsPortal2, ePlacedBy, vTracerOrigin, vFinalPosition, qFireAngles, fDelay );
 
-		pPortal->SetContextThink( &CProp_Portal::DelayedPlacementThink, gpGlobals->curtime + fDelay, s_pDelayedPlacementContext ); 
+		QAngle qFireAngles;
+		VectorAngles(vDirection, qFireAngles);
+		DoEffectBlast(pPortal->m_bIsPortal2, ePlacedBy, vTracerOrigin, vFinalPosition, qFireAngles, fDelay);
+
+		pPortal->SetContextThink(&CProp_Portal::DelayedPlacementThink, gpGlobals->curtime + fDelay, s_pDelayedPlacementContext);
 		pPortal->m_vDelayedPosition = vFinalPosition;
 		pPortal->m_hPlacedBy = this;
 	}
@@ -805,7 +825,7 @@ bool CWeaponPortalgun::CanHolster(void)
 {
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 
-	if (pPlayer && pPlayer->GetUseEntity())
+	if (pPlayer && pPlayer->GetUseEntity() && pPlayer->GetUseEntity()->IsBaseTank() == false)
 		return false;
 
 	return BaseClass::CanHolster();
@@ -929,6 +949,10 @@ bool CWeaponPortalgun::Reload(void)
 	return bFizzledPortal;
 }
 
+ConVar sv_portalbase_portalgun_fast_refire("sv_portalbase_portalgun_fast_refire", "1",
+	FCVAR_NONE,
+	"Let portal device fire a soon as possible without any delay.");
+
 //====================================================================================
 // WEAPON BEHAVIOUR
 //====================================================================================
@@ -939,20 +963,33 @@ void CWeaponPortalgun::ItemPostFrame(void)
 	if (m_bInReload)
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
 
 	if (pOwner == NULL)
 		return;
 
-	//Allow a refire as fast as the player can click
-	if (((pOwner->m_nButtons & IN_ATTACK) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime))
+	if (sv_portalbase_portalgun_fast_refire.GetBool())
 	{
-		m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
+		//Allow a refire as fast as the player can click
+		if (((pOwner->m_nButtons & IN_ATTACK) == false) && (m_flSoonestPrimaryAttack < gpGlobals->curtime) && pOwner->GetWaterLevel() == 0)
+			m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
+
+		if (((pOwner->m_nButtons & IN_ATTACK2) == false) && (m_flSoonestSecondaryAttack < gpGlobals->curtime) && pOwner->GetWaterLevel() == 0)
+			m_flNextSecondaryAttack = gpGlobals->curtime - 0.1f;
 	}
 
-	if (((pOwner->m_nButtons & IN_ATTACK2) == false) && (m_flSoonestSecondaryAttack < gpGlobals->curtime))
+	//mygamepedia: play underwater sound if attempts to shoot
+	//in attack1 and no delay or in attack2 and no delay AND underwater AND this weapon can't shoot underwater
+
+	bool bDelayed = (m_flNextPrimaryAttack <= gpGlobals->curtime || m_flNextSecondaryAttack <= gpGlobals->curtime);
+	bool bInAttack = ((pOwner->m_nButtons & IN_ATTACK) || (pOwner->m_nButtons & IN_ATTACK2));
+
+
+	if (bDelayed && bInAttack && pOwner->GetWaterLevel() == 3 && !m_bFiresUnderwater)
 	{
-		m_flNextSecondaryAttack = gpGlobals->curtime - 0.1f;
+		WeaponSound(EMPTY);
+		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
+		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5;
 	}
 }
 

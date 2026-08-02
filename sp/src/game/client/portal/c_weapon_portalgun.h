@@ -141,6 +141,7 @@ public:
 	float GetPortal2Placablity( void ) { return m_fCanPlacePortal2OnThisSurface; }
 	int GetLastFiredPortal( void ) { return m_iLastFiredPortal; }
 	bool IsHoldingObject( void ) { return m_bOpenProngs; }
+	virtual bool IsPortalGun() { return true; }
 
 	bool Reload( void );
 	void FillClip( void );

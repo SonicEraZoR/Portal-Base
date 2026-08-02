@@ -28,7 +28,9 @@ public:
 	virtual void SetupTransformMatrix( void );
 	virtual void Update( float flTimeDelta );
 
-	const matrix3x4_t& GetTransformMatrix() const;	
+	const matrix3x4_t& GetTransformMatrix() const;
+
+	void SetSuppressInFirstPerson(bool bSuppress) { m_bSuppressInFirstPerson = bSuppress; }
 
 protected:
 

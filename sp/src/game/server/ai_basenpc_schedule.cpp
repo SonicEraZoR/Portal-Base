@@ -34,6 +34,7 @@
 #include "ndebugoverlay.h"
 #include "tier0/vcrmode.h"
 #include "env_debughistory.h"
+#include "physics_prop_ragdoll.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -4591,7 +4592,19 @@ int CAI_BaseNPC::SelectCombatSchedule()
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::SelectDeadSchedule()
 {
-	if ( BecomeRagdollOnClient( vec3_origin ) )
+	if (m_bForceServerRagdoll)
+	{
+		CTakeDamageInfo dmg;
+		CBaseEntity* pRagdoll = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+
+		if (pRagdoll)
+		{
+			pRagdoll->ApplyAbsVelocityImpulse(vec3_origin);
+			CleanupOnDeath();
+			return SCHED_DIE_RAGDOLL;
+		}
+	}
+	else if ( BecomeRagdollOnClient( vec3_origin ) )
 	{
 		CleanupOnDeath();
 		return SCHED_DIE_RAGDOLL;

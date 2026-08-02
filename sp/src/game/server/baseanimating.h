@@ -325,6 +325,12 @@ public:
 
 	void	SetFadeDistance( float minFadeDist, float maxFadeDist );
 
+	inline float	GetFadeDistanceMax() { return m_fadeMaxDist; }
+	inline float	GetFadeDistanceMin() { return m_fadeMinDist; };
+
+	inline float	GetFadeDistanceScale() { return m_flFadeScale; };
+	inline void		SetFadeDistanceScale(const float flFadeScale) { m_flFadeScale = flFadeScale; }
+
 	int		GetBoneCacheFlags( void ) { return m_fBoneCacheFlags; }
 	inline void	SetBoneCacheFlags( unsigned short fFlag ) { m_fBoneCacheFlags |= fFlag; }
 	inline void	ClearBoneCacheFlags( unsigned short fFlag ) { m_fBoneCacheFlags &= ~fFlag; }

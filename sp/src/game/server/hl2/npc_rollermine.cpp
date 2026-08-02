@@ -542,7 +542,7 @@ void CNPC_RollerMine::Spawn( void )
 
 	BaseClass::Spawn();
 
-	AddEFlags( EFL_NO_DISSOLVE );
+	AddEFlags(EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL); //mygamepedia: fixed megaphyscannon rag clones
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_SQUAD );

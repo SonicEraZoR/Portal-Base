@@ -736,7 +736,7 @@ void CViewRender::SetUpViews()
 	float flFOVOffset = fDefaultFov - view.fov;
 
 	//Adjust the viewmodel's FOV to move with any FOV offsets on the viewer's end
-	view.fovViewmodel = g_pClientMode->GetViewModelFOV() - flFOVOffset;
+	view.fovViewmodel = fabs(g_pClientMode->GetViewModelFOV() - flFOVOffset);
 
 	if ( UseVR() )
 	{

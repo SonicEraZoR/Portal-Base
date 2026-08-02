@@ -21,10 +21,13 @@
 	#include "c_portal_player.h"
 #endif
 #include "PortalSimulation.h"
+#include "filesystem.h"
 
 bool g_bAllowForcePortalTrace = false;
 bool g_bForcePortalTrace = false;
 bool g_bBulletPortalTrace = true; // makes metrocops shoot through portals (sometimes)
+
+static CUtlVector<CUtlString> g_PortalTraceIgnoreList;
 
 ConVar sv_portal_trace_vs_world ("sv_portal_trace_vs_world", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment world geometry" );
 ConVar sv_portal_trace_vs_displacements ("sv_portal_trace_vs_displacements", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment displacement geometry" );
@@ -32,6 +35,9 @@ ConVar sv_portal_trace_vs_holywall ("sv_portal_trace_vs_holywall", "1", FCVAR_RE
 ConVar sv_portal_trace_vs_staticprops ("sv_portal_trace_vs_staticprops", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Use traces against portal environment static prop geometry" );
 ConVar sv_use_find_closest_passable_space ("sv_use_find_closest_passable_space", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Enables heavy-handed player teleporting stuck fix code." );
 ConVar sv_use_transformed_collideables("sv_use_transformed_collideables", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Disables traces against remote portal moving entities using transforms to bring them into local space." );
+ConVar sv_portalbase_debug_bullet_traceray("sv_portalbase_debug_bullet_traceray", "0", FCVAR_CHEAT,
+	"Draw debug lines/boxes for bullet portal traversal (server only)");
+
 class CTransformedCollideable : public ICollideable //wraps an existing collideable, but transforms everything that pertains to world space by another transform
 {
 public:
@@ -143,108 +149,113 @@ const matrix3x4_t* CTransformedCollideable::GetRootParentToWorldTransform() cons
 	return &m_ReferencedVars.m_matRootParentToWorldTransform;
 }
 
-Color UTIL_Portal_Color( int iPortal )
+//-----------------------------------------------------------------------------
+// Purpose: Returns wanted colors for portals and portalgun, 0 for gravity beam, 1 for blue portal (portal 1), 2 for orange portal (portal 2).
+// Used by crosshair and some sprites on the portalgun, doesn't affect portals, gravity beams and other portalgun's sprites.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+Color UTIL_Portal_Color(int iPortal)
 {
-	switch ( iPortal )
+	switch (iPortal)
 	{
 		case 0:
 			// GRAVITY BEAM
-			return Color( 242, 202, 167, 255 );
+			return Color(242, 202, 167, 255);
 
 		case 1:
 			// PORTAL 1
-			return Color( 64, 160, 255, 255 );
+			return Color(64, 160, 255, 255);
 
 		case 2:
 			// PORTAL 2
-			return Color( 255, 160, 32, 255 );
+			return Color(255, 160, 32, 255);
 	}
 
-	return Color( 255, 255, 255, 255 );
+	return Color(255, 255, 255, 255);
 }
 
-void UTIL_Portal_Trace_Filter( CTraceFilterSimpleClassnameList *traceFilterPortalShot )
+//-----------------------------------------------------------------------------
+// Purpose: Used by portalbase_update_portal_trace_list to refresh the list.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void PortalbaseUpdatePortalTraceListChanged(IConVar* pConVar, const char* pOldString, float flOldValue)
 {
-	traceFilterPortalShot->AddClassnameToIgnore( "prop_physics" );
-	traceFilterPortalShot->AddClassnameToIgnore( "func_physbox" );
-	traceFilterPortalShot->AddClassnameToIgnore( "npc_portal_turret_floor" );
-	traceFilterPortalShot->AddClassnameToIgnore( "prop_energy_ball" );
-	traceFilterPortalShot->AddClassnameToIgnore( "npc_security_camera" );
-	traceFilterPortalShot->AddClassnameToIgnore( "player" );
-	traceFilterPortalShot->AddClassnameToIgnore( "simple_physics_prop" );
-	traceFilterPortalShot->AddClassnameToIgnore( "simple_physics_brush" );
-	traceFilterPortalShot->AddClassnameToIgnore( "prop_ragdoll" );
-	traceFilterPortalShot->AddClassnameToIgnore( "prop_glados_core" );
-	traceFilterPortalShot->AddClassnameToIgnore( "updateitem2" );
-	traceFilterPortalShot->AddClassnameToIgnore("npc_turret_floor");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_manhack");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_rollermine");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_metropolice");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_combine");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_citizen");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_alyx");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_antlion");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_antlion_grub");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_antlionguard");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_barney");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_breen");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_combine_s");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_dog");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_fastzombie");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_fisherman");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_headcrab");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_headcrab_fast");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_hunter");
-	traceFilterPortalShot->AddClassnameToIgnore("hunter_flechette");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_kleiner");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_magnusson");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_monk");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_mossman");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_poisonzombie");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_stalker");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_vortigaunt");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_zombie");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_zombie_torso");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_zombine");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_357");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_ar2");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_bugbait");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_crossbow");
-	traceFilterPortalShot->AddClassnameToIgnore("crossbow_bolt");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_crowbar");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_frag");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_pistol");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_rpg");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_shotgun");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_smg1");
-	traceFilterPortalShot->AddClassnameToIgnore("prop_stickybomb");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_striderbuster");
-	traceFilterPortalShot->AddClassnameToIgnore("weapon_physcannon");
-	traceFilterPortalShot->AddClassnameToIgnore("item_box_srounds");	
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_pistol");
-	traceFilterPortalShot->AddClassnameToIgnore("item_large_box_srounds");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_pistol_large");
-	traceFilterPortalShot->AddClassnameToIgnore("item_box_mrounds");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_smg1");
-	traceFilterPortalShot->AddClassnameToIgnore("item_large_box_mrounds");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_smg1_large");
-	traceFilterPortalShot->AddClassnameToIgnore("item_box_lrounds");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_ar2");
-	traceFilterPortalShot->AddClassnameToIgnore("item_large_box_lrounds");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_ar2_large");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_357");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_357_large");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_crossbow");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ml_grenade");
-	traceFilterPortalShot->AddClassnameToIgnore("item_rpg_round");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ar2_grenade");
-	traceFilterPortalShot->AddClassnameToIgnore("item_box_buckshot");
-	traceFilterPortalShot->AddClassnameToIgnore("item_ammo_ar2_altfire");
-	traceFilterPortalShot->AddClassnameToIgnore("item_battery");
-	traceFilterPortalShot->AddClassnameToIgnore("item_crate");
-	traceFilterPortalShot->AddClassnameToIgnore("npc_bullseye");
+	ConVarRef var(pConVar);
+
+#ifndef CLIENT_DLL
+	Msg("Portal trace filter has been changed on server!\n");
+
+	//run on server
+	UTIL_Porta_LoadPortalTraceFilterList(var.GetString());
+
+	char szReturnString[512];
+	Q_snprintf(szReturnString, sizeof(szReturnString), "cl_portalbase_portal_trace_filter_file %s\n", var.GetString());
+
+	//update filter data for all clients
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CBaseEntity* pPlayer = UTIL_PlayerByIndex(i);
+		if (pPlayer)
+			engine->ClientCommand(pPlayer->edict(), szReturnString);
+	}
+#else
+	Msg("Portal trace filter has been changed on client!\n");
+
+	//run on client
+	UTIL_Porta_LoadPortalTraceFilterList(var.GetString());
+#endif
 }
 
+#ifndef CLIENT_DLL
+ConVar sv_portalbase_portal_trace_filter_file("sv_portalbase_portal_trace_filter_file", "portalbase_portal_trace_filter",
+	FCVAR_REPLICATED,
+	"Script file with classnames for portal trace filter to ignore on server.",
+	PortalbaseUpdatePortalTraceListChanged);
+#else
+ConVar cl_portalbase_portal_trace_filter_file("cl_portalbase_portal_trace_filter_file", "portalbase_portal_trace_filter",
+	FCVAR_SERVER_CAN_EXECUTE,
+	"Script file with classnames for portal trace filter to ignore on client.",
+	PortalbaseUpdatePortalTraceListChanged);
+#endif // !CLIENT_DLL
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Loads a list of passable entities for portal projectile.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void UTIL_Porta_LoadPortalTraceFilterList(const char* szFile)
+{
+	g_PortalTraceIgnoreList.Purge();
+
+	KeyValues* kv = new KeyValues("PortalTraceFilter");
+
+	char filename[512];
+	Q_snprintf(filename, sizeof(filename), "scripts/%s.txt", szFile);
+
+	if (kv->LoadFromFile(filesystem, filename, "MOD"))
+	{
+		//BUG: it needs at least two classes in the file to load without errors (still will work with < 2)
+		for (KeyValues* sub = kv->GetFirstSubKey(); sub; sub = sub->GetNextKey())
+		{
+			g_PortalTraceIgnoreList.AddToTail(sub->GetName());
+		}
+	}
+
+	kv->deleteThis();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Adds a list of passable entities for portal projectile into trace filter.
+// Our in Portal-Base version using dynamic list of classes via file, instead of a predefined/hardcoded classses.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void UTIL_Portal_Trace_Filter(CTraceFilterSimpleClassnameList* traceFilterPortalShot)
+{
+	for (int i = 0; i < g_PortalTraceIgnoreList.Count(); ++i)
+	{
+		traceFilterPortalShot->AddClassnameToIgnore(g_PortalTraceIgnoreList[i]);
+	}
+}
 
 CProp_Portal* UTIL_Portal_FirstAlongRay( const Ray_t &ray, float &fMustBeCloserThan )
 {
@@ -278,93 +289,24 @@ CProp_Portal* UTIL_Portal_FirstAlongRay( const Ray_t &ray, float &fMustBeCloserT
 	return pIntersectedPortal;
 }
 
-
-bool UTIL_Portal_TraceRay_Bullets( const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, trace_t *pTrace, bool bTraceHolyWall )
+//-----------------------------------------------------------------------------
+// Purpose: Trace a bullet ray through portals, returning the first hit.
+// Our in Portal-Base version, we support up to 16 passes for recursive portal traversal, debug with sv_portalbase_debug_bullet_traceray.
+// Output: Returns true if the ray went through a portal, false if it hit something in the original world.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal* pPortal, const Ray_t& ray,
+	unsigned int fMask, ITraceFilter* pTraceFilter, trace_t* pTrace, bool bTraceHolyWall,
+	CUtlVector<PortalBulletCrossing_t>* pCrossingsOut)
 {
-	if( !pPortal || !pPortal->IsActivedAndLinked() )
-	{
-		//not in a portal environment, use regular traces
-		enginetrace->TraceRay( ray, fMask, pTraceFilter, pTrace );
-		return false;
-	}
-
-	trace_t trReal;
-
-	enginetrace->TraceRay( ray, fMask, pTraceFilter, &trReal );
-
-	Vector vRayNormal = ray.m_Delta;
-	VectorNormalize( vRayNormal );
-
-	Vector vPortalForward;
-	pPortal->GetVectors( &vPortalForward, 0, 0 );
-
-	// If the ray isn't going into the front of the portal, just use the real trace
-	if ( vPortalForward.Dot( vRayNormal ) > 0.0f )
-	{
-		*pTrace = trReal;
-		return false;
-	}
-
-	// If the real trace collides before the portal plane, just use the real trace
-	float fPortalFraction = UTIL_IntersectRayWithPortal( ray, pPortal );
-
-	if ( fPortalFraction == -1.0f || trReal.fraction + 0.0001f < fPortalFraction )
-	{
-		// Didn't intersect or the real trace intersected closer
-		*pTrace = trReal;
-		return false;
-	}
-
-	Ray_t rayPostPortal;
-	rayPostPortal = ray;
-	rayPostPortal.m_Start = ray.m_Start + ray.m_Delta * fPortalFraction;
-	rayPostPortal.m_Delta = ray.m_Delta * ( 1.0f - fPortalFraction );
-
-	VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
-
-	Ray_t rayTransformed;
-	UTIL_Portal_RayTransform( matThisToLinked, rayPostPortal, rayTransformed );
-
-	// After a bullet traces through a portal it can hit the player that fired it
-	CTraceFilterSimple *pSimpleFilter = dynamic_cast<CTraceFilterSimple*>(pTraceFilter);
-	const IHandleEntity *pPassEntity = NULL;
-	if ( pSimpleFilter )
-	{
-		pPassEntity = pSimpleFilter->GetPassEntity();
-		pSimpleFilter->SetPassEntity( 0 );
-	}
-
-	trace_t trPostPortal;
-	enginetrace->TraceRay( rayTransformed, fMask, pTraceFilter, &trPostPortal );
-
-	if ( pSimpleFilter )
-	{
-		pSimpleFilter->SetPassEntity( pPassEntity );
-	}
-
-	//trPostPortal.startpos = ray.m_Start;
-	UTIL_Portal_PointTransform( matThisToLinked, ray.m_Start, trPostPortal.startpos );
-	trPostPortal.fraction = trPostPortal.fraction * ( 1.0f - fPortalFraction ) + fPortalFraction;
-
-	*pTrace = trPostPortal;
-
-	return true;
-}
-
-//added this overload to use in void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
-bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, const IHandleEntity *ignore, int collisionGroup, trace_t *pTrace, bool bTraceHolyWall)
-{
-	CTraceFilterSimple traceFilter( ignore, collisionGroup );
 	if (!pPortal || !pPortal->IsActivedAndLinked())
 	{
-		//not in a portal environment, use regular traces
-		enginetrace->TraceRay(ray, fMask, &traceFilter, pTrace);
+		enginetrace->TraceRay(ray, fMask, pTraceFilter, pTrace);
 		return false;
 	}
 
 	trace_t trReal;
-
-	enginetrace->TraceRay(ray, fMask, &traceFilter, &trReal);
+	enginetrace->TraceRay(ray, fMask, pTraceFilter, &trReal);
 
 	Vector vRayNormal = ray.m_Delta;
 	VectorNormalize(vRayNormal);
@@ -372,23 +314,30 @@ bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray,
 	Vector vPortalForward;
 	pPortal->GetVectors(&vPortalForward, 0, 0);
 
-	// If the ray isn't going into the front of the portal, just use the real trace
 	if (vPortalForward.Dot(vRayNormal) > 0.0f)
 	{
 		*pTrace = trReal;
 		return false;
 	}
 
-	// If the real trace collides before the portal plane, just use the real trace
 	float fPortalFraction = UTIL_IntersectRayWithPortal(ray, pPortal);
 
 	if (fPortalFraction == -1.0f || trReal.fraction + 0.0001f < fPortalFraction)
 	{
-		// Didn't intersect or the real trace intersected closer
 		*pTrace = trReal;
 		return false;
 	}
 
+	//mygamepedia: clear pass entity so bullet can hit the shooter after going through a portal  
+	CTraceFilterSimple* pSimpleFilter = dynamic_cast<CTraceFilterSimple*>(pTraceFilter);
+	const IHandleEntity* pPassEntity = NULL;
+	if (pSimpleFilter)
+	{
+		pPassEntity = pSimpleFilter->GetPassEntity();
+		pSimpleFilter->SetPassEntity(0);
+	}
+
+	//mygamepedia: build the post-portal ray and transform through the first portal  
 	Ray_t rayPostPortal;
 	rayPostPortal = ray;
 	rayPostPortal.m_Start = ray.m_Start + ray.m_Delta * fPortalFraction;
@@ -396,33 +345,177 @@ bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray,
 
 	VMatrix matThisToLinked = pPortal->MatrixThisToLinked();
 
-	Ray_t rayTransformed;
-	UTIL_Portal_RayTransform(matThisToLinked, rayPostPortal, rayTransformed);
+	Ray_t rayCurrent;
+	UTIL_Portal_RayTransform(matThisToLinked, rayPostPortal, rayCurrent);
 
-	// After a bullet traces through a portal it can hit the player that fired it
-	CTraceFilterSimple *pSimpleFilter = dynamic_cast<CTraceFilterSimple*>(&traceFilter);
-	const IHandleEntity *pPassEntity = NULL;
-	if (pSimpleFilter)
+	if (pCrossingsOut)
 	{
-		pPassEntity = pSimpleFilter->GetPassEntity();
-		pSimpleFilter->SetPassEntity(0);
+		PortalBulletCrossing_t crossing;
+		crossing.pPortal = pPortal;                              // the function parameter  
+		crossing.vWorldEntry = ray.m_Start + ray.m_Delta * fPortalFraction;
+		crossing.vWorldExit = rayCurrent.m_Start;                  // already transformed  
+		pCrossingsOut->AddToTail(crossing);
 	}
 
-	trace_t trPostPortal;
-	enginetrace->TraceRay(rayTransformed, fMask, &traceFilter, &trPostPortal);
+	float fAccumulatedFraction = fPortalFraction;
+	float fRemainingScale = 1.0f - fPortalFraction;
+
+	const int MAX_PORTAL_TRAVERSALS = 16; //mygamepedia: use this line to set the amount of max portal traversals
+
+	int iNumLoops = 0;
+
+#ifndef CLIENT_DLL
+	const bool bDebug = sv_portalbase_debug_bullet_traceray.GetBool();
+
+	//mygamepedia: store up to MAX_PORTAL_TRAVERSALS+1 segments (start/end per segment)  
+	Vector dbgSegStart[MAX_PORTAL_TRAVERSALS + 1];
+	Vector dbgSegEnd[MAX_PORTAL_TRAVERSALS + 1];
+	int    iDbgSegCount = 0;
+
+	Vector vFirstPortalHit = vec3_origin;
+	Vector vLastPortalHit = vec3_origin;
+
+	if (bDebug)
+	{
+		//mygamepedia: segment 0: bullet origin -> first portal crossing (original world space)  
+		vFirstPortalHit = ray.m_Start + ray.m_Delta * fPortalFraction;
+		dbgSegStart[iDbgSegCount] = ray.m_Start;
+		dbgSegEnd[iDbgSegCount] = vFirstPortalHit;
+		++iDbgSegCount;
+	}
+#endif
+
+	while (iNumLoops < MAX_PORTAL_TRAVERSALS)
+	{
+		trace_t trInner;
+		enginetrace->TraceRay(rayCurrent, fMask, pTraceFilter, &trInner);
+
+		//mygamepedia: fNextPortalFraction: in = wall fraction (upper bound),  
+		//									out = actual portal fraction (if portal found)  
+		float fNextPortalFraction = trInner.fraction + 0.0001f;
+		CProp_Portal* pNextPortal = UTIL_Portal_FirstAlongRay(rayCurrent, fNextPortalFraction);
+
+		if (!pNextPortal)
+		{
+			//mygamepedia: no more portals — final hit. Map fraction back to original ray space.  
+			trInner.fraction = fAccumulatedFraction + trInner.fraction * fRemainingScale;
+
+#ifndef CLIENT_DLL  
+			if (bDebug)
+			{
+				//mygamepedia: final segment: current ray start -> actual hit point  
+				dbgSegStart[iDbgSegCount] = rayCurrent.m_Start;
+				dbgSegEnd[iDbgSegCount] = trInner.endpos;
+				++iDbgSegCount;
+			}
+#endif  
+			* pTrace = trInner;
+			break;
+		}
+
+		//mygamepedia: fNextPortalFraction now holds the actual portal crossing fraction.  
+#ifndef CLIENT_DLL  
+		if (bDebug)
+		{
+			//segment N: current ray start -> this portal crossing point  
+			vLastPortalHit = rayCurrent.m_Start + rayCurrent.m_Delta * fNextPortalFraction;
+			dbgSegStart[iDbgSegCount] = rayCurrent.m_Start;
+			dbgSegEnd[iDbgSegCount] = vLastPortalHit;
+			++iDbgSegCount;
+		}
+#endif  
+
+		fAccumulatedFraction += fNextPortalFraction * fRemainingScale;
+		fRemainingScale *= (1.0f - fNextPortalFraction);
+
+		Ray_t rayNextPostPortal;
+		rayNextPostPortal = rayCurrent;
+		rayNextPostPortal.m_Start = rayCurrent.m_Start + rayCurrent.m_Delta * fNextPortalFraction;
+		rayNextPostPortal.m_Delta = rayCurrent.m_Delta * (1.0f - fNextPortalFraction);
+
+		VMatrix matNextToLinked = pNextPortal->MatrixThisToLinked();
+		Ray_t rayNextTransformed;
+		UTIL_Portal_RayTransform(matNextToLinked, rayNextPostPortal, rayNextTransformed);
+
+		rayCurrent = rayNextTransformed;
+
+		//myganepedia: save data for bullet visuals in CBaseEntity::FireBullets()
+		if (pCrossingsOut)
+		{
+			PortalBulletCrossing_t crossing;
+			crossing.pPortal = pNextPortal;
+			crossing.vWorldEntry = rayCurrent.m_Start + rayCurrent.m_Delta * fNextPortalFraction;
+			UTIL_Portal_PointTransform(matNextToLinked, crossing.vWorldEntry, crossing.vWorldExit);
+			pCrossingsOut->AddToTail(crossing);
+		}
+
+		++iNumLoops;
+	}
+
+	if (iNumLoops >= MAX_PORTAL_TRAVERSALS)
+	{
+		//mygamepedia: loop limit reached — final trace with last transformed ray  
+		trace_t trFinal;
+		enginetrace->TraceRay(rayCurrent, fMask, pTraceFilter, &trFinal);
+		trFinal.fraction = fAccumulatedFraction + trFinal.fraction * fRemainingScale;
+
+#ifndef CLIENT_DLL  
+		if (bDebug)
+		{
+			dbgSegStart[iDbgSegCount] = rayCurrent.m_Start;
+			dbgSegEnd[iDbgSegCount] = trFinal.endpos;
+			++iDbgSegCount;
+		}
+#endif  
+		*pTrace = trFinal;
+	}
 
 	if (pSimpleFilter)
 	{
 		pSimpleFilter->SetPassEntity(pPassEntity);
 	}
 
-	//trPostPortal.startpos = ray.m_Start;
-	UTIL_Portal_PointTransform(matThisToLinked, ray.m_Start, trPostPortal.startpos);
-	trPostPortal.fraction = trPostPortal.fraction * (1.0f - fPortalFraction) + fPortalFraction;
+#ifndef CLIENT_DLL  
+	if (bDebug) //mygamepedia: here we draw all the info
+	{
+		const float flDuration = 5.0f;
 
-	*pTrace = trPostPortal;
+		//yellow beam, draw all those segments during bullet flight
+		for (int i = 0; i < iDbgSegCount; ++i)
+		{
+			NDebugOverlay::Line(dbgSegStart[i], dbgSegEnd[i],
+				255, 255, 0, true, flDuration);
+		}
+
+		//green box, our first portal hit point
+		NDebugOverlay::Box(vFirstPortalHit,
+			Vector(-4, -4, -4), Vector(4, 4, 4),
+			0, 255, 0, 200, flDuration);
+
+		//red box, our last portal hit point
+		if (iNumLoops > 0)
+		{
+			NDebugOverlay::Box(vLastPortalHit,
+				Vector(-4, -4, -4), Vector(4, 4, 4),
+				255, 0, 0, 200, flDuration);
+		}
+	}
+#endif
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Overloaded version of UTIL_Portal_TraceRay_Bullets() above, we used it for the crowbar swing trace.
+// Output: Returns true if the ray went through a portal, false if it hit something in the original world.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal* pPortal, const Ray_t& ray,
+	unsigned int fMask, const IHandleEntity* ignore, int collisionGroup,
+	trace_t* pTrace, bool bTraceHolyWall, CUtlVector<PortalBulletCrossing_t>* pCrossingsOut)
+{
+	CTraceFilterSimple traceFilter(ignore, collisionGroup);
+	return UTIL_Portal_TraceRay_Bullets(pPortal, ray, fMask, &traceFilter, pTrace, bTraceHolyWall, pCrossingsOut);
 }
 
 CProp_Portal* UTIL_Portal_TraceRay_Beam( const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, float *pfFraction )
@@ -1194,6 +1287,11 @@ void UTIL_Portal_TraceEntity( CBaseEntity *pEntity, const Vector &vecAbsStart, c
 							if( pRemoteEntity->GetSolid() == SOLID_NONE )
 								continue;
 
+							//mygamepedia: apply the trace filter to remote entities — ClipRayToCollideable has no filter param
+							//we used it to fix projectiles hitting the player when it's too close to the portal
+							if (pFilter && !pFilter->ShouldHitEntity(pRemoteEntity, mask))
+								continue;
+
 							transformedCollideable.m_pWrappedCollideable = pRemoteEntity->GetCollideable();
 							Assert( transformedCollideable.m_pWrappedCollideable != NULL );
 	                        						
@@ -1335,11 +1433,29 @@ float UTIL_Portal_DistanceThroughPortalSqr( const CProp_Portal *pPortal, const V
 	return vPoint1.DistToSqr( pPortal->GetAbsOrigin() ) + pPortalLinked->GetAbsOrigin().DistToSqr( vPoint2 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: The same as UTIL_Portal_ShortestDistanceSqr(), but returns the actual distance (not squared).
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 float UTIL_Portal_ShortestDistance( const Vector &vPoint1, const Vector &vPoint2, CProp_Portal **pShortestDistPortal_Out /*= NULL*/, bool bRequireStraightLine /*= false*/ )
 {
 	return FastSqrt( UTIL_Portal_ShortestDistanceSqr( vPoint1, vPoint2, pShortestDistPortal_Out, bRequireStraightLine ) );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Finds the shortest squared distance between two world-space points, 
+//			accounting for portal shortcuts. It iterates every active, linked portal pair 
+//			and checks whether traveling through a portal produces a shorter path than 
+//			going directly. If a portal shortcut is shorter, it returns that shorter 
+//			distance and (optionally) which portal to enter.
+// Input :	&vPoint1 - Start point.
+//			&vPoint2 - End point.
+//			**pShortestDistPortal_Out - Optional. If non-NULL, receives a pointer to the portal that provides the shortest path.
+//			bRequireStraightLine - If true, only counts portal paths where the line goes straight through the portal quad without wrapping around its edge. Defaults to false.
+// Output:	A float value, the squared distance of the shortest 
+//			path (direct or through a portal). Returns direct squared distance if no portal shortcut is shorter.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 float UTIL_Portal_ShortestDistanceSqr( const Vector &vPoint1, const Vector &vPoint2, CProp_Portal **pShortestDistPortal_Out /*= NULL*/, bool bRequireStraightLine /*= false*/ )
 {
 	float fMinDist = vPoint1.DistToSqr( vPoint2 );	
@@ -1466,6 +1582,10 @@ float UTIL_Portal_ShortestDistanceSqr( const Vector &vPoint1, const Vector &vPoi
 		}
 	}
 
+	//mygamepedia: fixes the bug when the closest portal stays null
+	if (pShortestDistPortal_Out)
+		*pShortestDistPortal_Out = pShortestDistPortal;
+
 	return fMinDist;
 }
 
@@ -1589,6 +1709,11 @@ bool UTIL_IsBoxIntersectingPortal( const Vector &vecBoxCenter, const Vector &vec
 	return UTIL_IsBoxIntersectingPortal( vecBoxCenter, vecBoxExtents, pPortal->GetAbsOrigin(), pPortal->GetAbsAngles(), flTolerance );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: This calcs if given ent touches any existing portals by their actual plane size.
+// Output: Pointer to portal that given object touches, or NULL if none.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 CProp_Portal *UTIL_IntersectEntityExtentsWithPortal( const CBaseEntity *pEntity )
 {
 	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
@@ -1613,6 +1738,99 @@ CProp_Portal *UTIL_IntersectEntityExtentsWithPortal( const CBaseEntity *pEntity 
 	}
 
 	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: The same as UTIL_IntersectEntityExtentsWithPortal, but only given portal and given tolerance.
+// Output: True if touched, false if don't.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+bool UTIL_IntersectEntityExtentsWithGivenPortal(const CProp_Portal* pPortal, const CBaseEntity* pEntity)
+{
+	Vector vMin, vMax;
+	pEntity->CollisionProp()->WorldSpaceAABB(&vMin, &vMax);
+	Vector ptCenter = (vMin + vMax) * 0.5;
+	Vector vExtents = (vMax - vMin) * 0.5;
+
+
+	if (pPortal->m_bActivated && (pPortal->m_hLinkedPortal.Get() != NULL) && UTIL_IsBoxIntersectingPortal(ptCenter, vExtents, pPortal))
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: This calcs if given ent touches any existing portals by their OBB.
+// Output: Pointer to portal that given object touches and the closest, or NULL if none.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+CProp_Portal* UTIL_IntersectEntityExtentsWithPortalOBB(const CBaseEntity* pEntity)
+{
+	if (!pEntity)
+		return NULL;
+
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+
+	if (iPortalCount == 0)
+		return NULL;
+
+	const CCollisionProperty* pCollision = pEntity->CollisionProp();
+	Vector ptEntityCenter = pCollision->GetCollisionOrigin();
+	QAngle qEntityAngles = pCollision->GetCollisionAngles();
+	Vector vEntityMins = pCollision->OBBMins();
+	Vector vEntityMaxs = pCollision->OBBMaxs();
+
+	CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();
+	CProp_Portal* pClosest = NULL;
+	float fClosestDistSqr = FLT_MAX;
+
+	for (int i = 0; i != iPortalCount; ++i)
+	{
+		CProp_Portal* pPortal = pPortals[i];
+
+		if (!pPortal->IsActivedAndLinked())
+			continue;
+
+		if (IsOBBIntersectingOBB(
+			pPortal->GetAbsOrigin(), pPortal->GetAbsAngles(),
+			CProp_Portal_Shared::vLocalMins, CProp_Portal_Shared::vLocalMaxs,
+			ptEntityCenter, qEntityAngles, vEntityMins, vEntityMaxs))
+		{
+			float fDistSqr = ptEntityCenter.DistToSqr(pPortal->GetAbsOrigin());
+			if (fDistSqr < fClosestDistSqr)
+			{
+				fClosestDistSqr = fDistSqr;
+				pClosest = pPortal;
+			}
+		}
+	}
+
+	return pClosest;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Use when on spawn needed to set ownership of an entity to a portal simulator if that entity is touching the portal by its OBB, and start cloning it.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void UTIL_SetPotentialPortalOwnEntity(CBaseEntity* pEntity)
+{
+#ifndef CLIENT_DLL
+	if (!pEntity)
+		return;
+
+	CProp_Portal* pPortal = UTIL_IntersectEntityExtentsWithPortalOBB(pEntity);
+	if (!pPortal)
+		return;
+
+	//just in case if already doesn't, must be rest
+	CPortalSimulator* pOwner = CPortalSimulator::GetSimulatorThatOwnsEntity(pEntity);
+	if (pOwner && pOwner != &pPortal->m_PortalSimulator)
+		pOwner->ReleaseOwnershipOfEntity(pEntity);
+
+	//start owning it
+	pPortal->m_PortalSimulator.TakeOwnershipOfEntity(pEntity);
+	pPortal->m_PortalSimulator.StartCloningEntity(pEntity);
+#endif // !CLIENT_DLL
 }
 
 void UTIL_Portal_NDebugOverlay( const Vector &ptPortalCenter, const QAngle &qPortalAngles, int r, int g, int b, int a, bool noDepthTest, float duration )

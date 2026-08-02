@@ -11,8 +11,22 @@
 #include "portal/weapon_physcannon.h"
 #include "ai_basenpc.h"
 #include "prop_portal_shared.h"
+#include "team.h"
+//#include "portal_mp_gamerules.h"
 #include "vphysics/player_controller.h"
 #include "physicsshadowclone.h"
+#include "player.h"
+
+CBaseEntity* g_pLastSpawn = NULL;
+CBaseEntity* g_pLastCombineSpawn = NULL;
+CBaseEntity* g_pLastRebelSpawn = NULL;
+
+enum
+{
+	TEAM_COMBINE = 2,
+	TEAM_REBELS,
+};
+
 
 LINK_ENTITY_TO_CLASS( player, CPortal_Player );
 
@@ -161,13 +175,12 @@ void CPortal_Player::Spawn(void)
 
 	SetPlayerUnderwater(false);
 
-#ifdef PORTAL_MP
-	PickTeam();
-#endif
+	if (gpGlobals->maxClients > 1)
+		PickTeam();
 }
 
 /*
-I think it makes the player make rebel hurt sounds when hit
+//I think it makes the player make rebel hurt sounds when hit
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -241,8 +254,55 @@ void CPortal_Player::PreThink( void )
 	SetLocalAngles( vOldAngles );
 }
 
-void CPortal_Player::PostThink( void )
+//ConVar	sv_portalbase_save_glitch("sv_portalbase_save_glitch", "0",
+//	FCVAR_NONE,
+//	"When off, fixes the save glitch that causes the player to use portal area collision while outside of that area.");
+
+void CPortal_Player::PostThink(void)
 {
+	//MyGamepedia:
+	//validate portal environment state every tick to fix save glitch.
+	//if the player is no longer inside the portal hole (e.g. after a save/load  
+	//while grazing the portal edge), release ownership so the stuck state clears,
+	//the same way used by Valve for Portal 2 game to fix consistency issues
+	/*
+	if (!sv_portalbase_save_glitch.GetBool() && m_hPortalEnvironment.Get() != NULL)
+	{
+		CProp_Portal* pPortal = m_hPortalEnvironment.Get();
+		bool bShouldRelease = false;
+
+		if (pPortal->m_PortalSimulator.OwnsEntity(this))
+		{
+			// Only check for save glitch when the player's center is behind the portal plane.  
+			// If in front, ownership is correct (player is approaching the portal).  
+			const VPlane& portalPlane = pPortal->m_PortalSimulator.m_DataAccess.Placement.PortalPlane;
+			float fDistFromPlane = portalPlane.m_Normal.Dot(WorldSpaceCenter()) - portalPlane.m_Dist;
+
+			if (fDistFromPlane < 0.0f)
+			{
+				// Player's center is behind the portal plane.  
+				// UTIL_Portal_EntityIsInPortalHole checks OBB vs portal quad (not the 500-unit  
+				// deep hole volume), so it returns false when the player is fully behind the plane.  
+				if (!UTIL_Portal_EntityIsInPortalHole(pPortal, this))
+					bShouldRelease = true;
+			}
+		}
+		else
+		{
+			// Simulator doesn't own us but m_hPortalEnvironment is set — desync after save/load.  
+			bShouldRelease = true;
+		}
+
+		if (bShouldRelease)
+		{
+			if (pPortal->m_PortalSimulator.OwnsEntity(this))
+				pPortal->m_PortalSimulator.ReleaseOwnershipOfEntity(this);
+			m_hPortalEnvironment = NULL; // Always clear directly; don't rely on the callback.  
+		}
+	}
+	*/
+
+	
 	BaseClass::PostThink();
 
 	// this needs to be here and not in CHL2_Player because otherwise it won't work on player's shadowclone
@@ -298,6 +358,63 @@ void CPortal_Player::PostThink( void )
 		Teleport( &vNewPos, NULL, &vForward );
 		m_bStuckOnPortalCollisionObject = false;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Vector CPortal_Player::PortalWeapon_ShootPosition(void)
+{
+	return PortalEyePosition();
+}
+
+extern ConVar sv_portalbase_edge_glitch;
+
+//-----------------------------------------------------------------------------
+// Purpose: The same as EyePosition(), but transforms the position to the linked portal's space if the player is looking through a portal.
+//-----------------------------------------------------------------------------
+Vector CPortal_Player::PortalEyePosition(void)
+{
+	Vector vEyePos = EyePosition();
+
+	CProp_Portal* pPlayerPortal = m_hPortalEnvironment.Get();
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		float fPortalDist = vPortalForward.Dot(ptPortalCenter - vEyePos);
+		if (fPortalDist > 0.0f && UTIL_Portal_EntityIsInPortalHole(pPlayerPortal, this))
+		{
+			VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+			UTIL_Portal_PointTransform(matThisToLinked, vEyePos, vEyePos);
+		}
+	}
+
+	return vEyePos;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CPortal_Player::GetPortalShootTransform(VMatrix& matOut)
+{
+	CProp_Portal* pPlayerPortal = m_hPortalEnvironment.Get();
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		float fPortalDist = vPortalForward.Dot(ptPortalCenter - EyePosition());
+		if (fPortalDist > 0.0f && UTIL_Portal_EntityIsInPortalHole(pPlayerPortal, this))
+		{
+			matOut = pPlayerPortal->MatrixThisToLinked();
+			return true;
+		}
+	}
+	return false;
 }
 
 void CPortal_Player::UpdatePortalPlaneSounds( void )
@@ -402,6 +519,10 @@ void CPortal_Player::UpdateWooshSounds( void )
 
 extern int	gEvilImpulse101;
 extern bool UTIL_ItemCanBeTouchedByPlayer(CBaseEntity *pItem, CBasePlayer *pPlayer);
+
+ConVar sv_portalbase_portalgun_pickup_mode("sv_portalbase_portalgun_pickup_mode", "1",
+	FCVAR_NONE,
+	"True to prevent pick up when no need, false to allow the player pick up portal device in any case.");
 //-----------------------------------------------------------------------------
 // Purpose: Player reacts to bumping a weapon. 
 // Input  : pWeapon - the weapon that the player bumped into.
@@ -438,7 +559,13 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 			return false;
 	}
 
-	CWeaponPortalgun *pPickupPortalgun = dynamic_cast<CWeaponPortalgun*>( pWeapon );
+	CWeaponPortalgun* pPickupPortalgun = NULL;
+
+	if (pWeapon->IsPortalGun())
+	{
+		//portalgun I want to pickup
+		pPickupPortalgun = static_cast<CWeaponPortalgun*>(pWeapon);
+	}
 
 	// ----------------------------------------
 	// If I already have it just take the ammo
@@ -446,17 +573,48 @@ bool CPortal_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	if (Weapon_OwnsThisType(pWeapon->GetClassname(), pWeapon->GetSubType()))
 	{
 		// If we picked up a second portal gun set the bool to alow secondary fire
-		if ( pPickupPortalgun )
+
+		//mygamepedia: this part is reworked to prevent players from picking up portal guns with no need (if wanted)
+
+		//portalgun I already own
+		CWeaponPortalgun* pOwnedPortalGun = static_cast<CWeaponPortalgun*>(Weapon_OwnsThisType("weapon_portalgun"));
+
+		if (sv_portalbase_portalgun_pickup_mode.GetBool() && pPickupPortalgun)
 		{
-			CWeaponPortalgun *pPortalGun = static_cast<CWeaponPortalgun*>( Weapon_OwnsThisType( pWeapon->GetClassname() ) );
+			int iPickUpType = 0;
 
-			if ( pPickupPortalgun->CanFirePortal1() )
-				pPortalGun->SetCanFirePortal1();
+			//pick up so I can shoot portal blue
+			if (pPickupPortalgun->CanFirePortal1() && !pOwnedPortalGun->CanFirePortal1())
+			{
+				pOwnedPortalGun->SetCanFirePortal1();
+				iPickUpType++;
+			}
 
-			if ( pPickupPortalgun->CanFirePortal2() )
-				pPortalGun->SetCanFirePortal2();
+			//pick up so I can shoot portal orange
+			if (pPickupPortalgun->CanFirePortal2() && !pOwnedPortalGun->CanFirePortal2())
+			{
+				pOwnedPortalGun->SetCanFirePortal2();
+				iPickUpType++;
+			}
 
-			UTIL_Remove( pWeapon );
+			//picked up to add one more portal to my portal gun, remove and true, if didn't, no remove false
+			if (iPickUpType > 0)
+			{
+				UTIL_Remove(pPickupPortalgun);
+				return true;
+			}
+			else
+				return false;
+			}
+		else if (pPickupPortalgun) //the orig logic that let's you to pick up a portalgun no matter what
+		{
+			if (pPickupPortalgun->CanFirePortal1())
+				pOwnedPortalGun->SetCanFirePortal1();
+
+			if (pPickupPortalgun->CanFirePortal2())
+				pOwnedPortalGun->SetCanFirePortal2();
+
+			UTIL_Remove(pPickupPortalgun);
 			return true;
 		}
 
@@ -1106,12 +1264,12 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	bool bIsTurret = false;
 
-	if ( pAttacker && FClassnameIs( pAttacker, "npc_portal_turret_floor" ) )
+	if (pAttacker && pAttacker->IsPortalTurret())
 		bIsTurret = true;
 
 	// Refuse damage from prop_glados_core.
-	if ( (pAttacker && FClassnameIs( pAttacker, "prop_glados_core" )) ||
-		(pInflictor && FClassnameIs( pInflictor, "prop_glados_core" ))  )
+	if ( (pAttacker && pAttacker->IsGladosCore()) ||
+		(pInflictor && pInflictor->IsGladosCore())  )
 	{
 		inputInfoCopy.SetDamage(0.0f);
 	}
@@ -1146,7 +1304,13 @@ int CPortal_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	// Copy the multidamage damage origin over what the base class wrote, because
 	// that gets translated correctly though portals.
-	m_DmgOrigin = inputInfo.GetDamagePosition();
+
+	//mygamepedia: do so only if not poision dmg, or the screen effect will not work
+	Vector dmgPos = inputInfo.GetDamagePosition();
+	if (dmgPos != vec3_origin)
+	{
+		m_DmgOrigin = dmgPos;
+	}
 
 	if ( GetHealth() < 100 )
 	{
@@ -1340,35 +1504,39 @@ void CPortal_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *p
 	PortalSetupVisibility( this, area, pvs, pvssize );
 }
 
-
-#ifdef PORTAL_MP
-
+//-----------------------------------------------------------------------------
+// Purpose: This is player spawn point select from portal mp test but with proper sp support, mainly hl2dm copy. - MyGamepedia
+//-----------------------------------------------------------------------------
 CBaseEntity* CPortal_Player::EntSelectSpawnPoint( void )
 {
+	//spawn as in sp
+	if (gpGlobals->maxClients < 2)
+		return BaseClass::EntSelectSpawnPoint();
+
 	CBaseEntity *pSpot = NULL;
 	CBaseEntity *pLastSpawnPoint = g_pLastSpawn;
 	edict_t		*player = edict();
 	const char *pSpawnpointName = "info_player_start";
 
-	/*if ( HL2MPRules()->IsTeamplay() == true )
+	if ( g_pGameRules->IsTeamplay() == true)
 	{
-	if ( GetTeamNumber() == TEAM_COMBINE )
-	{
-	pSpawnpointName = "info_player_combine";
-	pLastSpawnPoint = g_pLastCombineSpawn;
-	}
-	else if ( GetTeamNumber() == TEAM_REBELS )
-	{
-	pSpawnpointName = "info_player_rebel";
-	pLastSpawnPoint = g_pLastRebelSpawn;
-	}
+		if ( GetTeamNumber() == TEAM_COMBINE )
+		{
+			pSpawnpointName = "info_player_combine";
+			pLastSpawnPoint = g_pLastCombineSpawn;
+		}
+		else if ( GetTeamNumber() == TEAM_REBELS )
+		{
+			pSpawnpointName = "info_player_rebel";
+			pLastSpawnPoint = g_pLastRebelSpawn;
+		}
 
-	if ( gEntList.FindEntityByClassname( NULL, pSpawnpointName ) == NULL )
-	{
-	pSpawnpointName = "info_player_deathmatch";
-	pLastSpawnPoint = g_pLastSpawn;
+		if ( gEntList.FindEntityByClassname( NULL, pSpawnpointName ) == NULL )
+		{
+			pSpawnpointName = "info_player_deathmatch";
+			pLastSpawnPoint = g_pLastSpawn;
+		}
 	}
-	}*/
 
 	pSpot = pLastSpawnPoint;
 	// Randomize the start spot
@@ -1423,27 +1591,33 @@ CBaseEntity* CPortal_Player::EntSelectSpawnPoint( void )
 
 ReturnSpot:
 
-	/*if ( HL2MPRules()->IsTeamplay() == true )
+	if ( g_pGameRules->IsTeamplay() == true )
 	{
-	if ( GetTeamNumber() == TEAM_COMBINE )
-	{
-	g_pLastCombineSpawn = pSpot;
+		if ( GetTeamNumber() == TEAM_COMBINE )
+		{
+			g_pLastCombineSpawn = pSpot;
+		}
+		else if ( GetTeamNumber() == TEAM_REBELS ) 
+		{
+			g_pLastRebelSpawn = pSpot;
+		}
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS ) 
-	{
-	g_pLastRebelSpawn = pSpot;
-	}
-	}*/
 
 	g_pLastSpawn = pSpot;
 
-	//m_flSlamProtectTime = gpGlobals->curtime + 0.5;
+	m_flSlamProtectTime = gpGlobals->curtime + 0.5;
 
 	return pSpot;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Pick the best team in tdm. - MyGamepedia
+//-----------------------------------------------------------------------------
 void CPortal_Player::PickTeam( void )
 {
+	if (gpGlobals->maxClients < 2 || !g_pGameRules->IsTeamplay())
+		return;
+
 	//picks lowest or random
 	CTeam *pCombine = g_Teams[TEAM_COMBINE];
 	CTeam *pRebels = g_Teams[TEAM_REBELS];
@@ -1461,7 +1635,6 @@ void CPortal_Player::PickTeam( void )
 	}
 }
 
-#endif
 
 CON_COMMAND( startadmiregloves, "Starts the admire gloves animation." )
 {

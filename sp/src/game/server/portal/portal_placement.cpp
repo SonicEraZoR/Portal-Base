@@ -34,6 +34,7 @@ bool g_bBumpedByLinkedPortal;
 
 ConVar sv_portal_placement_debug ("sv_portal_placement_debug", "0", FCVAR_REPLICATED );
 ConVar sv_portal_placement_never_bump ("sv_portal_placement_never_bump", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar sv_portalbase_portal_placement_ignore_liquid("sv_portalbase_portal_placement_ignore_liquid", "0", FCVAR_REPLICATED, "Should portal projectiles skip liquids ?");
 
 
 bool IsMaterialInList( const csurface_t &surface, char *g_ppszMaterials[] )
@@ -1177,7 +1178,35 @@ float VerifyPortalPlacement( const CProp_Portal *pIgnorePortal, Vector &vOrigin,
 	ray.Init( vOrigin + vForward, vOrigin - vForward );
 	enginetrace->TraceRay( ray, MASK_SHOT_PORTAL, &traceFilterPortalShot, &tr );
 
-	if ( tr.fraction == 1.0f )
+	//mygamepedia: check if it's disp, unacceptable to be placed on due to how flexible they're forms can be
+	//there is also no fully working hole generation solution anyway
+	if (tr.IsDispSurface())
+	{
+		if (sv_portal_placement_debug.GetBool())
+		{
+			DevMsg("Portal placed on a displacement surface.\n");
+		}
+		
+		//noportal srf effect if it can't be placed on such material anyway
+		if(IsNoPortalMaterial(tr.surface))
+			return PORTAL_ANALOG_SUCCESS_INVALID_SURFACE;
+
+		return PORTAL_ANALOG_SUCCESS_CANT_FIT;
+	}
+
+	//mygamepedia: prevents portal projectile from passing liquid, works only if the convar enabled
+	//SURF_WARP is water, CONTENTS_SLIME is acid or toxic slime/water
+	if ((tr.surface.flags & SURF_WARP) || (tr.contents & CONTENTS_SLIME))
+	{
+		if (sv_portal_placement_debug.GetBool())
+		{
+			DevMsg("Portal placed on a liquid surface.\n");
+		}
+
+		return PORTAL_ANALOG_SUCCESS_CANT_FIT;
+	}
+
+	if (tr.fraction == 1.0f)
 	{
 		if ( sv_portal_placement_debug.GetBool() )
 		{

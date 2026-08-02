@@ -42,7 +42,7 @@
 #define MINIMUM_FLOOR_PORTAL_EXIT_VELOCITY 50.0f
 #define MINIMUM_FLOOR_TO_FLOOR_PORTAL_EXIT_VELOCITY 225.0f
 #define MINIMUM_FLOOR_PORTAL_EXIT_VELOCITY_PLAYER 300.0f
-#define MAXIMUM_PORTAL_EXIT_VELOCITY 1000.0f
+#define MAXIMUM_PORTAL_EXIT_VELOCITY 1500.0f //mygamepedia: changed from 1000, this is grav gun's maxforce (def) val, also works with sticky props 
 
 CCallQueue *GetPortalCallQueue();
 
@@ -354,12 +354,10 @@ void CProp_Portal::DelayedPlacementThink( void )
 		DoFizzleEffect( PORTAL_FIZZLE_CLOSE, false );
 	}
 
-	CWeaponPortalgun *pPortalGun = dynamic_cast<CWeaponPortalgun*>( m_hPlacedBy.Get() );
-
-	if( pPortalGun )
+	if(m_hPlacedBy.Get() && m_hPlacedBy.Get()->IsPortalGun())
 	{
-		CPortal_Player *pFiringPlayer = dynamic_cast<CPortal_Player *>( pPortalGun->GetOwner() );
-		if( pFiringPlayer )
+		CWeaponPortalgun* pPortalGun = static_cast<CWeaponPortalgun*>(m_hPlacedBy.Get());
+		if(ToBasePlayer(pPortalGun->GetOwner()))
 		{
 			//pFiringPlayer->IncrementPortalsPlaced();
 
@@ -480,13 +478,14 @@ void CProp_Portal::DoFizzleEffect( int iEffect, bool bDelayedPos /*= true*/ )
 	ep.m_pOrigin = &m_vAudioOrigin;
 
 	// Rumble effects on the firing player (if one exists)
-	CWeaponPortalgun *pPortalGun = dynamic_cast<CWeaponPortalgun*>( m_hPlacedBy.Get() );
-
-	if ( pPortalGun && (iEffect != PORTAL_FIZZLE_CLOSE ) 
-				    && (iEffect != PORTAL_FIZZLE_SUCCESS )
-				    && (iEffect != PORTAL_FIZZLE_NONE )		)
+	if (m_hPlacedBy.Get() && m_hPlacedBy.Get()->IsPortalGun()
+		&& (iEffect != PORTAL_FIZZLE_CLOSE)
+		&& (iEffect != PORTAL_FIZZLE_SUCCESS) 
+		&& (iEffect != PORTAL_FIZZLE_NONE))
 	{
-		CBasePlayer* pPlayer = (CBasePlayer*)pPortalGun->GetOwner();
+		CWeaponPortalgun* pPortalGun = static_cast<CWeaponPortalgun*>(m_hPlacedBy.Get());
+
+		CBasePlayer* pPlayer = ToBasePlayer(pPortalGun->GetOwner());
 		if ( pPlayer )
 		{
 			pPlayer->RumbleEffect( RUMBLE_PORTAL_PLACEMENT_FAILURE, 0, RUMBLE_FLAGS_NONE );
@@ -1099,6 +1098,12 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 
 		CBaseEntity *pHeldEntity = GetPlayerHeldEntity( pOtherAsPlayer );
 
+		//mygamepedia: try to get physcannon's grabbed object if the player don't have any held entity
+		if (!pHeldEntity)
+		{
+			pHeldEntity = PhysCannonGetHeldEntity(pOtherAsPlayer->GetActiveWeapon());
+		}
+
 		// Sometimes reorienting by pitch is more desirable than by roll depending on the portals' orientations and the relative player facing direction
 		if ( pHeldEntity )	// never pitch reorient while holding an object
 		{
@@ -1233,6 +1238,16 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 	else if( bPlayer )
 	{
 		CBaseEntity *pHeldEntity = GetPlayerHeldEntity( pOtherAsPlayer );
+		bool bPhysCannonHeld = false;
+
+		//mygamepedia: try to get physcannon's grabbed object if the player don't have any held entity
+		if (!pHeldEntity)
+		{
+			pHeldEntity = PhysCannonGetHeldEntity(pOtherAsPlayer->GetActiveWeapon());
+			if (pHeldEntity)
+				bPhysCannonHeld = true;
+		}
+
 		if( pHeldEntity )
 		{
 			pOtherAsPlayer->ToggleHeldObjectOnOppositeSideOfPortal();
@@ -1247,7 +1262,15 @@ void CProp_Portal::TeleportTouchingEntity( CBaseEntity *pOther )
 				//we need to make sure the held object and player don't interpenetrate when the player's shape changes
 				Vector vTargetPosition;
 				QAngle qTargetOrientation;
-				UpdateGrabControllerTargetPosition( pOtherAsPlayer, &vTargetPosition, &qTargetOrientation );
+				
+				if (bPhysCannonHeld) //mygamepedia: fix physcannon teleporting objects to incorrect place after passing portals
+				{
+					UpdatePhysCannonGrabControllerTargetPosition(pOtherAsPlayer, &vTargetPosition, &qTargetOrientation);
+				}
+				else
+				{
+					UpdateGrabControllerTargetPosition(pOtherAsPlayer, &vTargetPosition, &qTargetOrientation);
+				}
 
 				pHeldEntity->Teleport( &vTargetPosition, &qTargetOrientation, 0 );
 
@@ -1629,7 +1652,7 @@ void CProp_Portal::WakeNearbyEntities( void )
 			if( IsOBBIntersectingOBB( ptOrigin, qAngles, CProp_Portal_Shared::vLocalMins, CProp_Portal_Shared::vLocalMaxs, 
 				ptEntityCenter, pEntCollision->GetCollisionAngles(), pEntCollision->OBBMins(), pEntCollision->OBBMaxs() ) )
 			{
-				if( FClassnameIs( pEntity, "func_portal_detector" ) )
+				if(pEntity->IsPortalDetector())
 				{
 					// It's a portal detector
 					CFuncPortalDetector *pPortalDetector = static_cast<CFuncPortalDetector*>( pEntity );
@@ -1669,17 +1692,39 @@ void CProp_Portal::WakeNearbyEntities( void )
 
 				if ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
 				{
+					//mygamepedia: crossbow bolts don't have proper physics model, we should check it here
+					//this part will enable motion for stickied bolts in case if this portal is active
+					if (pEntity->IsCrossbowBolt() && pEntity->IsStickied() && IsActivedAndLinked() &&
+						UTIL_IntersectEntityExtentsWithGivenPortal(this, pEntity))
+					{
+						variant_t tmpvar;
+						pEntity->AcceptInput("EnableMotion", this, this, tmpvar, 0);
+					}
+
 					IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
 
-					if ( pPhysicsObject && pPhysicsObject->IsMoveable() )
+					if (!pPhysicsObject)
+						continue;
+
+					if (pPhysicsObject->IsMoveable())
 					{
 						pPhysicsObject->Wake();
 
 						// If the target is debris, convert it to non-debris
-						if ( pEntity->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
+						if (pEntity->GetCollisionGroup() == COLLISION_GROUP_DEBRIS)
 						{
 							// Interactive debris converts back to debris when it comes to rest
-							pEntity->SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS );
+							pEntity->SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+						}
+					}
+					else
+					{
+						//mygamepedia: if Stickied and i'm linked active portal and in my hole - enable motion for such prop
+						if (pEntity->IsStickied() && IsActivedAndLinked() && UTIL_IntersectEntityExtentsWithGivenPortal(this, pEntity))
+						{
+							variant_t tmpvar;
+							pEntity->AcceptInput("EnableMotion", this, this, tmpvar, 0);
+							pEntity->SetStickied(false);
 						}
 					}
 				}
@@ -2030,11 +2075,11 @@ void CProp_Portal::PlacePortal( const Vector &vOrigin, const QAngle &qAngles, fl
 		else if ( fPlacementSuccess == PORTAL_ANALOG_SUCCESS_PASSTHROUGH_SURFACE )
 			m_iDelayedFailure = PORTAL_FIZZLE_NONE;
 
-		CWeaponPortalgun *pPortalGun = dynamic_cast<CWeaponPortalgun*>( m_hPlacedBy.Get() );
-
-		if( pPortalGun )
+		if(m_hPlacedBy.Get() && m_hPlacedBy.Get()->IsPortalGun())
 		{
-			CPortal_Player *pFiringPlayer = dynamic_cast<CPortal_Player *>( pPortalGun->GetOwner() );
+			CWeaponPortalgun* pPortalGun = static_cast<CWeaponPortalgun*>(m_hPlacedBy.Get());
+
+			CBasePlayer *pFiringPlayer = ToBasePlayer(pPortalGun->GetOwner());
 			if( pFiringPlayer )
 			{
 				g_PortalGameStats.Event_PortalPlacement( pFiringPlayer->GetAbsOrigin(), vOrigin, m_iDelayedFailure );
@@ -2059,12 +2104,12 @@ void CProp_Portal::PlacePortal( const Vector &vOrigin, const QAngle &qAngles, fl
 		m_iDelayedFailure = PORTAL_FIZZLE_SUCCESS;
 	}
 
-	CWeaponPortalgun *pPortalGun = dynamic_cast<CWeaponPortalgun*>( m_hPlacedBy.Get() );
-
-	if( pPortalGun )
+	if (m_hPlacedBy.Get() && m_hPlacedBy.Get()->IsPortalGun())
 	{
-		CPortal_Player *pFiringPlayer = dynamic_cast<CPortal_Player *>( pPortalGun->GetOwner() );
-		if( pFiringPlayer )
+		CWeaponPortalgun* pPortalGun = static_cast<CWeaponPortalgun*>(m_hPlacedBy.Get());
+
+		CBasePlayer* pFiringPlayer = ToBasePlayer(pPortalGun->GetOwner());
+		if (pFiringPlayer)
 		{
 			g_PortalGameStats.Event_PortalPlacement( pFiringPlayer->GetAbsOrigin(), vOrigin, m_iDelayedFailure );
 		}

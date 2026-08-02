@@ -173,6 +173,8 @@ public:
 	virtual void			Spawn( void );
 	virtual void			Precache( void );
 
+	virtual	void			UpdateOnRemove();
+
 	void					MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 
 	// Subtypes are used to manage multiple weapons of the same type on the player.
@@ -317,8 +319,6 @@ public:
 	void					SetOwner( CBaseCombatCharacter *owner );
 	virtual void			OnPickedUp( CBaseCombatCharacter *pNewOwner );
 
-	virtual bool			IsPortalGun() { return false; } //true for weapon_portalgun
-
 	virtual void			AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles ) {};
 	virtual float			CalcViewmodelBob( void ) { return 0.0f; };
 
@@ -444,6 +444,9 @@ public:
 	void					Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
 	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return NULL; }
+
+	void EjectBrassPhysics(int iType);
+
 
 // Client only methods
 #else
@@ -599,6 +602,7 @@ public:
 
 	float					m_flUnlockTime;
 	EHANDLE					m_hLocker;				// Who locked this weapon.
+	EHANDLE					m_hTouchArea;			//mygamepedia: touch area used by this weapon for pick up
 
 	CNetworkVar( bool, m_bFlipViewModel );
 

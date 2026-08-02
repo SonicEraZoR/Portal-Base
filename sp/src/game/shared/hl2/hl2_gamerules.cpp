@@ -208,7 +208,7 @@ bool CHalfLife2::Damage_IsTimeBased( int iDmgType )
 	// Damage types that are time-based.
 #ifdef HL2_EPISODIC
 	// This makes me think EP2 should have its own rules, but they are #ifdef all over in here.
-	return ( ( iDmgType & ( DMG_PARALYZE | DMG_NERVEGAS | DMG_POISON | DMG_RADIATION | DMG_DROWNRECOVER | DMG_SLOWBURN ) ) != 0 );
+	return ((iDmgType & (DMG_PARALYZE | DMG_NERVEGAS | DMG_POISON | DMG_RADIATION | DMG_DROWNRECOVER | DMG_ACID | DMG_SLOWBURN)) != 0);
 #else
 	return BaseClass::Damage_IsTimeBased( iDmgType );
 #endif
@@ -1488,6 +1488,7 @@ ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REP
 	//-----------------------------------------------------------------------------
 	float CHalfLife2::FlPlayerFallDamage(CBasePlayer *pPlayer)
 	{
+		//TODO: Replace with sv_portalbase_portalgamerules_fall_damage_type here and in settings menu
 		if (sv_receive_fall_damage.GetBool())
 			return BaseClass::FlPlayerFallDamage(pPlayer);
 		else

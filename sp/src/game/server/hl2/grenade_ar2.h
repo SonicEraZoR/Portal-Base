@@ -36,6 +36,9 @@ public:
 	void 		GrenadeAR2Touch( CBaseEntity *pOther );
 	void		GrenadeAR2Think( void );
 	void		Event_Killed( const CTakeDamageInfo &info );
+	void		UpdateOnRemove();
+
+	virtual bool	IsSpecialProjectile() { return true; } //mygamepedia: helps to resolve the case when it touches the player owner smh
 
 public:
 	void EXPORT				Detonate(void);

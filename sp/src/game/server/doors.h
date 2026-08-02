@@ -80,6 +80,7 @@ public:
 	virtual void SetToggleState( int state );
 
 	virtual bool IsRotatingDoor() { return false; }
+	virtual bool IsPortalNonTeleportable( ){ return true; }
 	virtual bool ShouldSavePhysics();
 	// used to selectivly override defaults
 	void DoorTouch( CBaseEntity *pOther );

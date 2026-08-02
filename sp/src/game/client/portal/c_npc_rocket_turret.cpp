@@ -44,7 +44,7 @@ private:
 	float	m_fPulseOffset;
 	QAngle  m_vecCurrentAngles;
 
-	CTraceFilterSkipTwoEntities		m_filterBeams;
+	CTraceFilterSimpleClassnameList		m_filterBeams; //mygamepedia: now we can pass all players
 
 };
 
@@ -59,10 +59,10 @@ END_RECV_TABLE()
 
 
 C_NPC_RocketTurret::C_NPC_RocketTurret( void )
-	: m_filterBeams( NULL, NULL, COLLISION_GROUP_DEBRIS )
+	: m_filterBeams(NULL, COLLISION_GROUP_DEBRIS)
 {
 	m_filterBeams.SetPassEntity( this );
-	m_filterBeams.SetPassEntity2( UTIL_PlayerByIndex( 1 ) );
+	m_filterBeams.AddClassnameToIgnore("player"); //mygamepedia: this will work in mp
 }
 
 C_NPC_RocketTurret::~C_NPC_RocketTurret( void )

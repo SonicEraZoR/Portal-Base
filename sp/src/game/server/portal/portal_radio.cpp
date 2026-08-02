@@ -6,9 +6,9 @@
 #include "cbase.h"					// for pch
 #include "props.h"
 #include "filters.h"
-#include "achievementmgr.h"
+//#include "achievementmgr.h"
 
-extern CAchievementMgr g_AchievementMgrPortal;
+//extern CAchievementMgr g_AchievementMgrPortal;
 
 #define RADIO_MODEL_NAME "models/props/radio_reference.mdl"
 //#define RADIO_DEBUG_SERVER
@@ -151,22 +151,10 @@ void CPortal_Dinosaur::Spawn()
 
 void CPortal_Dinosaur::Activate( void )
 {
-	// Find the current completion status of the dinosaurs
-	uint64 fStateFlags = 0;
-	CBaseAchievement *pTransmissionRecvd = dynamic_cast<CBaseAchievement *>(g_AchievementMgrPortal.GetAchievementByName("PORTAL_TRANSMISSION_RECEIVED"));
-	if ( pTransmissionRecvd )
+	//mygamepedia: we kinda know everything already, keep this part simple code 
+	if (m_hDinosaur_Signal != NULL)
 	{
-		fStateFlags = pTransmissionRecvd->GetComponentBits();
-	}
-
-	if ( m_hDinosaur_Signal != NULL )
-	{
-		uint64 nId = m_hDinosaur_Signal.Get()->m_nSignalID;
-		// See if we're already tripped
-		if ( fStateFlags & ((uint64)1<<nId) )
-		{
-			m_bAlreadyDiscovered = true;
-		}
+		m_bAlreadyDiscovered = true;
 	}
 
 	BaseClass::Activate();
@@ -485,8 +473,8 @@ void CSpawnDinosaurHack::LevelInitPostEntity()
 		return;
 	}
 
-	IAchievement *pHeartbreaker = g_AchievementMgrPortal.GetAchievementByName("PORTAL_BEAT_GAME");
-	if ( pHeartbreaker == NULL || pHeartbreaker->IsAchieved() == false )
+	ConVarRef argwanted("sv_portalbase_portalgamerules_use_radio_arg"); //mygamepedia: replaced with achiv so it appear when we want
+	if (!argwanted.GetBool())
 	{
 #if defined ( RADIO_DEBUG_SERVER )
 		Msg( "Not spawning any Dinosaurs: Player has not beat the game, or failed to get heartbreaker achievement from mgr\n" );

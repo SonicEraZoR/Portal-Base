@@ -347,6 +347,8 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	bShowUsageHint = false;
 	m_bAllowFlipping = true;
 	m_bBuiltRightHanded = true;
+
+	m_iPlayerDamage = 0; //mygamepedia: taked from hl2dm
 }
 
 #ifdef CLIENT_DLL
@@ -460,5 +462,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 			}
 		}
 	}
+
+	m_iPlayerDamage = pKeyValuesData->GetInt("damage", 0); //mygamepedia: taked from hl2dm
 }
 

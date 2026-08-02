@@ -95,6 +95,7 @@ public:
 	bool IsDirForward();
 	void SetDirForward( bool bForward );
 	void SetSpeed( float flSpeed, bool bAccel = false );
+	virtual bool IsPortalNonTeleportable() { return true; }
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void SetSpeedDirAccel( float flNewSpeed );
 	

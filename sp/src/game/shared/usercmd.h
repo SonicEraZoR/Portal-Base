@@ -54,6 +54,20 @@ public:
 		mousedx = 0;
 		mousedy = 0;
 
+		fViewModelCalcAnglesX = 0.0f;
+		fViewModelCalcAnglesY = 0.0f;
+		fViewModelCalcAnglesZ = 0.0f;
+
+		fViewModelAttachAnglesX = 0.0f;
+		fViewModelAttachAnglesY = 0.0f;
+		fViewModelAttachAnglesZ = 0.0f;
+
+		fViewModelAttachOriginX = 0.0f;
+		fViewModelAttachOriginY = 0.0f;
+		fViewModelAttachOriginZ = 0.0f;
+
+		iViewModelHasValidParams = 0;
+
 		hasbeenpredicted = false;
 #if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
 		entitygroundcontact.RemoveAll();
@@ -78,6 +92,21 @@ public:
 		random_seed			= src.random_seed;
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
+
+		//mygamepedia: viewmodel info we need for shells
+		fViewModelCalcAnglesX = src.fViewModelCalcAnglesX;
+		fViewModelCalcAnglesY = src.fViewModelCalcAnglesY;
+		fViewModelCalcAnglesZ = src.fViewModelCalcAnglesZ;
+
+		fViewModelAttachAnglesX = src.fViewModelAttachAnglesX;
+		fViewModelAttachAnglesY = src.fViewModelAttachAnglesY;
+		fViewModelAttachAnglesZ = src.fViewModelAttachAnglesZ;
+
+		fViewModelAttachOriginX = src.fViewModelAttachOriginX;
+		fViewModelAttachOriginY = src.fViewModelAttachOriginY;
+		fViewModelAttachOriginZ = src.fViewModelAttachOriginZ;
+
+		iViewModelHasValidParams = src.iViewModelHasValidParams;
 
 		hasbeenpredicted	= src.hasbeenpredicted;
 
@@ -111,6 +140,7 @@ public:
 		CRC32_ProcessBuffer( &crc, &random_seed, sizeof( random_seed ) );
 		CRC32_ProcessBuffer( &crc, &mousedx, sizeof( mousedx ) );
 		CRC32_ProcessBuffer( &crc, &mousedy, sizeof( mousedy ) );
+
 		CRC32_Final( &crc );
 
 		return crc;
@@ -149,6 +179,21 @@ public:
 	// Current weapon id
 	int		weaponselect;	
 	int		weaponsubtype;
+
+	//mygamepedia: viewmodel info we need for shells
+	float	fViewModelCalcAnglesX;
+	float	fViewModelCalcAnglesY;
+	float	fViewModelCalcAnglesZ;
+
+	float	fViewModelAttachAnglesX;
+	float	fViewModelAttachAnglesY;
+	float	fViewModelAttachAnglesZ;
+
+	float	fViewModelAttachOriginX;
+	float	fViewModelAttachOriginY;
+	float	fViewModelAttachOriginZ;
+	int		iViewModelHasValidParams;
+
 
 	int		random_seed;	// For shared random functions
 

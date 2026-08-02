@@ -3200,6 +3200,10 @@ bool CBaseAnimating::LookupHitbox( const char *szName, int& outSet, int& outBox 
 	return false;
 }
 
+ConVar sv_portalbase_copy_more_animation_data("sv_portalbase_copy_more_animation_data", "1",
+	FCVAR_REPLICATED,
+	"Copy more model data for model clones, such as ragdolls.");
+
 void CBaseAnimating::CopyAnimationDataFrom( CBaseAnimating *pSource )
 {
 	this->SetModelName( pSource->GetModelName() );
@@ -3211,6 +3215,20 @@ void CBaseAnimating::CopyAnimationDataFrom( CBaseAnimating *pSource )
 	this->m_flAnimTime = pSource->m_flAnimTime;
 	this->m_nBody = pSource->m_nBody;
 	this->m_nSkin = pSource->m_nSkin;
+
+	//mygamepedia: not sure if this will break anything, this is why i make it optional
+	if (sv_portalbase_copy_more_animation_data.GetBool())
+	{
+		this->SetModelScale(pSource->GetModelScale());
+		this->SetRenderMode(pSource->GetRenderMode());
+		this->SetRenderColorR(pSource->GetRenderColor().r);
+		this->SetRenderColorG(pSource->GetRenderColor().g);
+		this->SetRenderColorB(pSource->GetRenderColor().b);
+		this->SetRenderColorA(pSource->GetRenderColor().a);
+		this->SetShadowCastDistance(pSource->GetShadowCastDistance());
+		this->SetFadeDistance(pSource->m_fadeMinDist, pSource->m_fadeMaxDist);
+		this->m_flFadeScale = pSource->m_flFadeScale;
+	}
 	this->LockStudioHdr();
 }
 

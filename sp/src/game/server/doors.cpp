@@ -1333,6 +1333,7 @@ public:
 	// This is ONLY used by the node graph to test movement through a door
 	virtual void SetToggleState( int state );
 	virtual bool IsRotatingDoor() { return true; }
+	virtual bool IsPortalNonTeleportable() { return true; }
 
 	bool m_bSolidBsp;
 

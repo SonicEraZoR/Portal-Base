@@ -72,6 +72,11 @@ public:
 	virtual bool				ShouldSimulate() const { return m_bSimulate; }
 	virtual void				SetShouldSimulate( bool bSim ) { m_bSimulate = bSim; }
 
+	//mygamepedia: used to prevent muzzle flash from rendering in portals
+	void						SetViewModelOnly(bool bViewModelOnly) { m_bViewModelOnly = bViewModelOnly; }
+
+	void						SetSuppressInFirstPerson(bool bSuppress) { m_bSuppressInFirstPerson = bSuppress; }
+
 	int							AllocateToolParticleEffectId();
 	int							GetToolParticleEffectId() const;
 protected:
@@ -98,6 +103,9 @@ protected:
 
 	bool						m_bSimulate;
 	int							m_nToolParticleEffectId;
+
+	bool						m_bViewModelOnly;
+	bool						m_bSuppressInFirstPerson;
 
 private:
 	// Update the reference count.
@@ -177,6 +185,8 @@ public:
 	void			SetDrawBeforeViewModel( bool state = true );
 
 	SimpleParticle*	AddSimpleParticle( PMaterialHandle hMaterial, const Vector &vOrigin, float flDieTime=3, unsigned char uchSize=10 );
+
+	void			SetSuppressInFirstPerson(bool bSuppress) { m_bSuppressInFirstPerson = bSuppress; }
 	
 // Overridables for variants like CEmberEffect.
 protected:
@@ -191,6 +201,7 @@ protected:
 
 	float			m_flNearClipMin;
 	float			m_flNearClipMax;
+	bool			m_bSuppressInFirstPerson;
 
 private:
 	CSimpleEmitter( const CSimpleEmitter & ); // not defined, not accessible

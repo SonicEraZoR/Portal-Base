@@ -122,6 +122,8 @@ extern ConVar *sv_maxreplay;
 
 extern CServerGameDLL g_ServerGameDLL;
 
+extern CBaseEntity* g_pLastSpawn;
+
 // TIME BASED DAMAGE AMOUNT
 // tweak these values based on gameplay feedback:
 #define PARALYZE_DURATION	2		// number of 2 second intervals to take damage
@@ -4755,9 +4757,6 @@ Vector CBasePlayer::GetSmoothedVelocity( void )
 }
 
 
-CBaseEntity	*g_pLastSpawn = NULL;
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Finds a player start entity of the given classname. If any entity of
 //			of the given classname has the SF_PLAYER_START_MASTER flag set, that
@@ -8950,8 +8949,24 @@ void CBasePlayer::HandleAnimEvent( animevent_t *pEvent )
 		if ( pEvent->event == AE_RAGDOLL )
 		{
 			// Convert to ragdoll immediately
-			CreateRagdollEntity();
-			BecomeRagdollOnClient( vec3_origin );
+			//mygamepedia: support server ragdolls to pass portals
+			if (m_bForceServerRagdoll)
+			{
+				CTakeDamageInfo dmg;
+				CBaseEntity* pRagdoll = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+
+				if (pRagdoll)
+				{
+					//pRagdoll->ApplyAbsVelocityImpulse(vec3_origin); //mygamepedia: apply force vec that is used by client rags
+					FixupBurningServerRagdoll(pRagdoll);
+				}
+
+			}
+			else
+			{
+				//CreateRagdollEntity(); //mygamepedia: i let you know that this thing does NOTHING
+				BecomeRagdollOnClient(vec3_origin);
+			}
  
 			// Force the player to start death thinking
 			SetThink(&CBasePlayer::PlayerDeathThink);

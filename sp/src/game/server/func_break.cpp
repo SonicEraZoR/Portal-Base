@@ -40,6 +40,10 @@ extern void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject );
 
 extern Vector		g_vecAttackDir;
 
+extern CBaseEntity* BreakModelCreateSingle(CBaseEntity* pOwner, breakmodel_t* pModel, const Vector& position,
+	const QAngle& angles, const Vector& velocity, const AngularImpulse& angVelocity, int nSkin, const breakablepropparams_t& params,
+	bool bUsePropPhysicsOverride = false);
+
 // Just add more items to the bottom of this array and they will automagically be supported
 // This is done instead of just a classname in the FGD so we can control which entities can
 // be spawned, and still remain fairly flexible
@@ -916,6 +920,9 @@ void CBreakable::ResetOnGroundFlags(void)
 }
 
 
+ConVar sv_portalbase_breakmodel_vphysics("sv_portalbase_breakmodel_vphysics", "1", FCVAR_NONE,
+	"If set to 1, gibs with simple client physics will use vphysics to pass portals.");
+
 //-----------------------------------------------------------------------------
 // Purpose: Breaks the breakable. m_hBreaker is the entity that caused us to break.
 //-----------------------------------------------------------------------------
@@ -1043,7 +1050,6 @@ void CBreakable::Die( void )
 	Vector vecSpot = WorldSpaceCenter();
 	CPVSFilter filter2( vecSpot );
 
-	int iModelIndex = 0;
 	CCollisionProperty *pCollisionProp = CollisionProp();
 
 	Vector vSize = pCollisionProp->OBBSize();
@@ -1068,35 +1074,118 @@ void CBreakable::Die( void )
 		}
 	}
 
-	if ( m_iszModelName != NULL_STRING )
+	int iModelIndex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel(STRING(m_iszModelName)));
+	vcollide_t* pCollide = modelinfo->GetVCollide(iModelIndex);
+
+	//mygamepedia: portals doesn't work with simple client physics,
+	//spawn vphysics breakables if the cvar is set, and the model supports it.
+	if (!sv_portalbase_breakmodel_vphysics.GetBool())
 	{
-		for ( int i = 0; i < iCount; i++ )
+		int iModelIndex = 0;
+
+		if (m_iszModelName != NULL_STRING)
 		{
-
-	#ifdef HL1_DLL
-			// Use the passed model instead of the propdata type
-			const char *modelName = STRING( m_iszModelName );
-			
-			// if the map specifies a model by name
-			if( strstr( modelName, ".mdl" ) != NULL )
+			for (int i = 0; i < iCount; i++)
 			{
-				iModelIndex = modelinfo->GetModelIndex( modelName );
+
+#ifdef HL1_DLL
+				// Use the passed model instead of the propdata type
+				const char* modelName = STRING(m_iszModelName);
+
+				// if the map specifies a model by name
+				if (strstr(modelName, ".mdl") != NULL)
+				{
+					iModelIndex = modelinfo->GetModelIndex(modelName);
+				}
+				else	// do the hl2 / normal way
+#endif
+
+					iModelIndex = modelinfo->GetModelIndex(g_PropDataSystem.GetRandomChunkModel(STRING(m_iszModelName)));
+
+				// All objects except the first one in this run are marked as slaves...
+				int slaveFlag = 0;
+				if (i != 0)
+				{
+					slaveFlag = BREAK_SLAVE;
+				}
+
+				te->BreakModel(filter2, 0.0,
+					vecSpot, pCollisionProp->GetCollisionAngles(), vSize,
+					vecVelocity, iModelIndex, 100, 1, 2.5, cFlag | slaveFlag);
 			}
-			else	// do the hl2 / normal way
-	#endif
-
-			iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel(  STRING( m_iszModelName ) ) );
-
-			// All objects except the first one in this run are marked as slaves...
-			int slaveFlag = 0;
-			if ( i != 0 )
+		}
+	}
+	else if (pCollide && pCollide->solidCount) //spawn vphysics only if model supports
+	{
+		if (m_iszModelName != NULL_STRING)
+		{
+			for (int i = 0; i < iCount; i++)
 			{
-				slaveFlag = BREAK_SLAVE;
-			}
+				breakmodel_t breakModel;
 
-			te->BreakModel( filter2, 0.0, 
-				vecSpot, pCollisionProp->GetCollisionAngles(), vSize, 
-				vecVelocity, iModelIndex, 100, 1, 2.5, cFlag | slaveFlag );
+				const char* modelName = STRING(m_iszModelName);
+
+				//this is from hls, shouldn't break anything in hl2, so let it be main core feature
+				if (strstr(modelName, ".mdl") != NULL)
+				{
+					Q_strncpy(breakModel.modelName,
+						modelName,
+						sizeof(breakModel.modelName));
+				}
+				else
+				{
+					Q_strncpy(breakModel.modelName,
+						g_PropDataSystem.GetRandomChunkModel(STRING(m_iszModelName)),
+						sizeof(breakModel.modelName));
+				}
+
+				breakModel.health = 1;
+				breakModel.fadeTime = 2.5f + RandomFloat(0, 1.0f);
+				breakModel.fadeMinDist = 0.0f;
+				breakModel.fadeMaxDist = 0.0f;
+				breakModel.burstScale = 0.0f;
+				breakModel.collisionGroup = COLLISION_GROUP_INTERACTIVE_DEBRIS;
+				breakModel.isRagdoll = false;
+				breakModel.isMotionDisabled = false;
+				breakModel.placementName[0] = 0;
+				breakModel.placementIsBone = false;
+
+				// Random position within the breakable's bounds  
+				Vector gibPos = vecSpot + Vector(
+					random->RandomFloat(-0.5, 0.5) * vSize[0],
+					random->RandomFloat(-0.5, 0.5) * vSize[1],
+					random->RandomFloat(-0.5, 0.5) * vSize[2]);
+
+				// Per-gib velocity: base direction + randomization (matching client-side BreakModel)  
+				Vector gibVelocity;
+				gibVelocity.x = vecVelocity.x + random->RandomFloat(-100.0, 100.0);
+				gibVelocity.y = vecVelocity.y + random->RandomFloat(-100.0, 100.0);
+				gibVelocity.z = vecVelocity.z + random->RandomFloat(0, 100.0); // upward bias
+
+				// Trace from center to candidate position to avoid spawning inside world brushes  
+				trace_t tr;
+				UTIL_TraceLine(vecSpot, gibPos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+				if (tr.fraction < 1.0f)
+				{
+					// Hit a brush — place the gib on the surface, pulled back slightly  
+					// so it's not exactly flush with the brush face  
+					gibPos = tr.endpos + tr.plane.normal * 2.0f;
+				}
+
+				AngularImpulse angImpulse(
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255),
+					random->RandomFloat(-256, 255));
+
+				breakablepropparams_t params(vecSpot, pCollisionProp->GetCollisionAngles(),
+					gibVelocity, angImpulse);
+				params.impactEnergyScale = 0.1f;
+				params.defBurstScale = 0.0f;
+				params.defCollisionGroup = COLLISION_GROUP_INTERACTIVE_DEBRIS;
+
+				BreakModelCreateSingle(this, &breakModel, gibPos,
+					pCollisionProp->GetCollisionAngles(), gibVelocity, angImpulse, 0, params, true);
+			}
 		}
 	}
 

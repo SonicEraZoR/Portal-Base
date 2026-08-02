@@ -17,6 +17,7 @@
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "prop_portal.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -119,6 +120,9 @@ void CGrenadeBugBait::Spawn( void )
 
 	m_pSporeTrail->m_vecEndColor		= Vector( 0, 0, 0 );
 	*/
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -284,6 +288,14 @@ bool CGrenadeBugBait::ActivateBugbaitTargets( CBaseEntity *pOwner, Vector vecOri
 //-----------------------------------------------------------------------------
 void CGrenadeBugBait::ThinkBecomeSolid( void )
 {
+	//mygamepedia: before we are solid, clean portal that owns us
+	//solves bug caused by early simulator
+	//LET ME KNOW IF IT'S STILL IN THE GAME!
+	CProp_Portal* pPortal = UTIL_IntersectEntityExtentsWithPortalOBB(this);
+	CPortalSimulator* pSimulator = CPortalSimulator::GetSimulatorThatOwnsEntity(this);
+	if (pPortal == NULL && pSimulator != NULL)
+		pSimulator->ReleaseOwnershipOfEntity(this);
+
 	SetThink( NULL );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 }

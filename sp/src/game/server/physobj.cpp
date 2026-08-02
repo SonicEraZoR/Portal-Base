@@ -40,6 +40,7 @@ const char *GetMassEquivalent(float flMass);
 // 
 
 #define SF_SPRING_ONLYSTRETCH		0x0001
+#define PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
 
 class CPhysicsSpring : public CBaseEntity
 {
@@ -447,7 +448,13 @@ void CPhysBox::Spawn( void )
 	SetSolid( SOLID_VPHYSICS );
 	if ( HasSpawnFlags( SF_PHYSBOX_DEBRIS ) )
 	{
-		SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+
+#ifndef PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+		SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+#else
+		SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+#endif
+
 	}
 
 	if ( HasSpawnFlags( SF_PHYSBOX_NO_ROTORWASH_PUSH ) )

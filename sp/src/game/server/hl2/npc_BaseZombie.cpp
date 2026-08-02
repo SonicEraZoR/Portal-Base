@@ -921,7 +921,17 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 				if (flDamageThreshold >= 1.0)
 				{
 					m_iHealth = 0;
-					BecomeRagdollOnClient( info.GetDamageForce() );
+
+					//mygamepedia: replaced client ragdoll with server to pass portals
+					if (m_bForceServerRagdoll)
+					{
+						CTakeDamageInfo dmg;
+						CBaseEntity* pRagdoll = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+						if (pRagdoll)
+							pRagdoll->ApplyAbsVelocityImpulse(info.GetDamageForce());
+					}
+					else
+						BecomeRagdollOnClient(info.GetDamageForce());
 				}
 			}
 			else if ( random->RandomInt(1, 3) == 1 )
@@ -950,7 +960,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 void CNPC_BaseZombie::MakeAISpookySound( float volume, float duration )
 {
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( g_pGameRules->IsAlyxInDarknessMode() )
 	{
 		CSoundEnt::InsertSound( SOUND_COMBAT, EyePosition(), volume, duration, this, SOUNDENT_CHANNEL_SPOOKY_NOISE );
 	}
@@ -1056,7 +1066,7 @@ bool CNPC_BaseZombie::ShouldIgniteZombieGib( void )
 #ifdef HL2_EPISODIC
 	// If we're in darkness mode, don't ignite giblets, because we don't want to
 	// pay the perf cost of multiple dynamic lights per giblet.
-	return ( IsOnFire() && !HL2GameRules()->IsAlyxInDarknessMode() );
+	return ( IsOnFire() && !g_pGameRules->IsAlyxInDarknessMode() );
 #else
 	return IsOnFire();
 #endif 
@@ -1105,9 +1115,7 @@ void CNPC_BaseZombie::DieChopped( const CTakeDamageInfo &info )
 
 	CBaseEntity *pLegGib = CreateRagGib( GetLegsModel(), GetAbsOrigin(), GetAbsAngles(), vecLegsForce, flFadeTime, ShouldIgniteZombieGib() );
 	if ( pLegGib )
-	{
 		CopyRenderColorTo( pLegGib );
-	}
 
 	forceVector *= random->RandomFloat( 0.04, 0.06 );
 	forceVector.z = ( 100 * 12 * 5 ) * random->RandomFloat( 0.8, 1.2 );
@@ -1133,7 +1141,6 @@ void CNPC_BaseZombie::DieChopped( const CTakeDamageInfo &info )
 
 		pTorsoGib->SetOwnerEntity( this );
 		CopyRenderColorTo( pTorsoGib );
-
 	}
 
 	if ( UTIL_ShouldShowBlood( BLOOD_COLOR_YELLOW ) )
@@ -1208,7 +1215,7 @@ void CNPC_BaseZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() == true && GetEffectEntity() != NULL )
+	if ( g_pGameRules->IsAlyxInDarknessMode() == true && GetEffectEntity() != NULL )
 	{
 		GetEffectEntity()->AddEffects( EF_DIMLIGHT );
 	}
@@ -2412,7 +2419,6 @@ void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &ve
 
 			pGib->SetOwnerEntity( this );
 			CopyRenderColorTo( pGib );
-
 			
 			if( UTIL_ShouldShowBlood(BLOOD_COLOR_YELLOW) )
 			{
@@ -2511,7 +2517,24 @@ void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &ve
 
 	if( fRagdollBody )
 	{
-		BecomeRagdollOnClient( vec3_origin );
+		//mygamepedia: replaced client ragdoll with server to pass portals
+		//HEY! I'm not sure why it exists, but when this part runs it create 2 full body ragdolls of this zombie instead of one
+		//when server ragdolls are ON, so this is why it is disabled, let me know if you find anything wrong, just put 0 in such case
+#if 0
+		if (m_bForceServerRagdoll)
+		{			
+			CTakeDamageInfo dmg;
+			CBaseEntity* pRagdoll = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+			if (pRagdoll)
+				pRagdoll->ApplyAbsVelocityImpulse(vec3_origin);
+			
+		}
+		else
+			BecomeRagdollOnClient(vec3_origin);
+#else
+		if (!m_bForceServerRagdoll)
+			BecomeRagdollOnClient(vec3_origin);
+#endif
 	}
 }
 

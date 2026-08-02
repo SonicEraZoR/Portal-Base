@@ -28,6 +28,9 @@ class CVGuiScreen;
 
 #define VIEWMODEL_INDEX_BITS 1
 
+//todo: for all, not just vm - mygamepedia
+//ConVar r_portalbase_projectedtexture_on_viewmodel("r_portalbase_viewmodel_shouldreceiveprojectedtextures", "1");
+
 class CBaseViewModel : public CBaseAnimating, public IHasOwner
 {
 	DECLARE_CLASS( CBaseViewModel, CBaseAnimating );
@@ -145,7 +148,7 @@ public:
 	// Should this object receive shadows?
 	virtual bool			ShouldReceiveProjectedTextures( int flags )
 	{
-		return false;
+		return true;
 	}
 
 	// Add entity to visible view models list?

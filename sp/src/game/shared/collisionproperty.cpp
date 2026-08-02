@@ -466,7 +466,10 @@ bool CCollisionProperty::ShouldTouchTrigger( int triggerSolidFlags ) const
 	}
 
 	// triggers don't touch other triggers (might be solid to other ents as well as trigger)
-	if ( IsSolidFlagSet( FSOLID_TRIGGER ) )
+
+	//mygamepedia: now we filter items and weapons to pass portals, yes, items are triggers,
+	//this affects other triggers so they can touch triggers now, but it shouldn't really affect anything
+	if (IsSolidFlagSet(FSOLID_TRIGGER))
 		return false;
 
 	return true;

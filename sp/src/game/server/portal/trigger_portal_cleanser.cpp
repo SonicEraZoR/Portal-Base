@@ -30,6 +30,7 @@ static char *g_pszPortalNonCleansable[] =
 	"env_ghostanimating",
 	"physicsshadowclone",
 	"prop_energy_ball",
+	"prop_combine_ball", //mygamepedia: used by player and combines, the way how it looks is weird, just filter it here
 	NULL,
 };
 
@@ -234,6 +235,22 @@ void CTriggerPortalCleanser::Touch( CBaseEntity *pOther )
 		CBaseEntity *pDisolvingObj = ConvertToSimpleProp( pBaseAnimating );
 		if ( pDisolvingObj )
 		{
+			//mygamepedia: fix headcrab disappear on zombie, we way need a big rework (creating new ent means losing lots of data)
+			//i also added some other visual data here
+			pDisolvingObj->m_clrRender = pBaseAnimating->m_clrRender;
+			pDisolvingObj->SetEffects(pBaseAnimating->GetEffects());
+
+			int modelindex = pDisolvingObj->GetModelIndex();
+			const model_t* model = modelinfo->GetModel(modelindex);
+			if (model && modelinfo->GetModelType(model) == mod_studio)
+			{
+				CBaseAnimating* pAnimatingDisolving = static_cast<CBaseAnimating*>(pDisolvingObj);
+
+				pAnimatingDisolving->m_nBody = pBaseAnimating->m_nBody;
+				pAnimatingDisolving->m_flModelScale = pBaseAnimating->m_flModelScale;
+				pAnimatingDisolving->m_nSkin = pBaseAnimating->m_nSkin;
+			}
+
 			// Remove old prop, transfer name and children to the new simple prop
 			pDisolvingObj->SetName( pBaseAnimating->GetEntityName() );
 			UTIL_TransferPoseParameters( pBaseAnimating, pDisolvingObj );

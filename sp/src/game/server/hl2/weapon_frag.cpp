@@ -15,9 +15,14 @@
 #include "in_buttons.h"
 #include "soundent.h"
 #include "gamestats.h"
+#include "portal_player.h"  
+#include "prop_portal_shared.h"  
+#include "portal_util_shared.h"  
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar sv_portalbase_edge_glitch;
 
 #define GRENADE_TIMER	3.0f //Seconds
 
@@ -405,6 +410,34 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 	Vector vecThrow;
 	pPlayer->GetVelocity( &vecThrow, NULL );
 	vecThrow += vForward * 1200;
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal 
+	CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+	CProp_Portal* pPlayerPortal = pPortalPlayer->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if ((!sv_portalbase_edge_glitch.GetBool() && pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPortalPlayer)) || sv_portalbase_edge_glitch.GetBool())
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecEye, vecEye);
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vForward, vForward);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecThrow, vecThrow);
+			}
+		}
+	}
+
 	Fraggrenade_Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, GRENADE_TIMER, false );
 
 	m_bRedraw = true;
@@ -430,10 +463,38 @@ void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 	pPlayer->EyeVectors( &vForward, &vRight, NULL );
 	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f + Vector( 0, 0, -8 );
 	CheckThrowPosition( pPlayer, vecEye, vecSrc );
-	
+
 	Vector vecThrow;
-	pPlayer->GetVelocity( &vecThrow, NULL );
-	vecThrow += vForward * 350 + Vector( 0, 0, 50 );
+	pPlayer->GetVelocity(&vecThrow, NULL);
+	vecThrow += vForward * 350 + Vector(0, 0, 50);
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal 
+	CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+	CProp_Portal* pPlayerPortal = pPortalPlayer->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if ((!sv_portalbase_edge_glitch.GetBool() && pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPortalPlayer)) || sv_portalbase_edge_glitch.GetBool())
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecEye, vecEye);
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vForward, vForward);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecThrow, vecThrow);
+			}
+		}
+	}
+
 	Fraggrenade_Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(200,random->RandomInt(-600,600),0), pPlayer, GRENADE_TIMER, false );
 
 	WeaponSound( WPN_DOUBLE );
@@ -462,6 +523,7 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	// no up/down direction
 	vecFacing.z = 0;
 	VectorNormalize( vecFacing );
+
 	trace_t tr;
 	UTIL_TraceLine( vecSrc, vecSrc - Vector(0,0,16), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_NONE, &tr );
 	if ( tr.fraction != 1.0 )
@@ -477,10 +539,38 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	Vector vecThrow;
 	pPlayer->GetVelocity( &vecThrow, NULL );
 	vecThrow += vecFacing * 700;
+
 	// put it on its side
 	QAngle orientation(0,pPlayer->GetLocalAngles().y,-90);
 	// roll it
 	AngularImpulse rotSpeed(0,0,720);
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal 
+	CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+	CProp_Portal* pPlayerPortal = pPortalPlayer->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPortalPlayer)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecFacing, vecFacing);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecThrow, vecThrow);
+			}
+		}
+	} 
+
 	Fraggrenade_Create( vecSrc, orientation, vecThrow, rotSpeed, pPlayer, GRENADE_TIMER, false );
 
 	WeaponSound( SPECIAL1 );

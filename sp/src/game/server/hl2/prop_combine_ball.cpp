@@ -26,6 +26,7 @@
 #include "eventqueue.h"
 #include "physics_collisionevent.h"
 #include "gamestats.h"
+#include "prop_portal.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -414,6 +415,9 @@ void CPropCombineBall::Spawn( void )
 	m_bWeaponLaunched = false;
 
 	m_flNextDamageTime = gpGlobals->curtime;
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 //-----------------------------------------------------------------------------

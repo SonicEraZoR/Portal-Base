@@ -74,8 +74,6 @@ public:
 		DECLARE_DATADESC();
 	
 		//void SendReloadSoundEvent( void );
-
-		void Materialize( void );
 	#endif
 
 	// All predicted weapons need to implement and return true
@@ -104,9 +102,9 @@ public:
 		virtual void	DoAnimationEvents( CStudioHdr *pStudio );
 		virtual void	GetRenderBounds( Vector& theMins, Vector& theMaxs );
 
-		virtual bool	OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
+		virtual int		CalcOverrideModelIndex();
 
-		virtual int		CalcOverrideModelIndex() OVERRIDE; //override of an ovveride i guess?
+		virtual bool	OnFireEvent(C_BaseViewModel* pViewModel, const Vector& origin, const QAngle& angles, int event, const char* options);
 
 	#else
 

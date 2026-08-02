@@ -24,9 +24,14 @@
 #include "rumble_shared.h"
 #include "gamestats.h"
 #include "decals.h"
+#include "func_break.h"
+#include "prop_portal.h"
+#include "weapon_portalbasecombatweapon.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "portal_player.h" 
+	#include "prop_portal_shared.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,6 +45,14 @@
 
 extern ConVar sk_plr_dmg_crossbow;
 extern ConVar sk_npc_dmg_crossbow;
+
+ConVar sv_portalbase_crossbowbolt_protrusion("sv_portalbase_crossbowbolt_protrusion", "6", 
+	FCVAR_NONE, 
+	"The distance that the bolt will not pass through.");
+
+ConVar sv_portalbase_crossbowbolt_portal_displace("sv_portalbase_crossbowbolt_portal_displace", "1",
+	FCVAR_NONE,
+	"The distance that the bolt will be displaced (pushed away) by portal hole before teleporting.");
 
 void TE_StickyBolt( IRecipientFilter& filter, float delay,	Vector vecDirection, const Vector *origin );
 
@@ -67,6 +80,9 @@ public:
 	bool CreateVPhysics( void );
 	unsigned int PhysicsSolidMaskForEntity() const;
 	static CCrossbowBolt *BoltCreate( const Vector &vecOrigin, const QAngle &angAngles, CBasePlayer *pentOwner = NULL );
+	void InputEnableMotion(inputdata_t& inputdata);
+	virtual bool IsCrossbowBolt() { return true; }
+	virtual bool IsPortalTeleportable() { return true; }
 
 protected:
 
@@ -74,6 +90,8 @@ protected:
 
 	CHandle<CSprite>		m_pGlowSprite;
 	//CHandle<CSpriteTrail>	m_pGlowTrail;
+
+	bool	m_bPortalRot; //mygamepedia: tell the bolt to rotate because wanted by portal
 
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
@@ -88,6 +106,10 @@ BEGIN_DATADESC( CCrossbowBolt )
 	// These are recreated on reload, they don't need storage
 	DEFINE_FIELD( m_pGlowSprite, FIELD_EHANDLE ),
 	//DEFINE_FIELD( m_pGlowTrail, FIELD_EHANDLE ),
+	DEFINE_FIELD(m_bPortalRot, FIELD_BOOLEAN),
+
+	//Inputs
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableMotion", InputEnableMotion),
 
 END_DATADESC()
 
@@ -166,7 +188,7 @@ void CCrossbowBolt::Spawn( void )
 	SetModel( "models/crossbow_bolt.mdl" );
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	UTIL_SetSize( this, -Vector(0.3f,0.3f,0.3f), Vector(0.3f,0.3f,0.3f) );
-	SetSolid( SOLID_BBOX );
+	SetSolid(SOLID_VPHYSICS); //mygamepedia: it was SOLID_BBOX, now it's SOLID_VPHYSICS cuz we need proper orientation
 	SetGravity( 0.05f );
 	
 	// Make sure we're updated if we're underwater
@@ -181,6 +203,9 @@ void CCrossbowBolt::Spawn( void )
 
 	// Make us glow until we've hit the wall
 	m_nSkin = BOLT_SKIN_GLOW;
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 
@@ -193,6 +218,10 @@ void CCrossbowBolt::Precache( void )
 
 	PrecacheModel( "sprites/light_glow02_noz.vmt" );
 }
+
+ConVar sv_portalbase_crossbowbolt_pass_func_breakable_glass("sv_portalbase_crossbowbolt_pass_func_breakable_glass", "1",
+	FCVAR_NONE,
+	"Let crossbow bolt to go through as well func_breakable (if glass).");
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -255,6 +284,13 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		if ( pOther->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS )
 			 return;
 
+		if (sv_portalbase_crossbowbolt_pass_func_breakable_glass.GetBool() && FClassnameIs(pOther, "func_breakable"))
+		{
+			CBreakable* pOtherEntity = static_cast<CBreakable*>(pOther);
+			if (pOtherEntity->GetMaterialType() == matGlass)
+				return;
+		}
+
 		if ( !pOther->IsAlive() )
 		{
 			// We killed it! 
@@ -308,7 +344,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		tr = BaseClass::GetTouchTrace();
 
 		// See if we struck the world
-		if ( pOther->GetMoveType() == MOVETYPE_NONE && !( tr.surface.flags & SURF_SKY ) )
+		if ( pOther->GetMoveType() == MOVETYPE_NONE && !( tr.surface.flags & SURF_SKY ) && !UTIL_IntersectEntityExtentsWithPortal(this))
 		{
 			EmitSound( "Weapon_Crossbow.BoltHitWorld" );
 
@@ -334,34 +370,40 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				// Start to sink faster
 				SetGravity( 1.0f );
 			}
-			else
+			else //mygamepedia: this is the code when stickied to a wall, this part is reworked to unstick bolt when teleported by portal
 			{
-				SetThink( &CCrossbowBolt::SUB_Remove );
-				SetNextThink( gpGlobals->curtime + 2.0f );
-				
-				//FIXME: We actually want to stick (with hierarchy) to what we've hit
-				SetMoveType( MOVETYPE_NONE );
-			
+				SetMoveType(MOVETYPE_VPHYSICS); //mygamepedia: HACK! this allows portal detect (doesn't seem to break anything)
+
 				Vector vForward;
+				AngleVectors(GetAbsAngles(), &vForward);
+				VectorNormalize(vForward);
 
-				AngleVectors( GetAbsAngles(), &vForward );
-				VectorNormalize ( vForward );
-
+				//data for effects
 				CEffectData	data;
-
 				data.m_vOrigin = tr.endpos;
 				data.m_vNormal = vForward;
 				data.m_nEntIndex = 0;
-			
-				DispatchEffect( "BoltImpact", data );
-				
-				UTIL_ImpactTrace( &tr, DMG_BULLET );
 
-				AddEffects( EF_NODRAW );
-				SetTouch( NULL );
-				SetThink( &CCrossbowBolt::SUB_Remove );
-				SetNextThink( gpGlobals->curtime + 2.0f );
+				DispatchEffect("BoltImpact", data); //orig code creates temp model here (the stickied bolt), it doesn't anymore as disabled
+				UTIL_ImpactTrace(&tr, DMG_BULLET);  //creates decal (not in a very consistent way)
 
+				m_nSkin = BOLT_SKIN_NORMAL; //not orange anymore
+				SetStickied(true); //i'm stickid now
+
+				//our bbox is initially very small, pull out bolt out of the wall so only the half will appear in the wall
+				Vector pos = tr.endpos - vForward * sv_portalbase_crossbowbolt_protrusion.GetFloat();
+				Teleport(&pos, NULL, NULL);
+
+				//fix size so it can work with portal utils
+				UTIL_SetSize(this, -Vector(0.3f, 0.3f, 0.3f), Vector(sv_portalbase_crossbowbolt_protrusion.GetFloat() + 0.3f, 0.3f, 0.3f));
+
+				//SetTouch( NULL );
+
+				//no more think until wanted
+				SetThink(NULL);
+				SetNextThink(-1); //don't think until wanted
+
+				//create the white impact sprite
 				if ( m_pGlowSprite != NULL )
 				{
 					m_pGlowSprite->TurnOn();
@@ -408,21 +450,61 @@ void CCrossbowBolt::BubbleThink( void )
 
 	// Make danger sounds out in front of me, to scare snipers back into their hole
 	CSoundEnt::InsertSound( SOUND_DANGER_SNIPERONLY, GetAbsOrigin() + GetAbsVelocity() * 0.2, 120.0f, 0.5f, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
-
-	if ( GetWaterLevel()  == 0 )
+	
+	//mygamepedia: stickied and not underwater bolts should not create bubbles
+	if (GetWaterLevel() == 0 || IsStickied())
 		return;
 
 	UTIL_BubbleTrail( GetAbsOrigin() - GetAbsVelocity() * 0.1f, GetAbsOrigin(), 5 );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Enable motion when touched by portal while stickied. Done by input for easy debug.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+void CCrossbowBolt::InputEnableMotion(inputdata_t& inputdata)
+{
+	SetStickied(false); //not stickied anymore
+
+	Vector vForward;
+	QAngle qAng = GetAbsAngles();
+	AngleVectors(qAng, &vForward);
+	VectorNormalize(vForward);
+
+	//pull me out to a certain distance as i should be pushed back by portal
+	Vector vPos = GetAbsOrigin() - vForward * sv_portalbase_crossbowbolt_portal_displace.GetFloat();
+
+	m_bPortalRot = true;
+	qAng.x = -90;
+	AngleVectors(qAng, &vForward);
+	Vector vVel = vForward;
+
+	//let it be like this, this is a stable way
+	Teleport(&vPos, NULL, NULL);
+	SetAbsAngles(qAng);
+	SetAbsVelocity(vVel);
+
+
+	UTIL_SetSize(this, -Vector(0.3f, 0.3f, 0.3f), Vector(0.3f, 0.3f, 0.3f));
+
+	//restore needed move types
+	SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM);
+	SetGravity(1.0f);
+
+
+	//restore think
+	SetTouch(&CCrossbowBolt::BoltTouch);
+	SetThink(&CCrossbowBolt::BubbleThink);
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
 
 //-----------------------------------------------------------------------------
 // CWeaponCrossbow
 //-----------------------------------------------------------------------------
 
-class CWeaponCrossbow : public CBaseHLCombatWeapon
+class CWeaponCrossbow : public CBasePortalCombatWeapon
 {
-	DECLARE_CLASS( CWeaponCrossbow, CBaseHLCombatWeapon );
+	DECLARE_CLASS( CWeaponCrossbow, CBasePortalCombatWeapon);
 public:
 
 	CWeaponCrossbow( void );
@@ -465,15 +547,20 @@ private:
 		CHARGER_STATE_OFF,
 	};
 
-	void	CreateChargerEffects( void );
+	//void	CreateChargerEffects( void );
 	void	SetChargerState( ChargerState_t state );
 	void	DoLoadEffect( void );
 
 private:
 	
 	// Charger effects
-	ChargerState_t		m_nChargeState;
-	CHandle<CSprite>	m_hChargerSprite;
+	//CHandle<CSprite>	m_hChargerSprite;
+
+	//mygamepedia: networked vars we use on client for sprites states,
+	//we are not a multiplayer game, otherwise we would need to use prediction instead
+	CNetworkVar(int, m_nChargeState);
+	CNetworkVar(int, m_nBlastCountVM);
+	CNetworkVar(int, m_nBlastCountWR);
 
 	bool				m_bInZoom;
 	bool				m_bMustReload;
@@ -498,6 +585,9 @@ LINK_ENTITY_TO_CLASS( weapon_crossbow, CWeaponCrossbow );
 PRECACHE_WEAPON_REGISTER( weapon_crossbow );
 
 IMPLEMENT_SERVERCLASS_ST( CWeaponCrossbow, DT_WeaponCrossbow )
+	SendPropInt(SENDINFO(m_nChargeState)),
+	SendPropInt(SENDINFO(m_nBlastCountVM)),
+	SendPropInt(SENDINFO(m_nBlastCountWR)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CWeaponCrossbow )
@@ -505,7 +595,10 @@ BEGIN_DATADESC( CWeaponCrossbow )
 	DEFINE_FIELD( m_bInZoom,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bMustReload,	FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_nChargeState,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_hChargerSprite,	FIELD_EHANDLE ),
+	//DEFINE_FIELD( m_hChargerSprite,	FIELD_EHANDLE ), //mygamepedia: for main and portal view, we use client sprite (see the code)
+
+	DEFINE_FIELD(m_nBlastCountVM, FIELD_INTEGER),
+	DEFINE_FIELD(m_nBlastCountWR, FIELD_INTEGER),
 
 END_DATADESC()
 
@@ -630,6 +723,8 @@ void CWeaponCrossbow::ItemPostFrame( void )
 	BaseClass::ItemPostFrame();
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -650,15 +745,39 @@ void CWeaponCrossbow::FireBolt( void )
 		return;
 	}
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CPortal_Player *pOwner = ToPortalPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
 
 	pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
 
-	Vector vecAiming	= pOwner->GetAutoaimVector( 0 );
+	Vector vecAiming	= static_cast<CBasePlayer*>(pOwner)->GetAutoaimVector( 0 ); //mygamepedia: cast base player or it won't compile
 	Vector vecSrc		= pOwner->Weapon_ShootPosition();
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal
+	CProp_Portal* pPlayerPortal = pOwner->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pOwner)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecAiming, vecAiming);
+			}
+		}
+	}
 
 	QAngle angAiming;
 	VectorAngles( vecAiming, angAiming );
@@ -772,6 +891,7 @@ void CWeaponCrossbow::ToggleZoom( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+/*
 void CWeaponCrossbow::CreateChargerEffects( void )
 {
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
@@ -790,6 +910,7 @@ void CWeaponCrossbow::CreateChargerEffects( void )
 		m_hChargerSprite->TurnOff();
 	}
 }
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -832,8 +953,13 @@ void CWeaponCrossbow::DoLoadEffect( void )
 	data.m_nEntIndex = pViewModel->entindex();
 	data.m_nAttachmentIndex = 1;
 
-	DispatchEffect( "CrossbowLoad", data );
+	//DispatchEffect( "CrossbowLoad", data );
 
+	//tell the client to draw the sprite
+	m_nBlastCountVM++;
+	m_nBlastCountWR++;
+
+	/*
 	CSprite *pBlast = CSprite::SpriteCreate( CROSSBOW_GLOW_SPRITE2, GetAbsOrigin(), false );
 
 	if ( pBlast )
@@ -844,6 +970,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		pBlast->SetScale( 0.2f );
 		pBlast->FadeOutFromSpawn();
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -853,7 +980,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 {
 	// Make sure we're setup
-	CreateChargerEffects();
+	//CreateChargerEffects();
 
 	// Don't do this twice
 	if ( state == m_nChargeState )
@@ -874,12 +1001,13 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 
 	case CHARGER_STATE_START_CHARGE:
 		{
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 32, 0.5f );
 			m_hChargerSprite->SetScale( 0.025f, 0.5f );
 			m_hChargerSprite->TurnOn();
+			*/
 		}
 
 		break;
@@ -887,12 +1015,13 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 	case CHARGER_STATE_READY:
 		{
 			// Get fully charged
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 80, 1.0f );
 			m_hChargerSprite->SetScale( 0.1f, 0.5f );
 			m_hChargerSprite->TurnOn();
+			*/
 		}
 
 		break;
@@ -901,11 +1030,11 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 		{
 			SetSkin( BOLT_SKIN_NORMAL );
 			
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
+			m_hChargerSprite->TurnOff();*/
 		}
 
 		break;
@@ -914,11 +1043,11 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 		{
 			SetSkin( BOLT_SKIN_NORMAL );
 
-			if ( m_hChargerSprite == NULL )
+			/*if (m_hChargerSprite == NULL)
 				break;
 			
 			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
+			m_hChargerSprite->TurnOff();*/
 		}
 		break;
 

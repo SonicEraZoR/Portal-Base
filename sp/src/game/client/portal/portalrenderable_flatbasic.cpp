@@ -40,7 +40,7 @@ CLIENTEFFECT_MATERIAL( "models/portals/portalstaticoverlay_2" )
 CLIENTEFFECT_MATERIAL( "models/portals/portal_stencil_hole" )
 CLIENTEFFECT_MATERIAL( "models/portals/portal_refract_1" )
 CLIENTEFFECT_MATERIAL( "models/portals/portal_refract_2" )
-//CLIENTEFFECT_MATERIAL( "effects/flashlight001" ) //light transfers disabled indefinitely
+CLIENTEFFECT_MATERIAL( "effects/flashlight001" )
 CLIENTEFFECT_REGISTER_END()
 
 CAutoInitFlatBasicPortalDrawingMaterials s_FlatBasicPortalDrawingMaterials;

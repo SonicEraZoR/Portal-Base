@@ -17,10 +17,11 @@
 class CFuncPortalDetector : public CBaseEntity
 {
 public:
-	DECLARE_CLASS( CFuncPortalDetector, CBaseEntity );
+	DECLARE_CLASS(CFuncPortalDetector, CBaseEntity);
 
 	// Overloads from base entity
-	virtual void	Spawn( void );
+	virtual void	Spawn(void);
+	virtual bool	IsPortalDetector() { return true; }
 	
 	void OnActivate( void );
 

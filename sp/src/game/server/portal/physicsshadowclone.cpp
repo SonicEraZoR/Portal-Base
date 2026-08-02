@@ -139,6 +139,9 @@ void CPhysicsShadowClone::Spawn( void )
 	s_IsShadowClone[entindex()] = true;
 }
 
+ConVar sv_portalbase_debug_physicsshadowclone_display("sv_portalbase_debug_physicsshadowclone_display", "0",
+	FCVAR_NONE,
+	"If enabled, the physicsshadowclone will be displayed.");
 
 void CPhysicsShadowClone::FullSync( bool bAllowAssumedSync )
 {
@@ -319,8 +322,12 @@ void CPhysicsShadowClone::FullSync( bool bAllowAssumedSync )
 		SetSolidFlags( iSolidFlags );
 
 
-
-		SetEffects( pClonedEntity->GetEffects() | (EF_NODRAW | EF_NOSHADOW | EF_NORECEIVESHADOW) );
+		if (sv_portalbase_debug_physicsshadowclone_display.GetBool())
+		{
+			SetEffects(pClonedEntity->GetEffects());
+		}
+		else
+			SetEffects(pClonedEntity->GetEffects() | (EF_NODRAW | EF_NOSHADOW | EF_NORECEIVESHADOW));
 
 		SetCollisionGroup( pClonedEntity->GetCollisionGroup() );
 
@@ -947,7 +954,6 @@ CPhysicsShadowClone *CPhysicsShadowClone::CreateShadowClone( IPhysicsEnvironment
 		return NULL;
 
 	if (pClonedEntity->GetSolidFlags() & (FSOLID_NOT_SOLID | FSOLID_TRIGGER))
-	//if( pClonedEntity->GetSolidFlags() & (FSOLID_NOT_SOLID) ) //MyGamepedia: Removed FSOLID_TRIGGER to allow CItem teleport (doesn't work)
 		return NULL;
 
 	if( pClonedEntity->GetFlags() & (FL_WORLDBRUSH | FL_STATICPROP) )

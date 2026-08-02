@@ -26,6 +26,7 @@
 #include "collisionutils.h"
 #include "iservervehicle.h"
 #include "func_break.h"
+#include "items.h"
 
 #ifdef HL2MP
 	#include "hl2mp_gamerules.h"
@@ -35,6 +36,13 @@
 #include "tier0/memdbgon.h"
 
 extern int	gEvilImpulse101;		// In Player.h
+
+extern ConVar sv_portalbase_item_touch_area;
+
+ConVar sv_portalbase_weapon_shells_vphysics("sv_portalbase_weapon_shells_vphysics", "1",
+	FCVAR_NONE, 
+	"If set to 1, weapon shells will use vphysics instead of being client-side physics."
+);
 
 // -----------------------------------------
 //	Sprite Index info
@@ -481,11 +489,38 @@ void CBaseCombatWeapon::FallInit( void )
 	SetModel( GetWorldModel() );
 	VPhysicsDestroyObject();
 
-	if ( !VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false ) )
+	int iSolidFlag = GetSolidFlags();
+
+	if (!sv_portalbase_item_touch_area.GetBool())
+		iSolidFlag |= FSOLID_TRIGGER;
+
+	IPhysicsObject* pPhysObj = NULL;
+
+	if (!sv_portalbase_item_touch_area.GetBool())
 	{
-		SetMoveType( MOVETYPE_FLYGRAVITY );
-		SetSolid( SOLID_BBOX );
-		AddSolidFlags( FSOLID_TRIGGER );
+		pPhysObj = VPhysicsInitNormal(SOLID_BBOX, iSolidFlag, false);
+	}
+	else
+		pPhysObj = VPhysicsInitNormal(SOLID_VPHYSICS, iSolidFlag, false);
+
+	if (!pPhysObj)
+	{
+		if (!sv_portalbase_item_touch_area.GetBool())
+		{
+			SetMoveType(MOVETYPE_FLYGRAVITY);
+		}
+		else
+			SetMoveType(MOVETYPE_VPHYSICS);
+
+		if (!sv_portalbase_item_touch_area.GetBool())
+		{
+			SetSolid(SOLID_BBOX);
+		}
+		else
+			SetSolid(SOLID_VPHYSICS);
+
+		if (!sv_portalbase_item_touch_area.GetBool())
+			AddSolidFlags( FSOLID_TRIGGER );
 	}
 	else
 	{
@@ -579,14 +614,34 @@ void CBaseCombatWeapon::Materialize( void )
 #ifdef HL2MP
 	if ( HasSpawnFlags( SF_NORESPAWN ) == false )
 	{
-		VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
+		SolidType_t iType = (!sv_portalbase_item_touch_area.GetBool()) ? SOLID_BBOX : SOLID_VPHYSICS;
+
+		int iSolidFlags = GetSolidFlags();
+
+		if (!sv_portalbase_item_touch_area.GetBool())
+			iSolidFlags |= FSOLID_TRIGGER;
+
+		VPhysicsInitNormal(iType, iSolidFlags, false );
 		SetMoveType( MOVETYPE_VPHYSICS );
 
 		HL2MPRules()->AddLevelDesignerPlacedObject( this );
 	}
 #else
-	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_TRIGGER );
+	if (!sv_portalbase_item_touch_area.GetBool()) 
+	{
+		SetSolid(SOLID_BBOX);
+	}
+	else
+		SetSolid(SOLID_VPHYSICS);
+
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		AddSolidFlags(FSOLID_TRIGGER);
+	}
+	else if (m_hTouchArea.Get())
+	{
+		static_cast<CEnvTouchArea*>(m_hTouchArea.Get())->EnableTouchArea();
+	}
 #endif
 
 	SetPickupTouch();
@@ -732,3 +787,122 @@ void CBaseCombatWeapon::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	}
 }
 
+ConVar sv_portalbase_vphysics_ejectbrass("sv_portalbase_vphysics_ejectbrass", "1",
+	FCVAR_REPLICATED,
+	"Use server side physics for shells created by shots.");
+
+//-----------------------------------------------------------------------------
+// Purpose: This replicates client side shells generating code, but for server shells - MyGamepedia
+// Input: iType for shell model, 0 - def, 1 - rifle, 2 - shotgun
+//-----------------------------------------------------------------------------
+void CBaseCombatWeapon::EjectBrassPhysics(int iType)
+{
+	//vphysics shells not allowed
+	if (sv_portalbase_vphysics_ejectbrass.GetBool() == false)
+		return;
+
+	CPhysicsProp* pShell = (CPhysicsProp*)CreateEntityByName("prop_physics_override");
+
+	//no shell created
+	if (!pShell)
+		return;
+
+	Vector vOrigin;
+	QAngle vAng;
+	QAngle vRot;
+
+	CBaseCombatCharacter* pOwner = GetOwner();
+	CBasePlayer* pPlayerOwner = NULL;
+
+	if (pOwner->IsPlayer()) //use vm for params
+	{
+		pPlayerOwner = ToBasePlayer(GetOwner());
+		CBaseViewModel* pVM = pPlayerOwner->GetViewModel();
+
+		//no vm
+		if (!pVM)
+			return;
+
+		//no needed attach point
+		CStudioHdr* pHdr = pVM->GetModelPtr();
+		if (!pHdr || pHdr->GetNumAttachments() < 2)
+			return;
+
+		const CUserCmd* pCmd = pPlayerOwner->GetCurrentUserCommand();
+
+		//something doesn't work on client (see the code)
+		if (pCmd->iViewModelHasValidParams != 1)
+			return;
+
+		//get attach orig + ang and vm rotation we get from client
+		//I want to note that it doesn't look accurate if you view self in portals,
+		//but it's not critical, I don't think people will note, the same thing can be seen in Gmod
+		vOrigin = Vector(pCmd->fViewModelAttachOriginX, pCmd->fViewModelAttachOriginY, pCmd->fViewModelAttachOriginZ);
+		vAng = QAngle(pCmd->fViewModelAttachAnglesX, pCmd->fViewModelAttachAnglesY, pCmd->fViewModelAttachAnglesZ);
+		vRot = QAngle(pCmd->fViewModelCalcAnglesX, pCmd->fViewModelCalcAnglesY, pCmd->fViewModelCalcAnglesZ);
+	}
+	else //for NPCs, use wpn wrld mdl instead
+	{
+		if (!GetAttachment(2, vOrigin, vAng))
+			return;
+
+		vRot = vAng;
+	}
+
+	string_t pModel;
+
+	if (iType == 1)
+	{
+		pModel = AllocPooledString("models/weapons/rifleshell.mdl");
+	}
+	else if (iType == 2)
+	{
+		pModel = AllocPooledString("models/weapons/shotgun_shell.mdl");
+	}
+	else
+	{
+		pModel = AllocPooledString("models/weapons/shell.mdl");
+	}
+
+	pShell->PrecacheModel(pModel.ToCStr());
+	pShell->SetModelName(pModel);
+
+	Vector vTempVel = Vector(RandomFloat(-1024, 1024), RandomFloat(-1024, 1024), RandomFloat(-1024, 1024));
+
+	pShell->Teleport(&vOrigin, &vRot, &vTempVel); //Face forward 
+
+	//didn't managed to spawn
+	if (DispatchSpawn(pShell) == -1)
+		return;
+
+	pShell->Activate();
+	pShell->SetMoveType(MOVETYPE_VPHYSICS);
+	pShell->SetCollisionGroup(COLLISION_GROUP_WEAPON); //npcs should not collide with shells
+	pShell->m_bAllowToFadeInView = true; //let it die asap, or we risk with teleporting ents limit reach
+
+	Vector	dir;
+
+	AngleVectors(vAng, &dir);
+
+	//add some random spread
+	dir *= random->RandomFloat(150.0f, 200.0f);
+
+	dir[0] = dir[0] + random->RandomFloat(-64, 64);
+	dir[1] = dir[1] + random->RandomFloat(-64, 64);
+	dir[2] = dir[2] + random->RandomFloat(0, 64);
+
+	pShell->ApplyAbsVelocityImpulse(dir);
+
+	//HACK! Valve messed up with attach point rotation for NPCs, manually turn shell by 90 degree
+	if (!pOwner->IsPlayer())
+	{
+		vAng.y = vAng.y + 90;
+		pShell->Teleport(NULL, &vAng, NULL);
+	}
+
+	//fix object not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(pShell);
+
+	pShell->SetNextThink(gpGlobals->curtime + 2.0f + RandomFloat(0.0f, 1.0f)); // Add an extra 0-1 secs of life	
+	pShell->SetThink(&CBaseEntity::SUB_FadeOut);
+}

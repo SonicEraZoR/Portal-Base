@@ -29,206 +29,52 @@
 #include "world.h"
 #include "ai_baseactor.h"		// for Glados ent playing VCDs
 #include "sceneentity.h"		// precacheing vcds
+#include "npc_security_camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define	SECURITY_CAMERA_MODEL		"models/props/security_camera.mdl"
-#define SECURITY_CAMERA_BC_YAW		"aim_yaw"
-#define SECURITY_CAMERA_BC_PITCH	"aim_pitch"
-#define	SECURITY_CAMERA_RANGE		1500
-#define SECURITY_CAMERA_SPREAD		VECTOR_CONE_2DEGREES
-#define	SECURITY_CAMERA_MAX_WAIT	5
-#define	SECURITY_CAMERA_PING_TIME	1.0f	//LPB!!
-
-#define SECURITY_CAMERA_NUM_ROPES 2
-#define SECURITY_CAMERA_GLOW_SPRITE	"sprites/glow1.vmt"
-
-//Aiming variables
-#define	SECURITY_CAMERA_MAX_NOHARM_PERIOD	0.0f
-#define	SECURITY_CAMERA_MAX_GRACE_PERIOD	3.0f
-
-//Spawnflags
-#define SF_SECURITY_CAMERA_AUTOACTIVATE		0x00000020
-#define SF_SECURITY_CAMERA_STARTINACTIVE	0x00000040
-#define SF_SECURITY_CAMERA_NEVERRETIRE		0x00000080
-#define SF_SECURITY_CAMERA_OUT_OF_AMMO		0x00000100
-
-#define CAMERA_DESTROYED_SCENE_1			"scenes/general/generic_security_camera_destroyed-1.vcd"
-#define CAMERA_DESTROYED_SCENE_2			"scenes/general/generic_security_camera_destroyed-2.vcd"
-#define CAMERA_DESTROYED_SCENE_3			"scenes/general/generic_security_camera_destroyed-3.vcd"
-#define CAMERA_DESTROYED_SCENE_4			"scenes/general/generic_security_camera_destroyed-4.vcd"
-#define CAMERA_DESTROYED_SCENE_5			"scenes/general/generic_security_camera_destroyed-5.vcd"
-
-//Heights
-#define	SECURITY_CAMERA_YAW_SPEED	7.0f
-
-#define SECURITY_CAMERA_TOTAL_TO_KNOCK_DOWN 33
-
-//Turret states
-enum turretState_e
-{
-	TURRET_SEARCHING,
-	TURRET_AUTO_SEARCHING,
-	TURRET_ACTIVE,
-	TURRET_DEPLOYING,
-	TURRET_RETIRING,
-	TURRET_DEAD,
-};
-
-// Forces glados actor to play reaction scenes when player dismounts camera.
-void PlayDismountSounds( void );
-
-
-//
-// Security Camera
-//
-
-class CNPC_SecurityCamera : public CNPCBaseInteractive<CAI_BaseNPC>, public CDefaultPlayerPickupVPhysics
-{
-	DECLARE_CLASS( CNPC_SecurityCamera, CNPCBaseInteractive<CAI_BaseNPC> );
-public:
-	
-	CNPC_SecurityCamera( void );
-	~CNPC_SecurityCamera( void );
-
-	void			Precache( void );
-	virtual void	CreateSounds( void );
-	virtual void	StopLoopingSounds( void );
-	virtual void	Spawn( void );
-	virtual void	Activate( void );
-	bool			CreateVPhysics( void );
-	virtual void	UpdateOnRemove( void );
-	virtual void	NotifySystemEvent( CBaseEntity *pNotify, notify_system_event_t eventType, const notify_system_event_params_t &params );
-	virtual int		ObjectCaps( void );
-	void			Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	// Think functions
-	void	Retire( void );
-	void	Deploy( void );
-	void	ActiveThink( void );
-	void	SearchThink( void );
-	void	DeathThink( void );
-
-	// Inputs
-	void	InputToggle( inputdata_t &inputdata );
-	void	InputEnable( inputdata_t &inputdata );
-	void	InputDisable( inputdata_t &inputdata );
-	void	InputRagdoll( inputdata_t &inputdata );
-
-	void	SetLastSightTime();
-
-	int		OnTakeDamage( const CTakeDamageInfo &inputInfo );
-	virtual void	PlayerPenetratingVPhysics( void );
-	bool	OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
-
-	bool	ShouldSavePhysics() { return true; }
-
-	virtual bool CanBeAnEnemyOf( CBaseEntity *pEnemy );
-
-	Class_T	Classify( void ) 
-	{
-		if( m_bEnabled ) 
-			return CLASS_COMBINE;
-
-		return CLASS_NONE;
-	}
-	
-	bool	FVisible( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
-
-	Vector	EyeOffset( Activity nActivity ) 
-	{
-		Vector vForward;
-
-		GetVectors( &vForward, 0, 0 );
-
-		return vForward * 10.0f;
-	}
-
-	Vector	EyePosition( void )
-	{
-		return GetAbsOrigin() + EyeOffset(GetActivity());
-	}
-
-
-protected:
-	
-	bool	PreThink( turretState_e state );
-	void	Ping( void );	
-	void	Toggle( void );
-	void	Enable( void );
-	void	Disable( void );
-
-	void	RopesOn( void );
-	void	RopesOff( void );
-	void	EyeOn( void );
-	void	EyeOff( void );
-
-	bool	UpdateFacing( void );
-
-private:
-
-	CHandle<CRopeKeyframe>	m_hRopes[ SECURITY_CAMERA_NUM_ROPES ];
-	CHandle<CSprite>		m_hEyeGlow;
-
-	bool	m_bAutoStart;
-	bool	m_bActive;		//Denotes the turret is deployed and looking for targets
-	bool	m_bBlinkState;
-	bool	m_bEnabled;		//Denotes whether the turret is able to deploy or not
-	
-	float	m_flLastSight;
-	float	m_flPingTime;
-
-	QAngle	m_vecGoalAngles;
-	QAngle	m_vecCurrentAngles;
-	Vector	m_vNoisePos;
-	int		m_iTicksTillNextNoise;
-
-	CSoundPatch		*m_pMovementSound;
-
-	COutputEvent m_OnDeploy;
-	COutputEvent m_OnRetire;
-
-	DECLARE_DATADESC();
-};
-
 //Datatable
-BEGIN_DATADESC( CNPC_SecurityCamera )
+BEGIN_DATADESC(CNPC_SecurityCamera)
 
-	DEFINE_ARRAY( m_hRopes, FIELD_EHANDLE, SECURITY_CAMERA_NUM_ROPES ),
-	DEFINE_FIELD( m_hEyeGlow,		FIELD_EHANDLE ),
+DEFINE_ARRAY(m_hRopes, FIELD_EHANDLE, SECURITY_CAMERA_NUM_ROPES),
+DEFINE_FIELD(m_hEyeGlow, FIELD_EHANDLE),
 
-	DEFINE_FIELD( m_bAutoStart,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bActive,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bBlinkState,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bEnabled,			FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flLastSight,		FIELD_TIME ),
-	DEFINE_FIELD( m_flPingTime,			FIELD_TIME ),
-	DEFINE_FIELD( m_vecGoalAngles,		FIELD_VECTOR ),
-	DEFINE_FIELD( m_vecCurrentAngles,	FIELD_VECTOR ),
-	DEFINE_FIELD( m_vNoisePos,			FIELD_VECTOR ),
-	DEFINE_FIELD( m_iTicksTillNextNoise, FIELD_INTEGER ),
+DEFINE_FIELD(m_bAutoStart, FIELD_BOOLEAN),
+DEFINE_FIELD(m_bActive, FIELD_BOOLEAN),
+DEFINE_FIELD(m_bBlinkState, FIELD_BOOLEAN),
+DEFINE_FIELD(m_bEnabled, FIELD_BOOLEAN),
+DEFINE_FIELD(m_flLastSight, FIELD_TIME),
+DEFINE_FIELD(m_flPingTime, FIELD_TIME),
+DEFINE_FIELD(m_vecGoalAngles, FIELD_VECTOR),
+DEFINE_FIELD(m_vecCurrentAngles, FIELD_VECTOR),
+DEFINE_FIELD(m_vNoisePos, FIELD_VECTOR),
+DEFINE_FIELD(m_iTicksTillNextNoise, FIELD_INTEGER),
+DEFINE_FIELD(m_bDetached, FIELD_BOOLEAN),
 
-	DEFINE_SOUNDPATCH( m_pMovementSound ),
+DEFINE_SOUNDPATCH(m_pMovementSound),
 
-	DEFINE_THINKFUNC( Retire ),
-	DEFINE_THINKFUNC( Deploy ),
-	DEFINE_THINKFUNC( ActiveThink ),
-	DEFINE_THINKFUNC( SearchThink ),
-	DEFINE_THINKFUNC( DeathThink ),
+DEFINE_THINKFUNC(Retire),
+DEFINE_THINKFUNC(Deploy),
+DEFINE_THINKFUNC(ActiveThink),
+DEFINE_THINKFUNC(SearchThink),
+DEFINE_THINKFUNC(DeathThink),
 
-	// Inputs
-	DEFINE_INPUTFUNC( FIELD_VOID, "Toggle", InputToggle ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "Ragdoll", InputRagdoll ),
+// Inputs
+DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Ragdoll", InputRagdoll),
 
-	DEFINE_OUTPUT( m_OnDeploy, "OnDeploy" ),
-	DEFINE_OUTPUT( m_OnRetire, "OnRetire" ),
+DEFINE_OUTPUT(m_OnDeploy, "OnDeploy"),
+DEFINE_OUTPUT(m_OnRetire, "OnRetire"),
+
+DEFINE_OUTPUT(m_OnPhysGunPickup, "OnPhysGunPickup"),
+DEFINE_OUTPUT(m_OnPhysGunDrop, "OnPhysGunDrop"),
 
 END_DATADESC()
 
-LINK_ENTITY_TO_CLASS( npc_security_camera, CNPC_SecurityCamera );
+LINK_ENTITY_TO_CLASS(npc_security_camera, CNPC_SecurityCamera);
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -241,6 +87,7 @@ CNPC_SecurityCamera::CNPC_SecurityCamera( void )
 	m_flLastSight		= 0;
 	m_bBlinkState		= false;
 	m_bEnabled			= false;
+	m_bDetached			= false;
 	m_vecCurrentAngles	= QAngle( 0.0f, 0.0f, 0.0f );
 
 	m_vecGoalAngles.Init();
@@ -311,17 +158,20 @@ void CNPC_SecurityCamera::Spawn( void )
 	m_HackedGunPos	= Vector( 0, 0, 12.75 );
 	SetViewOffset( EyeOffset( ACT_IDLE ) );
 	m_flFieldOfView	= VIEW_FIELD_FULL;
-	m_takedamage	= DAMAGE_NO;
+	m_takedamage	= DAMAGE_EVENTS_ONLY; //mygamepedia: changed from _NO to make apply force work
 	m_iHealth		= 1000;
 	m_bloodColor	= BLOOD_COLOR_MECH;
 	
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
-	SetCollisionBounds( Vector( -16.0f, -16.0f, -16.0f ), Vector( 16.0f, 16.0f, 16.0f ) );
+	//mygamepedia: it was 16 for everything, now we have stable collision with these
+	//i did by eye if you ask
+	//format: forward, side, up
+	SetCollisionBounds( Vector( -2.5f, -18.0f, -32.0f ), Vector( 42.0f, 18.0f, 16.0f ) );
 
 	RemoveFlag( FL_AIMTARGET );
-	AddEFlags( EFL_NO_DISSOLVE );
+	AddEFlags(EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL); //mygamepedia: the second flag prevents bugs with megaphyscannon
 
 	SetPoseParameter( SECURITY_CAMERA_BC_YAW, 0 );
 	SetPoseParameter( SECURITY_CAMERA_BC_PITCH, 0 );
@@ -345,11 +195,13 @@ void CNPC_SecurityCamera::Spawn( void )
 void CNPC_SecurityCamera::Activate( void )
 {
 	BaseClass::Activate();
-
-	CreateSounds();
-
 	RopesOn();
-	EyeOn();
+
+	if (!m_bDetached)
+	{
+		CreateSounds();
+		EyeOn();
+	}
 }
 
 bool CNPC_SecurityCamera::CreateVPhysics( void )
@@ -399,6 +251,12 @@ void CNPC_SecurityCamera::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 		pPlayer->PickupObject( this );
 }
 
+
+//MyGamepedia: just a nice feature
+ConVar	sk_securitycamera_detach_by_damage("sk_securitycamera_detach_by_damage", "50.0",
+	FCVAR_NONE,
+	"Detach security camera when received this (or more) amount of damage, -1 to disable.");
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -412,12 +270,42 @@ int CNPC_SecurityCamera::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( m_bActive == false )
 		info.ScaleDamage( 0.1f );
 
+	if (info.GetDamageType() & (DMG_SLASH | DMG_CLUB))
+	{
+		info.ScaleDamageForce(2.0f);
+	}
+	else if (info.GetDamageType() & DMG_BLAST)
+	{
+		info.ScaleDamageForce(2.0f);
+	}
+	else if ((info.GetDamageType() & DMG_BULLET) && !(info.GetDamageType() & DMG_BUCKSHOT))
+	{
+		// Bullets, but not buckshot, do extra push
+		info.ScaleDamageForce(2.5f);
+	}
+
+	//mygamepedia: detach if
+	//is not detached, damage is > 49, feature enabled
+	float flVarVal = sk_securitycamera_detach_by_damage.GetFloat();
+	if  (!m_bDetached && flVarVal > -1 && info.GetDamage() >= flVarVal)
+	{
+		variant_t tmpvar;
+		AcceptInput("Ragdoll",
+			(info.GetInflictor()) ? info.GetInflictor() : this, //Inflictor
+			(info.GetAttacker()) ? info.GetAttacker() : this,   //Attacker
+			tmpvar, 0);
+	}
+
+	// Manually apply vphysics because AI_BaseNPC takedamage doesn't call back to CBaseEntity OnTakeDamage
+	if (m_bDetached)
+		VPhysicsTakeDamage(info);
+
 	m_iHealth -= info.GetDamage();
 
 	if ( m_iHealth <= 0 )
 	{
 		m_iHealth = 0;
-		m_takedamage = DAMAGE_NO;
+		m_takedamage = DAMAGE_EVENTS_ONLY; //mygamepedia: changed from _NO to make apply force work
 
 		RemoveFlag( FL_NPC ); // why are they set in the first place???
 
@@ -433,6 +321,8 @@ int CNPC_SecurityCamera::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 	}
 
+	m_iHealth = 1000; //mygamepedia: cuz now we get damage, this will prevent health fall
+
 	return 1;
 }
 
@@ -446,11 +336,6 @@ int CNPC_SecurityCamera::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 void CNPC_SecurityCamera::PlayerPenetratingVPhysics( void )
 {
 	// We don't care!
-}
-
-bool CNPC_SecurityCamera::OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
-{
-	return !m_bActive;
 }
 
 //-----------------------------------------------------------------------------
@@ -1052,6 +937,8 @@ void CNPC_SecurityCamera::InputRagdoll( inputdata_t &inputdata )
 	pPhysics->Wake();
 
 	PlayDismountSounds();
+
+	m_bDetached = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1108,11 +995,116 @@ bool CNPC_SecurityCamera::CanBeAnEnemyOf( CBaseEntity *pEnemy )
 	return BaseClass::CanBeAnEnemyOf( pEnemy );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Adds proper pick up logic for physcannon 
+// The code taked from npc_turret_floor mainly - MyGamepedia
+//-----------------------------------------------------------------------------
+void CNPC_SecurityCamera::OnPhysGunPickup(CBasePlayer* pPhysGunUser, PhysGunPickup_t reason)
+{
+	m_hPhysicsAttacker = pPhysGunUser;
+	m_flLastPhysicsInfluenceTime = gpGlobals->curtime;
 
-void PlayDismountSounds()
+	// Drop our mass a lot so that we can be moved easily with +USE
+	if (reason != PUNTED_BY_CANNON)
+	{
+		Assert(VPhysicsGetObject());
+
+		m_bCarriedByPlayer = true;
+		m_OnPhysGunPickup.FireOutput(this, this);
+
+		// We want to use preferred carry angles if we're not nicely upright
+		Vector vecToTurret = pPhysGunUser->GetAbsOrigin() - GetAbsOrigin();
+		vecToTurret.z = 0;
+		VectorNormalize(vecToTurret);
+
+		// We want to use preferred carry angles if we're not nicely upright
+		Vector	forward, up;
+		GetVectors(&forward, NULL, &up);
+	}
+
+	// Clear out our last NPC to kick me, because it makes no sense now
+	m_hLastNPCToKickMe = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Adds proper drop logic for physcannon 
+// The code taked from npc_turret_floor mainly - MyGamepedia
+//-----------------------------------------------------------------------------
+void CNPC_SecurityCamera::OnPhysGunDrop(CBasePlayer* pPhysGunUser, PhysGunDrop_t Reason)
+{
+	m_hPhysicsAttacker = pPhysGunUser;
+	m_flLastPhysicsInfluenceTime = gpGlobals->curtime;
+
+	m_bCarriedByPlayer = false;
+	//m_bUseCarryAngles = false;
+	m_OnPhysGunDrop.FireOutput(this, this);
+
+	// Restore our mass to the original value
+	Assert(VPhysicsGetObject());
+}
+
+//MyGamepedia: for debug mainly
+ConVar	sv_securitycamera_run_orig_attemptphysgunpickup("sv_securitycamera_run_orig_attemptphysgunpickup", "0",
+	FCVAR_NONE,
+	"Turns on original OnAttemptPhysGunPickup for npc_security_camera that doesn't work with physcannon's pull and grab.",
+	true, 0, true, 1
+);
+
+//-----------------------------------------------------------------------------
+// Purpose: Let physcannon pick up camera properly
+// The code taked from npc_turret_floor mainly - MyGamepedia
+//-----------------------------------------------------------------------------
+bool CNPC_SecurityCamera::OnAttemptPhysGunPickup(CBasePlayer* pPhysGunUser, PhysGunPickup_t reason)
+{
+	if(sv_securitycamera_run_orig_attemptphysgunpickup.GetBool())
+		return !m_bActive;
+
+	if (!m_bDetached)
+		return false;
+
+	// Prevent players pulling enemy turrets from afar if they're in front of the turret
+	if (reason == PICKED_UP_BY_CANNON && IRelationType(pPhysGunUser) == D_HT)
+	{
+		Vector vecForward;
+		GetVectors(&vecForward, NULL, NULL);
+		Vector vecForce = (pPhysGunUser->GetAbsOrigin() - GetAbsOrigin());
+		float flDistance = VectorNormalize(vecForce);
+
+		ConVarRef tracelength("physcannon_tracelength");
+
+		// If it's over the physcannon tracelength, we're pulling it
+		if (flDistance > tracelength.GetFloat())
+		{
+			float flDot = DotProduct(vecForward, vecForce);
+			if (flDot > 0.5)
+				return false;
+		}
+	}
+
+	return true;
+}
+
+inline void PlayDismountSounds()
 {
 	// Play GLaDOS's audio reaction
-	CPortal_Player* pPlayer = ToPortalPlayer( UTIL_PlayerByIndex( 1 ) );
+
+	//MyGamepedia: use ent 1 in sp, for mp - find valid player
+	CPortal_Player* pPlayer = NULL;
+	if (gpGlobals->maxClients < 2)
+	{
+		pPlayer = ToPortalPlayer(UTIL_PlayerByIndex(1));
+	}
+	else
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			pPlayer = ToPortalPlayer(UTIL_PlayerByIndex(i));
+
+			if (pPlayer && pPlayer->IsConnected()) //found a valid player ? GET OUT!!!
+				break;
+		}
+	}
+
 	CAI_BaseActor* pGlaDOS  = (CAI_BaseActor*)gEntList.FindEntityByName( NULL, "Aperture_AI" );
 	
 	if ( !pPlayer || !pGlaDOS )

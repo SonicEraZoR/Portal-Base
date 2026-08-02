@@ -4328,7 +4328,7 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 	const ClientWorldListInfo_t& info = *m_pWorldListInfo;
 
 #ifdef PORTAL //if we're in the portal mod, we need to make a detour so we can render portal views using stencil areas
-	if( ShouldDrawPortals() ) //no recursive stencil views during skybox rendering (although we might be drawing a skybox while already in a recursive stencil view)
+	if (ShouldDrawPortals() && !(m_DrawFlags & (DF_RENDER_REFLECTION | DF_RENDER_REFRACTION ))) //no recursive stencil views during skybox rendering (although we might be drawing a skybox while already in a recursive stencil view)
 	{
 		int iDrawFlagsBackup = m_DrawFlags;
 
@@ -4983,6 +4983,10 @@ void CShadowDepthView::Draw()
 		render->Push3DView( (*this), VIEW_CLEAR_DEPTH, m_pRenderTarget, GetFrustum() );
 	}
 
+	pRenderContext.GetFrom(materials);
+	pRenderContext->PushRenderTargetAndViewport(m_pRenderTarget, m_pDepthTexture, 0, 0, m_pDepthTexture->GetMappingWidth(), m_pDepthTexture->GetMappingHeight());
+	pRenderContext.SafeRelease();
+
 	SetupCurrentView( origin, angles, VIEW_SHADOW_DEPTH_TEXTURE );
 
 	MDLCACHE_CRITICAL_SECTION();
@@ -5028,6 +5032,8 @@ void CShadowDepthView::Draw()
 	}
 
 	render->PopView( GetFrustum() );
+
+	pRenderContext->PopRenderTargetAndViewport();
 
 #if defined( _X360 )
 	pRenderContext->PopVertexShaderGPRAllocation();

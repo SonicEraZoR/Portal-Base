@@ -86,6 +86,8 @@ public:
 	//avoid blocking traces that are supposed to hit our source entity
 	virtual bool	TestCollision( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 
+	virtual bool	IsPortalNonTeleportable() { return true; }
+
 
 
 

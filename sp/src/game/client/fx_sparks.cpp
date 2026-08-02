@@ -18,6 +18,7 @@
 #include "fx.h"
 #include "c_pixel_visibility.h"
 #include "particles_ez.h"
+#include "portal/PortalRender.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -70,6 +71,7 @@ CSimpleGlowEmitter::CSimpleGlowEmitter( const char *pDebugName, const Vector &so
 	m_queryHandle = 0;
 	m_wasTested = 0;
 	m_isVisible = 0;
+	m_bSuppressInFirstPerson = false;
 	m_startTime = gpGlobals->curtime;
 	m_flDeathTime = flDeathTime;
 }
@@ -165,6 +167,7 @@ CTrailParticles::CTrailParticles( const char *pDebugName ) : CSimpleEmitter( pDe
 {
 	m_fFlags			= 0;
 	m_flVelocityDampen	= 0.0f;
+	m_bSuppressInFirstPerson = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -197,6 +200,9 @@ void CTrailParticles::Setup( const Vector &origin, const Vector *direction, floa
 
 void CTrailParticles::RenderParticles( CParticleRenderIterator *pIterator )
 {
+	if (m_bSuppressInFirstPerson && !C_BasePlayer::ShouldDrawLocalPlayer() && !g_pPortalRender->IsRenderingPortal())
+		return;
+
 	const TrailParticle *pParticle = (const TrailParticle*)pIterator->GetFirst();
 	while ( pParticle )
 	{

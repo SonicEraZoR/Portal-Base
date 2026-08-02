@@ -23,6 +23,7 @@
 #include "datacache/imdlcache.h"
 #include "view.h"
 #include "viewrender.h"
+#include "PortalRender.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1503,6 +1504,10 @@ static RenderGroup_t DetectBucketedRenderGroup( RenderGroup_t group, float fDime
 	return bucketedGroup;
 }
 
+ConVar cl_portalbase_occluder_fix_hack("cl_portalbase_occluder_fix_hack", "1",
+	FCVAR_NONE,
+	"Disable func_occluder in portal view to fix models not appearing in it, gives performance trade off, this entity isn't used often anyway.");
+
 void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafIndex,	const SetupRenderInfo_t &info )
 {
 	bool portalTestEnts = r_PortalTestEnts.GetBool() && !r_portalsopenall.GetBool();
@@ -1583,8 +1588,22 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 		// UNDONE: Investigate speed tradeoffs of occlusion culling brush models too?
 		if ( renderable.m_Flags & RENDER_FLAGS_STUDIO_MODEL )
 		{
+			//mygamepedia: don't occlude in portals unless cvar disabled
+			bool bOcclude;
+			if (cl_portalbase_occluder_fix_hack.GetBool())
+			{
+				if (!g_pPortalRender->IsRenderingPortal())
+				{
+					bOcclude = true;
+				}
+				else
+					bOcclude = false;
+			}
+			else
+				bOcclude = true;
+
 			// test to see if this renderable is occluded by the engine's occlusion system
-			if ( engine->IsOccluded( absMins, absMaxs ) )
+			if (bOcclude && engine->IsOccluded(absMins, absMaxs))
 				continue;
 		}
 

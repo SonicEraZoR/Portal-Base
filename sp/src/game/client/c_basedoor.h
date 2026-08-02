@@ -25,6 +25,8 @@ public:
 	C_BaseDoor( void );
 	~C_BaseDoor( void );
 
+	virtual bool IsBaseDoor() { return true; }
+
 public:
 	float		m_flWaveHeight;
 };

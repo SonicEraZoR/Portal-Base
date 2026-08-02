@@ -33,6 +33,9 @@ class CHalfLife2 : public CSingleplayRules
 public:
 	DECLARE_CLASS( CHalfLife2, CSingleplayRules );
 
+	// Rules change for the mega physgun
+	CNetworkVar(bool, m_bMegaPhysgun);
+
 	// Damage Query Overrides.
 	virtual bool			Damage_IsTimeBased( int iDmgType );
 	// TEMP:
@@ -50,9 +53,6 @@ public:
 #endif
 
 private:
-	// Rules change for the mega physgun
-	CNetworkVar( bool, m_bMegaPhysgun );
-
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -90,11 +90,10 @@ public:
 	
 	virtual bool IsAlyxInDarknessMode();
 
-private:
-
 	float	m_flLastHealthDropTime;
 	float	m_flLastGrenadeDropTime;
 
+private:
 	void AdjustPlayerDamageTaken( CTakeDamageInfo *pInfo );
 	float AdjustPlayerDamageInflicted( float damage );
 

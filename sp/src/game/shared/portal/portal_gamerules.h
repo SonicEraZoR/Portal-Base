@@ -44,25 +44,21 @@ public:
 class CPortalGameRules : public CHalfLife2
 {
 public:
-	DECLARE_CLASS( CPortalGameRules, CSingleplayRules );
+	DECLARE_CLASS(CPortalGameRules, CHalfLife2); //mygamepedia: it was CSingleplayRules rules instead of CHalfLife2
+												 //this should fix multiple issues, such as mega physcannon, hope nothing will be broken
 
 	virtual bool	Init();
-	
-	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
-	virtual bool	ShouldUseRobustRadiusDamage(CBaseEntity *pEntity);
-#ifndef CLIENT_DLL
-	virtual bool	ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target );
-	virtual float	GetAutoAimScale( CBasePlayer *pPlayer );
-#endif
+
+	CNetworkVar(bool, m_bTeamPlayEnabled);
 
 #ifdef CLIENT_DLL
 	virtual bool IsBonusChallengeTimeBased( void );
+	virtual bool IsMultiplayer();
+	virtual bool FAllowFlashlight();
+	virtual bool ShouldCollide(int collisionGroup0, int collisionGroup1);
 #endif
 
 private:
-	// Rules change for the mega physgun
-	CNetworkVar( bool, m_bMegaPhysgun );
-
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -77,25 +73,23 @@ private:
 	virtual void			Think( void );
 
 	virtual bool			ClientCommand( CBaseEntity *pEdict, const CCommand &args );
-	virtual void			PlayerSpawn( CBasePlayer *pPlayer );
 
-	virtual void			InitDefaultAIRelationships( void );
-	virtual const char*		AIClassText(int classType);
-	virtual const char *GetGameDescription( void ) { return "Portal"; }
+	virtual const char*		GetGameDescription( void ) { return "Portal"; }
 
-	// Ammo
 	virtual void			PlayerThink( CBasePlayer *pPlayer );
-	virtual float			GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, int nAmmoType );
 
-	virtual bool			ShouldBurningPropsEmitLight();
+	//mygamepedia: these are modded for dif tasks we need with portal-base
+	virtual bool			IsMultiplayer();											//logical way to find out if we are in mp
+	virtual bool			ShouldBurningPropsEmitLight();								//orig does nothing, this is why i made it optional
+	virtual bool			ShouldRemoveRadio();										//remove radio depending on cvar val
+	virtual bool			FAllowFlashlight();											//use mp_flashlight to allow flashlight in mp
+	virtual void			PlayerSpawn(CBasePlayer* pPlayer);							//add optional def items spawn for mp
+	virtual bool			ShouldCollide(int collisionGroup0, int collisionGroup1);	//make wpns & plr collide optional
+	virtual	bool			IsTeamplay() { return m_bTeamPlayEnabled; }					//is teamplay on?
 
-	//bool ShouldRemoveRadio( void ); only used in portal arg I think so no need for this
-	
 public:
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
-
-	bool	MegaPhyscannonActive( void ) { return m_bMegaPhysgun;	}
 
 private:
 

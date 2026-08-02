@@ -4186,12 +4186,14 @@ void CGameMovement::FinishUnDuckJump( trace_t &trace )
 	CategorizePosition();
 }
 
+ConVar sv_portalbase_no_schrodinger_crouch("sv_portalbase_no_schrodinger_crouch", "0", FCVAR_REPLICATED, "Fixes schrodinger crouch when enabled.");
+
 //-----------------------------------------------------------------------------
 // Purpose: Finish ducking
 //-----------------------------------------------------------------------------
 void CGameMovement::FinishDuck( void )
 {
-	if ( player->GetFlags() & FL_DUCKING )
+	if ((player->GetFlags() & FL_DUCKING) && !sv_portalbase_no_schrodinger_crouch.GetBool())
 		return;
 
 	player->AddFlag( FL_DUCKING );

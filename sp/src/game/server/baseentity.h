@@ -3,6 +3,7 @@
 // Purpose: 
 //
 // $NoKeywords: $
+// $NoKeywords: $
 //=============================================================================//
 
 #ifndef BASEENTITY_H
@@ -941,7 +942,18 @@ public:
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
 	virtual bool	HasTarget( string_t targetname );
 	virtual	bool	IsPlayer( void ) const { return false; }
+	//virtual bool	IsPortalTeleportable() { return false; } //can this ent teleport in portals ?
+	virtual	bool	IsSecurityCamera() const { return false; } //true for sec camera
 	virtual	bool	IsBaseTank() const { return false; } //true for tanks
+	virtual bool	IsPortalDetector() { return false; } //true for func_portal_detector
+	virtual bool	IsCrossbowBolt() { return false; } //true for crossbow_bolt
+	virtual bool	IsBaseDoor() { return false; }	//true for doors
+	virtual bool	IsPortalGun() { return false; } //true for weapon_portalgun
+	virtual bool	IsPhyscannon() { return false; } //true for weapon_physcannon
+	virtual bool	IsItem() { return false; } //true for CItem
+	virtual bool	IsPortalTurret() { return false; } //true for npc_portal_turret_floor
+	virtual bool	IsGladosCore() { return false; } //true for prop_glados_core
+	virtual bool	IsPortalNonTeleportable() { return false; } //replaces hardcoded compare by str g_pszPortalNonTeleportable with per class bool
 	virtual bool	IsNetClient( void ) const { return false; }
 	virtual bool	IsTemplate( void ) { return false; }
 	virtual bool	IsBaseObject( void ) const { return false; }
@@ -1219,6 +1231,9 @@ public:
 	float			GetFriction( void ) const;
 	void			SetFriction( float flFriction );
 
+	void			SetStickied(const bool bStickied) { m_bStickied = bStickied; }
+	bool			IsStickied(){ return m_bStickied; }
+
 	virtual	bool FVisible ( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
 	virtual bool FVisible( const Vector &vecTarget, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
 
@@ -1370,6 +1385,8 @@ public:
 
 	virtual bool IsDeflectable() { return false; }
 	virtual void Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir ) {}
+
+	virtual bool IsSpecialProjectile() { return false; } //grenade_ar2, rpg_missile, grenade_bugbait
 
 //	void Relink() {}
 
@@ -1666,6 +1683,8 @@ private:
 	CNetworkVarForDerived( float, m_flFriction );
 	CNetworkVar( float, m_flElasticity );
 
+	CNetworkVar(bool, m_bStickied);
+
 	// was pev->ltime
 	float			m_flLocalTime;
 	// local time at the beginning of this frame
@@ -1723,6 +1742,8 @@ public:
 #endif
 
 	int								m_fDataObjectTypes;
+
+	CNetworkVar(bool, m_bAllowToFadeInView);
 
 	// So it can get at the physics methods
 	friend class CCollisionEvent;

@@ -15,6 +15,8 @@
 #include "entityoutput.h"
 #include "player_pickup.h"
 #include "vphysics/constraints.h"
+#include "baseanimating.h"
+#include "baseentity_shared.h"
 
 
 // Armor given by a battery
@@ -73,6 +75,11 @@ public:
 	void	SetOriginalSpawnAngles( const QAngle& angles ) { m_vOriginalSpawnAngles = angles; }
 	bool	CreateItemVPhysicsObject( void );
 	virtual bool	ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer );
+	virtual bool	IsItem() { return true; }
+	virtual	void	UpdateOnRemove();
+
+
+	EHANDLE		m_hTouchArea; //mygamepedia: touch area for this item
 
 #if defined( HL2MP ) || defined( TF_DLL )
 	void	FallThink( void );
@@ -92,6 +99,66 @@ private:
 	QAngle		m_vOriginalSpawnAngles;
 
 	IPhysicsConstraint		*m_pConstraint;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: This is a helper class make item pick up by trigger volume mechanism 
+// independ from item iteself, this allows us to make items compitable with portals 
+// and other triggers.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+
+enum PickUpType_t
+{
+	PUT_Nothing = 0,
+	PUT_Item,
+	PUT_Weapon,
+};
+
+class CEnvTouchArea : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
+{
+public:
+	DECLARE_CLASS(CEnvTouchArea, CBaseAnimating);
+
+	CEnvTouchArea();
+
+	virtual void	Spawn(void);
+	bool			CreateItemVPhysicsObject(void);
+
+	unsigned int	PhysicsSolidMaskForEntity(void) const;
+
+	virtual int		ObjectCaps() { return BaseClass::ObjectCaps() | FCAP_IMPULSE_USE | FCAP_WCEDIT_POSITION; };
+
+	void			ItemTouch(CBaseEntity* pOther);
+
+	//is it enabled ?
+	bool	IsEnabled() { return m_bIsEnabled; }
+
+	void	SetPickupItem(CItem* pItem);
+	void	SetPickupWeapon(CBaseCombatWeapon* pWeapon);
+	void	ClearPickupObject();
+
+	//controls ent's state
+	inline void		EnableTouchArea()	{ m_bIsEnabled = true; }
+	inline void		DisableTouchArea()	{ m_bIsEnabled = false; }
+	inline void		ToggleTouchArea()	{ (m_bIsEnabled) ? m_bIsEnabled = false : m_bIsEnabled = true; }
+
+	void			SetPickupType(PickUpType_t PUT_Type);
+
+	//added for debug, but also could be useful for level creators
+	void InputEnable(inputdata_t& inputdata);
+	void InputDisable(inputdata_t& inputdata);
+	void InputToggle(inputdata_t& inputdata);
+
+	bool		m_bIsEnabled; //activation state
+
+	DECLARE_DATADESC();
+
+private:
+	EHANDLE		m_hPickupItem; //item that uses the area
+	EHANDLE		m_hPickupWeapon; //weapon that uses the area
+
+	short		m_iPickupType; //0 - nothing, 1 - CItem, 2 - CBaseCombatWeapon
 };
 
 #endif // ITEMS_H

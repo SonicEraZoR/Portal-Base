@@ -380,10 +380,20 @@ static void ModifyWeight_PreCollision( vcollisionevent_t *pEvent )
 				if( pHoldingPlayer )
 					pGrabController = GetGrabControllerForPlayer( pHoldingPlayer );
 
-				float fSavedMass, fSavedRotationalDamping;
+				//mygamepedia: this may crash due to portals + physcannon obj held (when we don't use proper grab logic)
+				//so this is why the code reworked to prevent nullprt
+				float fSavedMass = pUnshadowedObjects[i]->GetMass();
+				float fSavedRotationalDamping = 0.0f;
 
 				AssertMsg( pGrabController, "Physics object is held, but we can't find the holding controller." );
-				GetSavedParamsForCarriedPhysObject( pGrabController, pUnshadowedObjects[i], &fSavedMass, &fSavedRotationalDamping );
+				if (pGrabController)
+				{
+					GetSavedParamsForCarriedPhysObject(pGrabController, pUnshadowedObjects[i], &fSavedMass, &fSavedRotationalDamping);
+				}
+				else
+				{
+					Warning("Physics object is held, but we can't find the holding controller.\n");
+				}
 
 				pEvent->pObjects[i]->SetMass( fSavedMass );
 				if( pUnshadowedObjects[i] != pEvent->pObjects[i] )

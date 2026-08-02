@@ -90,12 +90,18 @@ public:
 	void SetCollisionDamped( float dampen )	{	m_ParticleCollision.SetCollisionDampen( dampen );	}
 	void SetAngularCollisionDampen( float dampen )	{ m_ParticleCollision.SetAngularCollisionDampen( dampen );	}
 
+
+	//void SetSuppressInFirstPerson(bool bSuppress) { m_bSuppressInFirstPerson = bSuppress; }
+	//void SetDrawBeforeViewModel(bool state) { m_ParticleEffect.SetDrawBeforeViewModel(state); }
+
 	CParticleCollision	m_ParticleCollision;
 
 protected:
 
 	int					m_fFlags;
 	float				m_flVelocityDampen;
+	//bool				m_bSuppressInFirstPerson;
+
 
 private:
 	CTrailParticles( const CTrailParticles & ); // not defined, not accessible
@@ -146,6 +152,10 @@ public:
 
 	virtual void SimulateParticles( CParticleSimulateIterator *pIterator );
 	virtual void RenderParticles( CParticleRenderIterator *pIterator );
+
+	//void SetSuppressInFirstPerson(bool bSuppress) { m_bSuppressInFirstPerson = bSuppress; }
+	//void SetDrawBeforeViewModel(bool state) { m_ParticleEffect.SetDrawBeforeViewModel(state); }
+
 protected:
 
 	bool WasTestedInView( unsigned char viewMask );
@@ -157,6 +167,8 @@ protected:
 	float				m_flDeathTime;			// How long it has been alive for so far.
 	float				m_startTime;
 	pixelvis_handle_t	m_queryHandle;
+	//bool				m_bSuppressInFirstPerson;
+
 private:
 	unsigned char		m_wasTested;
 	unsigned char		m_isVisible;

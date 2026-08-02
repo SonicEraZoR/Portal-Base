@@ -15,9 +15,14 @@
 #include "vstdlib/random.h"
 #include "ai_utils.h"
 #include "EntityFlame.h"
+#include "physics_prop_ragdoll.h"
+#include "portal_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar ai_force_serverside_ragdoll;
+#define PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
 
 extern Vector			g_vecAttackDir;		// In globals.cpp
 
@@ -254,7 +259,12 @@ void CGib::InitGib( CBaseEntity *pVictim, float fMinVelocity, float fMaxVelocity
 			SetAbsVelocity( vecNewVelocity );
 		}
 	
-		SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+#ifndef PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+		SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+#else
+		SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+#endif
+		
 	}
 
 	LimitVelocity();
@@ -402,9 +412,13 @@ bool CGib::SUB_AllowedToFade( void )
 
 	CBasePlayer *pPlayer = ( AI_IsSinglePlayer() ) ? UTIL_GetLocalPlayer() : NULL;
 
-	if ( pPlayer && pPlayer->FInViewCone( this ) && m_bForceRemove == false )
+	if (pPlayer)
 	{
-		return false;
+		CPortal_Player* pPortalPlayer = static_cast<CPortal_Player*>(pPlayer);
+
+		//mygamepedia: also check if i can see it in portals
+		if ((pPortalPlayer->FInViewConeThroughPortal(this) && !m_bForceRemove) || (pPlayer->FInViewCone(this) && !m_bForceRemove))
+			return false;
 	}
 
 	return true;
@@ -595,7 +609,12 @@ void CGib::Spawn( const char *szGibModel )
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
-	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+
+#ifndef PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+	SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+#else
+	SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+#endif
 
 	SetModel( szGibModel );
 
@@ -644,18 +663,25 @@ CBaseEntity *CreateRagGib( const char *szModel, const Vector &vecOrigin, const Q
 		return NULL;
 	}
 
-	if ( bShouldIgnite )
+	//mygamepedia: added server ragdoll creation so raggib can pass portals
+	if (ai_force_serverside_ragdoll.GetBool())
 	{
-		CBaseAnimating *pAnimating = pGib->GetBaseAnimating();
-		if (pAnimating != NULL )
-		{
-			pAnimating->Ignite( random->RandomFloat( 8.0, 12.0 ), false );
-		}
+		return pGib->Spawn(szModel, vecOrigin, vecForce, flFadeTime, bShouldIgnite); //return the server rag
 	}
+	else
+	{
+		if (bShouldIgnite)
+		{
+			CBaseAnimating* pAnimating = pGib->GetBaseAnimating();
+			if (pAnimating != NULL)
+			{
+				pAnimating->Ignite(random->RandomFloat(8.0, 12.0), false);
+			}
+		}
 
-	pGib->Spawn( szModel, vecOrigin, vecForce, flFadeTime );
-
-	return pGib;
+		pGib->Spawn(szModel, vecOrigin, vecForce, flFadeTime);
+		return pGib; //return the raggib ent itself
+	}
 }
 
 void CRagGib::Spawn( const char *szModel, const Vector &vecOrigin, const Vector &vecForce, float flFadeTime = 0.0 )
@@ -674,6 +700,50 @@ void CRagGib::Spawn( const char *szModel, const Vector &vecOrigin, const Vector 
 			SUB_StartFadeOut( flFadeTime );
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Spawn a server gib with a finite lifetime, after which it will fade out.
+// - MyGamepedia
+//-----------------------------------------------------------------------------
+CRagdollProp* CRagGib::Spawn(const char* szModel, const Vector& vecOrigin, const Vector& vecForce, float flFadeTime, bool bShouldBurn)
+{
+	SetSolid(SOLID_BBOX);
+	AddSolidFlags(FSOLID_NOT_SOLID);
+	SetModel(szModel);
+	UTIL_SetSize(this, vec3_origin, vec3_origin);
+	UTIL_SetOrigin(this, vecOrigin);
+
+	//changed from client to server ragdolls to pass portals
+	CTakeDamageInfo dmg;
+	CBaseEntity* pEnt = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+
+	if (!pEnt)
+	{
+		AddSolidFlags(FSOLID_NOT_STANDABLE);
+		RemoveSolidFlags(FSOLID_NOT_SOLID);
+		if (flFadeTime > 0.0)
+		{
+			SUB_StartFadeOut(flFadeTime);
+		}
+
+		return NULL;
+	}
+
+	CRagdollProp* pRagdoll = static_cast<CRagdollProp*>(pEnt);
+	pRagdoll->ApplyAbsVelocityImpulse(vecForce);
+
+	//do i have a fade time ? apply on the ragdoll
+	if (flFadeTime > 0)
+		pRagdoll->FadeOut(1, flFadeTime);
+
+	//should i burn ? the line taked from other place
+	if (bShouldBurn)
+		pRagdoll->Ignite(random->RandomFloat(8.0, 12.0), false);
+
+	UTIL_Remove(this); //remove or a second none solied model will appear
+
+	return pRagdoll;
 }
 
 LINK_ENTITY_TO_CLASS( raggib, CRagGib );

@@ -207,14 +207,16 @@ void C_WeaponPortalgun::Spawn( void )
 //-----------------------------------------------------------------------------
 void C_WeaponPortalgun::StartEffects( void )
 {
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+
+	//todo: add a proper logic for NPCs when we will have working code for their portalgun
 	if (pOwner == NULL)
 		return;
 
 	int i;
 
 	//BusterBunny: check for active weapon to fix glitchy effects on portalgun on restore/levelchange when a different weapon is active
-	CBaseEntity *pModelView = ((pOwner->GetActiveWeapon() == this) ? (pOwner->GetViewModel()) : (0));
+	CBaseEntity* pModelView = ((pOwner->GetActiveWeapon() == this) ? (pOwner->GetViewModel()) : (0));
 	//Credit for the initial fix: MyGamepedia
 
 	CBaseEntity *pModelWorld = this;

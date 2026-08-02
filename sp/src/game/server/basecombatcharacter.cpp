@@ -64,7 +64,7 @@ extern int	g_interactionBarnacleVictimReleased;
 extern ConVar weapon_showproficiency;
 
 ConVar ai_show_hull_attacks( "ai_show_hull_attacks", "0" );
-ConVar ai_force_serverside_ragdoll( "ai_force_serverside_ragdoll", "0" );
+ConVar ai_force_serverside_ragdoll( "ai_force_serverside_ragdoll", "1" ); //mygamepedia: always use server ragdolls to work with portals
 
 ConVar nb_last_area_update_tolerance( "nb_last_area_update_tolerance", "4.0", FCVAR_CHEAT, "Distance a character needs to travel in order to invalidate cached area" ); // 4.0 tested as sweet spot (for wanderers, at least). More resulted in little benefit, less quickly diminished benefit [7/31/2008 tom]
 
@@ -105,6 +105,8 @@ BEGIN_DATADESC( CBaseCombatCharacter )
 	DEFINE_FIELD( m_hActiveWeapon, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bForceServerRagdoll, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPreventWeaponPickup, FIELD_BOOLEAN ),
+
+	DEFINE_FIELD(m_hMyCorpuse, FIELD_EHANDLE),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "KilledNPC", InputKilledNPC ),
 
@@ -541,19 +543,25 @@ bool CBaseCombatCharacter::FInViewCone( const Vector &vecSpot )
 
 #ifdef PORTAL
 //=========================================================
-// FInViewCone - returns true is the passed ent is in
-// the caller's forward view cone. The dot product is performed
-// in 2d, making the view cone infinitely tall. 
+// Purpose: The same as FInViewCone, but with portal checking.
+// Input: 
+// - CBaseEntity *pEntity - the entity to check against the view cone
+// - bool bRecursive - whether to check through portals recursively (i.e., chains of portals)
+// Output: Returns the portal through which the entity is visible, or NULL if not visible through any
+// - MyGamepedia
 //=========================================================
-CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( CBaseEntity *pEntity )
+CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal(CBaseEntity *pEntity, bool bRecursive)
 {
+	//mygamepedia: recursive may break something, use true if you are sure that you want it
+	if (bRecursive)
+		return FInViewConeThroughPortalRecursive(pEntity->WorldSpaceCenter());
+
 	return FInViewConeThroughPortal( pEntity->WorldSpaceCenter() );
 }
 
 //=========================================================
-// FInViewCone - returns true is the passed Vector is in
-// the caller's forward view cone. The dot product is performed
-// in 2d, making the view cone infinitely tall. 
+// Purpose: Returns the portal through which the given point is visible, or NULL if not visible through any portal.
+// Doesn't include recursive portal checking (i.e., chains of portals).
 //=========================================================
 CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( const Vector &vecSpot )
 {
@@ -642,6 +650,135 @@ CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortal( const Vector &vecS
 	}
 
 	return pBestPortal;
+}
+
+//=========================================================
+// Purpose: Returns the portal through which the given point is visible, or NULL if not visible through any portal.
+// Includes recursive portal checking (i.e., chains of portals).
+// - MyGamepedia
+//=========================================================
+CProp_Portal* CBaseCombatCharacter::FInViewConeThroughPortalRecursive(const Vector& vecSpot)  
+{  
+	//count all portals we have in level, no portals - return
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+	if (iPortalCount == 0)  
+		return NULL;
+  
+	//this character eye pos
+	const Vector ptEyePosition = EyePosition();  
+  
+	float fDistToBeat = 1e20; //arbitrarily high number
+	CProp_Portal* pBestPortal = NULL;  
+  
+	CProp_Portal** pPortals = CProp_Portal_Shared::AllPortals.Base();  //collect all portals in level
+  
+	//check all portals to see if any are in viewcone and could see the target spot through them (potentially recursively)
+	for (int iPortal = 0; iPortal < iPortalCount; ++iPortal)  
+	{  
+		CProp_Portal* pPortal = pPortals[iPortal];  
+  
+		//skip if not active and linked
+		if (!pPortal->IsActivedAndLinked())
+			continue;
+
+		// When very close to the portal, FInViewCone's 2D math breaks down  
+		// (near-zero vector after zeroing Z). The portal fills most of the  
+		// view at this range, so skip the pre-filter.  
+		float flDistToPortalSqr = (pPortal->GetAbsOrigin() - ptEyePosition).LengthSqr();
+		if (flDistToPortalSqr >= (PORTAL_HALF_HEIGHT * PORTAL_HALF_HEIGHT) && !FInViewCone(pPortal))
+			continue;
+
+		// The facing direction is the eye to the portal to set up a proper FOV through the relatively small portal hole
+		Vector facingDir = pPortal->GetAbsOrigin() - ptEyePosition;  
+  
+		//skip if the portal isn't facing the eye
+		if (facingDir.Dot(pPortal->m_plane_Origin.normal) > 0.0f)  
+			continue;  
+  
+		//skip if the point is behind the linked portal
+		if ((vecSpot - pPortal->m_hLinkedPortal->GetAbsOrigin()).Dot(pPortal->m_hLinkedPortal->m_plane_Origin.normal) < 0.0f)  
+			continue;  
+  
+		//we have a valid portal, get the linked portal for recursion and distance checking
+		CProp_Portal* pLinkedPortal = pPortal->m_hLinkedPortal.Get();  
+  
+		//3D — no longer zeroing Z  
+		float fPortalDist = VectorNormalize(facingDir);  
+  
+		//get the worst case FOV from the portal's corners (now in 3D)  
+		float fFOVThroughPortal = 1.0f;  
+		for (int i = 0; i < 4; ++i)  
+		{  
+			Vector vEyeToCorner = pPortal->m_vPortalCorners[i] - ptEyePosition;  
+			VectorNormalize(vEyeToCorner);  
+  
+			//use the dot product of the eye-to-corner vector and the 
+			//facing direction as the FOV metric, since the portal 
+			//corners can effectively reduce FOV more than distance
+			float flCornerDot = DotProduct(vEyeToCorner, facingDir);  
+			if (flCornerDot < fFOVThroughPortal)  
+				fFOVThroughPortal = flCornerDot;  
+		}  
+  
+		//check if portals can see each other (required for recursion depth > 1)  
+		bool bPortalsCanSeeEachOther = false;  
+
+		Vector vecEntryToLinked = pPortal->GetAbsOrigin() - pLinkedPortal->GetAbsOrigin();  
+		Vector vecLinkedToEntry = pLinkedPortal->GetAbsOrigin() - pPortal->GetAbsOrigin();  
+
+		//portals are roughly facing each other(based on plane normals)
+		bPortalsCanSeeEachOther =  
+				((vecEntryToLinked.Dot(pLinkedPortal->m_plane_Origin.normal) > 0.0f) &&  
+				(vecLinkedToEntry.Dot(pPortal->m_plane_Origin.normal) > 0.0f));    
+  
+		//check up to 2 portal transitions (limited depth, not true recursion)
+		Vector vCurrentSpot = vecSpot;  
+		for (int level = 0; level < 2; ++level)  
+		{  
+			//if we're more than 1 portal deep, require that portals can see each other to continue checking, 
+			//otherwise we get weird cases where you can see a portal through a portal but not see the second 
+			//portal through the first because the first isn't facing the second
+			if (level > 0 && !bPortalsCanSeeEachOther)  
+				break;  
+  
+			//translate the target spot across the portal
+			Vector vTranslatedVecSpot;  
+			UTIL_Portal_PointTransform(pLinkedPortal->MatrixThisToLinked(), vCurrentSpot, vTranslatedVecSpot);  
+			vCurrentSpot = vTranslatedVecSpot;  
+  
+			//3D — no longer zeroing Z  
+			Vector los = (vTranslatedVecSpot - ptEyePosition);  
+			float fSpotDist = VectorNormalize(los);  
+  
+			//skip if this candidate is farther than the best one found so far
+			if (fSpotDist > fDistToBeat)  
+				continue;  
+  
+			//skip if the point is significantly closer than the portal (invalid through-portal LOS)
+			if (fPortalDist > fSpotDist + 32.0f)  
+				continue;  
+  
+			//check if the translated point is in view cone, using the tougher FOV 
+			//of either the standard FOV or FOV clipped to the portal hole
+			float flDot = DotProduct(los, facingDir);  
+  
+			//if the point is in view cone through this portal, return this portal as the one through which the point is visible.
+			if (flDot > MAX(fFOVThroughPortal, m_flFieldOfView))  
+			{
+				//if this is a recursive check, we need to make sure the original portal 
+				//can see the translated point, otherwise we can get cases where you can see 
+				//a point through a chain of portals but not see the point through the first portal in the chain
+				float fActualDist = ptEyePosition.DistToSqr(vTranslatedVecSpot);  
+				if (fActualDist < fDistToBeat)  
+				{  
+					fDistToBeat = fActualDist;  
+					pBestPortal = pPortal;  
+				}  
+			}  
+		}    
+	}  
+  
+	return pBestPortal;  
 }
 #endif
 
@@ -1520,7 +1657,13 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 		// in single player create ragdolls on the server when the player hits someone
 		// with their vehicle - for more dramatic death/collisions
 		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, info2, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-		FixupBurningServerRagdoll( pRagdoll );
+		if (pRagdoll)
+		{
+			//pRagdoll->ApplyAbsVelocityImpulse(forceVector); //mygamepedia: apply force vec that is used by client rags
+			FixupBurningServerRagdoll(pRagdoll);
+			m_hMyCorpuse = pRagdoll;
+		}
+
 		RemoveDeferred();
 		return true;
 	}
@@ -1531,10 +1674,17 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 
 #ifdef HL2_EPISODIC
 	// Burning corpses are server-side in episodic, if we're in darkness mode
-	if ( IsOnFire() && HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( IsOnFire() && g_pGameRules->IsAlyxInDarknessMode() )
 	{
-		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_DEBRIS );
-		FixupBurningServerRagdoll( pRagdoll );
+		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS );
+
+		if (pRagdoll)
+		{
+			//pRagdoll->ApplyAbsVelocityImpulse(forceVector); //mygamepedia: apply force vec that is used by client rags
+			FixupBurningServerRagdoll(pRagdoll);
+			m_hMyCorpuse = pRagdoll;
+		}
+
 		RemoveDeferred();
 		return true;
 	}
@@ -1544,7 +1694,7 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 
 	bool bMegaPhyscannonActive = false;
 #if !defined( HL2MP )
-	bMegaPhyscannonActive = HL2GameRules()->MegaPhyscannonActive();
+	bMegaPhyscannonActive = g_pGameRules->MegaPhyscannonActive();
 #endif // !HL2MP
 
 	// Mega physgun requires everything to be a server-side ragdoll
@@ -1555,8 +1705,14 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 
 		//FIXME: This is fairly leafy to be here, but time is short!
 		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-		FixupBurningServerRagdoll( pRagdoll );
-		PhysSetEntityGameFlags( pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS );
+
+		if (pRagdoll)
+		{
+			//pRagdoll->ApplyAbsVelocityImpulse(forceVector); //mygamepedia: apply force vec that is used by client rags
+			FixupBurningServerRagdoll(pRagdoll);
+			m_hMyCorpuse = pRagdoll;
+		}
+
 		RemoveDeferred();
 
 		return true;
@@ -1564,7 +1720,13 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 
 	if( hl2_episodic.GetBool() && Classify() == CLASS_PLAYER_ALLY_VITAL )
 	{
-		CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		CBaseEntity* pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+		if (pRagdoll)
+		{
+			//pRagdoll->ApplyAbsVelocityImpulse(forceVector); //mygamepedia: apply force vec that is used by client rags
+			m_hMyCorpuse = pRagdoll;
+		}
+
 		RemoveDeferred();
 		return true;
 	}
@@ -2789,10 +2951,10 @@ CBaseEntity *CBaseCombatCharacter::FindHealthItem( const Vector &vecPosition, co
 
 	for ( int i = 0; i < count; i++ )
 	{
-		CItem *pItem = dynamic_cast<CItem *>(list[ i ]);
-
-		if( pItem )
+		if(list[i]->IsItem())
 		{
+			CItem* pItem = static_cast<CItem*>(list[i]);
+
 			// Healthkits and healthvials
 			if( pItem->ClassMatches( "item_health*" ) && FVisible( pItem ) )
 			{
@@ -3103,7 +3265,7 @@ void CBaseCombatCharacter::VPhysicsShadowCollision( int index, gamevcollisioneve
 	float flOtherAttackerTime = 0.0f;
 
 #if defined( HL2_DLL ) && !defined( HL2MP )
-	if ( HL2GameRules()->MegaPhyscannonActive() == true )
+	if ( g_pGameRules->MegaPhyscannonActive() == true )
 	{
 		flOtherAttackerTime = 1.0f;
 	}

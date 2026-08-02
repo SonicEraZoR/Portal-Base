@@ -499,6 +499,15 @@ CStudioHdr *C_ServerRagdoll::OnNewModel( void )
 		m_iv_ragAngles.SetMaxCount( m_elementCount );
 	}
 
+	C_BaseEntity* pOwner = GetOwnerEntity();
+
+	//mygamepedia: i have owner, owner has my model, owner is a model ent - copy owner's model instance on me
+	//this will fix missing blood decals from npcs
+	if (pOwner && pOwner->GetModelName() == GetModelName() && pOwner->GetBaseAnimating())
+		pOwner->SnatchModelInstance(this);
+
+	NoteRagdollCreationTick(this); //mygamepedia: let's gRagdolls to store ref to this one
+
 	return hdr;
 }
 

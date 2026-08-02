@@ -79,8 +79,12 @@ static CTempEnts g_TempEnts;
 ITempEnts *tempents = ( ITempEnts * )&g_TempEnts;
 #endif
 
-
-
+//mygamepedia: I added this whole system for portal view NPC effects used by the player in portal view
+//to avoid changing function signatures, I do a "hook" styled hack, I just set to this variable true when
+//the NPC effect is going to be used by the player via CWeaponPortalBase::OnFireEvent(), which before creating
+//the effects, set true to this variable, and after creating the effects, sets false for this variable
+//this is how we don't change too many places
+bool s_bNextNPCFlashSuppressInFirstPerson = false;
 
 C_LocalTempEntity::C_LocalTempEntity()
 {
@@ -1641,7 +1645,9 @@ void CTempEnts::Sprite_Smoke( C_LocalTempEntity *pTemp, float scale )
 //-----------------------------------------------------------------------------
 void CTempEnts::EjectBrass( const Vector &pos1, const QAngle &angles, const QAngle &gunAngles, int type )
 {
-	if ( cl_ejectbrass.GetBool() == false )
+	//mygamepedia: we're using srv side shells now, keep it disabled by def
+	//i invert it because this cvar seems to be saved by clients somehow
+	if ( cl_ejectbrass.GetBool() != false )
 		return;
 
 	const model_t *pModel = m_pShells[type];
@@ -1774,6 +1780,10 @@ void CTempEnts::MuzzleFlash( int type, ClientEntityHandle_t hEntity, int attachm
 		if ( firstPerson )
 		{
 			MuzzleFlash_357_Player( hEntity, attachmentIndex );
+		}
+		else
+		{
+			MuzzleFlash_Pistol_NPC(hEntity, attachmentIndex); //mygamepedia: pistol is the closest thing we have to a .357 muzzleflash
 		}
 		break;
 	case MUZZLEFLASH_RPG:
@@ -2535,6 +2545,7 @@ void CTempEnts::MuzzleFlash_Combine_Player( ClientEntityHandle_t hEntity, int at
 	float flScale = random->RandomFloat( 2.0f, 2.25f );
 
 	pSimple->SetDrawBeforeViewModel( true );
+	pSimple->SetViewModelOnly(true); //mygamepedia: render only in the main view, not portals or other views
 
 	// Flash
 	for ( int i = 1; i < 6; i++ )
@@ -2606,6 +2617,16 @@ void CTempEnts::MuzzleFlash_Combine_NPC( ClientEntityHandle_t hEntity, int attac
 	}
 
 	CSmartPtr<CLocalSpaceEmitter> pSimple = CLocalSpaceEmitter::Create( "MuzzleFlash_Combine_NPC", hEntity, attachmentIndex );
+
+	bool bSuppressInFirstPerson = s_bNextNPCFlashSuppressInFirstPerson;
+
+	//mygamepedia: the effect is created by the player, which is know by this global variable,
+	//if ture, don't render this flash in main view, for portal view effects
+	if (bSuppressInFirstPerson)
+	{
+		pSimple->SetSuppressInFirstPerson(true);
+		s_bNextNPCFlashSuppressInFirstPerson = false;
+	}
 
 	SimpleParticle *pParticle;
 	Vector			forward(1,0,0), offset; //NOTENOTE: All coords are in local space
@@ -2776,7 +2797,12 @@ void CTempEnts::MuzzleFlash_Combine_NPC( ClientEntityHandle_t hEntity, int attac
 		return;
 	}
 
-	if ( muzzleflash_light.GetBool() )
+	//mygamepedia: not sure for now if it's forever or a long term solution
+	//ideally, we should render vm elight everywhere but not in portas and vice versa for wm,
+	//but it looks like it's not that easy to implement, 
+	//so just don't create light for npc muzzle flash if created by the player,
+	//this how it's done in Gmod (by looking at the glass in gm_constract)
+	if (muzzleflash_light.GetBool() && !bSuppressInFirstPerson)
 	{
 		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntityFromHandle( hEntity );
 		if ( pEnt )
@@ -2833,6 +2859,7 @@ void CTempEnts::MuzzleFlash_SMG1_Player( ClientEntityHandle_t hEntity, int attac
 	float flScale = random->RandomFloat( 1.25f, 1.5f );
 
 	pSimple->SetDrawBeforeViewModel( true );
+	pSimple->SetViewModelOnly(true); //mygamepedia: render only in the main view, not portals or other views
 
 	// Flash
 	for ( int i = 1; i < 6; i++ )
@@ -2874,6 +2901,7 @@ void CTempEnts::MuzzleFlash_Shotgun_Player( ClientEntityHandle_t hEntity, int at
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Shotgun_Player" );
 
 	pSimple->SetDrawBeforeViewModel( true );
+	pSimple->SetViewModelOnly(true); //mygamepedia: render only in the main view, not portals or other views
 
 	CacheMuzzleFlashes();
 
@@ -2959,6 +2987,11 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 		CSmartPtr<CEmberEffect> pEmbers = CEmberEffect::Create( "muzzle_embers" );
 		pEmbers->SetSortOrigin( origin );
 
+		//mygamepedia: the effect is created by the player, which is know by this global variable,
+		//if true, don't render this flash in main view, for portal view effects
+		if (s_bNextNPCFlashSuppressInFirstPerson)
+			pEmbers->SetSuppressInFirstPerson(true);
+
 		SimpleParticle	*pParticle;
 
 		int	numEmbers = random->RandomInt( 0, 4 );
@@ -3000,6 +3033,11 @@ void CTempEnts::MuzzleFlash_Shotgun_NPC( ClientEntityHandle_t hEntity, int attac
 	
 	CSmartPtr<CTrailParticles> pTrails = CTrailParticles::Create( "MuzzleFlash_Shotgun_NPC" );
 	pTrails->SetSortOrigin( origin );
+
+	//mygamepedia: the effect is created by the player, which is know by this global variable,
+	//if true, don't render this flash in main view, for portal view effects
+	if (s_bNextNPCFlashSuppressInFirstPerson)
+		pTrails->SetSuppressInFirstPerson(true);
 
 	TrailParticle	*pTrailParticle;
 
@@ -3047,6 +3085,7 @@ void CTempEnts::MuzzleFlash_357_Player( ClientEntityHandle_t hEntity, int attach
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_357_Player" );
 
 	pSimple->SetDrawBeforeViewModel( true );
+	pSimple->SetViewModelOnly(true); //mygamepedia: render only in the main view, not portals or other views
 
 	CacheMuzzleFlashes();
 
@@ -3132,7 +3171,9 @@ void CTempEnts::MuzzleFlash_Pistol_Player( ClientEntityHandle_t hEntity, int att
 {
 	VPROF_BUDGET( "MuzzleFlash_Pistol_Player", VPROF_BUDGETGROUP_PARTICLE_RENDERING );
 	CSmartPtr<CSimpleEmitter> pSimple = CSimpleEmitter::Create( "MuzzleFlash_Pistol_Player" );
+
 	pSimple->SetDrawBeforeViewModel( true );
+	pSimple->SetViewModelOnly(true); //mygamepedia: render only in the main view, not portals or other views
 
 	CacheMuzzleFlashes();
 

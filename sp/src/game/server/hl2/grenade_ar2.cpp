@@ -19,6 +19,9 @@
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
+	#include "prop_portal.h"
+	#include "PortalSimulation.h"
+	#include "portal/physicsshadowclone.h"  
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -36,6 +39,8 @@ extern ConVar    sk_max_smg1_grenade;
 ConVar	  sk_smg1_grenade_radius		( "sk_smg1_grenade_radius","0");
 
 ConVar g_CV_SmokeTrail("smoke_trail", "1", 0); // temporary dust explosion switch
+
+ConVar sv_portalbase_debug_ar2touch("sv_portalbase_debug_ar2touch", "0", FCVAR_NONE, "Don't touch players at all.");
 
 BEGIN_DATADESC( CGrenadeAR2 )
 
@@ -80,7 +85,7 @@ void CGrenadeAR2::Spawn( void )
 
 	m_DmgRadius		= sk_smg1_grenade_radius.GetFloat();
 	m_takedamage	= DAMAGE_YES;
-	m_bIsLive		= true;
+	m_bIsLive		= true; //mygamepedia: with false, this let's the grenade to not detonate with MAX_AR2_NO_COLLIDE_TIME
 	m_iHealth		= 1;
 
 	SetGravity( UTIL_ScaleForGravity( 400 ) );	// use a lower gravity for grenades to make them easier to see
@@ -115,6 +120,9 @@ void CGrenadeAR2::Spawn( void )
 			m_hSmokeTrail->FollowEntity(this);
 		}
 	}
+
+	//MyGamepedia: fix projectile not passing a portal on spawn if the player is very close to the portal
+	UTIL_SetPotentialPortalOwnEntity(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -164,10 +172,10 @@ void CGrenadeAR2::Event_Killed( const CTakeDamageInfo &info )
 	Detonate( );
 }
 
-void CGrenadeAR2::GrenadeAR2Touch( CBaseEntity *pOther )
+void CGrenadeAR2::GrenadeAR2Touch(CBaseEntity* pOther)
 {
-	Assert( pOther );
-	if ( !pOther->IsSolid() )
+	Assert(pOther);
+	if (!pOther->IsSolid())
 		return;
 
 	// If I'm live go ahead and blow up
@@ -179,7 +187,7 @@ void CGrenadeAR2::GrenadeAR2Touch( CBaseEntity *pOther )
 	{
 		// If I'm not live, only blow up if I'm hitting an chacter that
 		// is not the owner of the weapon
-		CBaseCombatCharacter *pBCC = ToBaseCombatCharacter( pOther );
+		CBaseCombatCharacter* pBCC = ToBaseCombatCharacter(pOther);
 		if (pBCC && GetThrower() != pBCC)
 		{
 			m_bIsLive = true;
@@ -239,6 +247,19 @@ void CGrenadeAR2::Detonate(void)
 	RadiusDamage ( CTakeDamageInfo( this, GetThrower(), m_flDamage, DMG_BLAST ), GetAbsOrigin(), m_DmgRadius, CLASS_NONE, NULL );
 
 	UTIL_Remove( this );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Remove smoke trail when needed - MyGamepedia
+//-----------------------------------------------------------------------------
+void CGrenadeAR2::UpdateOnRemove()
+{
+	if (m_hSmokeTrail)
+	{
+		m_hSmokeTrail->SetLifetime(0.01f);
+	}
+
+	BaseClass::UpdateOnRemove();
 }
 
 void CGrenadeAR2::Precache( void )

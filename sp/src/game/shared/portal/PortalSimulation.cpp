@@ -45,8 +45,8 @@ static ConVar sv_portal_collision_sim_bounds_x( "sv_portal_collision_sim_bounds_
 static ConVar sv_portal_collision_sim_bounds_y( "sv_portal_collision_sim_bounds_y", "200", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 static ConVar sv_portal_collision_sim_bounds_z( "sv_portal_collision_sim_bounds_z", "252", FCVAR_REPLICATED, "Size of box used to grab collision geometry around placed portals. These should be at the default size or larger only!" );
 
-//#define DEBUG_PORTAL_SIMULATION_CREATION_TIMES //define to output creation timings to developer 2
-//#define DEBUG_PORTAL_COLLISION_ENVIRONMENTS //define this to allow for glview collision dumps of portal simulators
+#define DEBUG_PORTAL_SIMULATION_CREATION_TIMES //define to output creation timings to developer 2
+#define DEBUG_PORTAL_COLLISION_ENVIRONMENTS //define this to allow for glview collision dumps of portal simulators
 
 #if defined( DEBUG_PORTAL_COLLISION_ENVIRONMENTS ) || defined( DEBUG_PORTAL_SIMULATION_CREATION_TIMES )
 #	if !defined( PORTAL_SIMULATORS_EMBED_GUID )
@@ -104,7 +104,7 @@ static CPhysCollide *ConvertPolyhedronsToCollideable( CPolyhedron **pPolyhedrons
 
 #ifndef CLIENT_DLL
 static void UpdateShadowClonesPortalSimulationFlags( const CBaseEntity *pSourceEntity, unsigned int iFlags, int iSourceFlags );
-static bool g_bPlayerIsInSimulator = false;
+static bool g_bPlayerIsInSimulator[MAX_PLAYERS] = { false }; //mygamepedia: now we store multiple players
 #endif
 
 static CUtlVector<CPortalSimulator *> s_PortalSimulators;
@@ -1104,7 +1104,7 @@ void CPortalSimulator::MarkAsOwned( CBaseEntity *pEntity )
 
 	if ( pEntity->IsPlayer() )
 	{
-		g_bPlayerIsInSimulator = true;
+		g_bPlayerIsInSimulator[pEntity->entindex()] = true;
 	}
 }
 
@@ -1131,7 +1131,7 @@ void CPortalSimulator::MarkAsReleased( CBaseEntity *pEntity )
 
 	if ( pEntity->IsPlayer() )
 	{
-		g_bPlayerIsInSimulator = false;
+		g_bPlayerIsInSimulator[pEntity->entindex()] = false;
 	}
 }
 
@@ -2459,21 +2459,32 @@ void CPortalSimulator::PrePhysFrame( void )
 	}
 }
 
-void CPortalSimulator::PostPhysFrame( void )
+void CPortalSimulator::PostPhysFrame(void)
 {
-	if ( g_bPlayerIsInSimulator )
+	//mygamepedia: check all clients so portals can work in mp
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		CPortal_Player* pPlayer = dynamic_cast<CPortal_Player*>( UTIL_GetLocalPlayer() );
-		CProp_Portal* pTouchedPortal = pPlayer->m_hPortalEnvironment.Get();
-		CPortalSimulator* pSim = GetSimulatorThatOwnsEntity( pPlayer );
-		if ( pTouchedPortal && pSim && (pTouchedPortal->m_PortalSimulator.GetPortalSimulatorGUID() != pSim->GetPortalSimulatorGUID()) )
+		if (g_bPlayerIsInSimulator[i])
 		{
-			Warning ( "Player is simulated in a physics environment but isn't touching a portal! Can't teleport, but can fall through portal hole. Returning player to main environment.\n" );
-			ADD_DEBUG_HISTORY( HISTORY_PLAYER_DAMAGE, UTIL_VarArgs( "Player in PortalSimulator but not touching a portal, removing from sim at : %f\n",  gpGlobals->curtime ) );
-			
-			if ( pSim )
+			CPortal_Player* pPlayer = dynamic_cast<CPortal_Player*>(UTIL_PlayerByIndex(i));
+
+			if (!pPlayer)
 			{
-				pSim->ReleaseOwnershipOfEntity( pPlayer, false );
+				g_bPlayerIsInSimulator[i] = false;
+				continue;
+			}
+
+			CProp_Portal* pTouchedPortal = pPlayer->m_hPortalEnvironment.Get();
+			CPortalSimulator* pSim = GetSimulatorThatOwnsEntity(pPlayer);
+			if (pTouchedPortal && pSim && (pTouchedPortal->m_PortalSimulator.GetPortalSimulatorGUID() != pSim->GetPortalSimulatorGUID()))
+			{
+				Warning("Player is simulated in a physics environment but isn't touching a portal! Can't teleport, but can fall through portal hole. Returning player to main environment.\n");
+				ADD_DEBUG_HISTORY(HISTORY_PLAYER_DAMAGE, UTIL_VarArgs("Player in PortalSimulator but not touching a portal, removing from sim at : %f\n", gpGlobals->curtime));
+
+				if (pSim)
+				{
+					pSim->ReleaseOwnershipOfEntity(pPlayer, false);
+				}
 			}
 		}
 	}

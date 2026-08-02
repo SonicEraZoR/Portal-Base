@@ -18,13 +18,13 @@
 
 #define PORTAL_ANALOG_SUCCESS_NO_BUMP 1.0f
 #define PORTAL_ANALOG_SUCCESS_BUMPED 0.3f
-#define PORTAL_ANALOG_SUCCESS_CANT_FIT 0.1f
-#define PORTAL_ANALOG_SUCCESS_CLEANSER 0.028f
+#define PORTAL_ANALOG_SUCCESS_CANT_FIT 0.1f //not formed portal that can't fir surf, portal not placed
+#define PORTAL_ANALOG_SUCCESS_CLEANSER 0.028f //hit cleanser, placed portal (then assumed to be cleansed by cleanser)
 #define PORTAL_ANALOG_SUCCESS_OVERLAP_LINKED 0.027f
 #define PORTAL_ANALOG_SUCCESS_NEAR 0.0265f
-#define PORTAL_ANALOG_SUCCESS_INVALID_VOLUME 0.026f
-#define PORTAL_ANALOG_SUCCESS_INVALID_SURFACE 0.025f
-#define PORTAL_ANALOG_SUCCESS_PASSTHROUGH_SURFACE 0.0f
+#define PORTAL_ANALOG_SUCCESS_INVALID_VOLUME 0.026f //hit no portal volume ent, not placed
+#define PORTAL_ANALOG_SUCCESS_INVALID_SURFACE 0.025f //%noportal param surf and "portal center has no surface behind it", portal not placed
+#define PORTAL_ANALOG_SUCCESS_PASSTHROUGH_SURFACE 0.0f //no particle effects on hit, portal not placed
 
 #define MIN_FLING_SPEED 300
 

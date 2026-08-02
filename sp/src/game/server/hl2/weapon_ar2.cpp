@@ -27,6 +27,10 @@
 #include "npc_combine.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#include "portal_util_shared.h"
+#include "prop_portal.h"
+#include "portal_player.h"
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -204,6 +208,8 @@ void CWeaponAR2::DoImpactEffect( trace_t &tr, int nDamageType )
 	BaseClass::DoImpactEffect( tr, nDamageType );
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -211,8 +217,8 @@ void CWeaponAR2::DelayedAttack( void )
 {
 	m_bShotDelayed = false;
 	
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	
+	CPortal_Player* pOwner = ToPortalPlayer(GetOwner());
+
 	if ( pOwner == NULL )
 		return;
 
@@ -230,8 +236,33 @@ void CWeaponAR2::DelayedAttack( void )
 
 	// Fire the bullets
 	Vector vecSrc	 = pOwner->Weapon_ShootPosition( );
-	Vector vecAiming = pOwner->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
-	Vector impactPoint = vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
+	Vector vecAiming = static_cast<CBasePlayer*>(pOwner)->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //mygamepedia: cast base player or it won't compile
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal
+	CProp_Portal* pPlayerPortal = pOwner->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		if (fPortalDist > 0.0f)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pOwner)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecAiming, vecAiming);
+			}
+		}
+	}
+
+	//Vector impactPoint = vecSrc + (vecAiming * MAX_TRACE_LENGTH); //mygamepedia: unused
 
 	// Fire the bullets
 	Vector vecVelocity = vecAiming * 1000.0f;

@@ -17,6 +17,10 @@
 #include "soundent.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#include "portal_player.h"
+#include "portal_util_shared.h"  
+#include "portal_player.h"
+#include "prop_portal_shared.h" 
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -45,7 +49,7 @@ public:
 
 	float	GetFireRate( void ) { return 0.075f; }	// 13.3hz
 	int		CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
-	int		WeaponRangeAttack2Condition( float flDot, float flDist );
+	int		WeaponRangeAttack2Condition();
 	Activity	GetPrimaryAttackActivity( void );
 
 	virtual const Vector& GetBulletSpread( void )
@@ -210,6 +214,10 @@ void CWeaponSMG1::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool b
 	FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
 }
 
+ConVar sv_portalbase_elite_combine_s_can_fire_smg1_grenade("sv_portalbase_elite_combine_s_can_fire_smg1_grenade", "1",
+	FCVAR_NONE,
+	"Fixes elite combine soilder not able to shoot SMG1 grenade.");
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -217,6 +225,11 @@ void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 {
 	switch( pEvent->event )
 	{
+	case 6001: //mygamepedia: Eject a brass shell from attachment 1
+	{
+		EjectBrassPhysics(0);
+		break;
+	}
 	case EVENT_WEAPON_SMG1:
 		{
 			Vector vecShootOrigin, vecShootDir;
@@ -233,35 +246,61 @@ void CWeaponSMG1::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 
 			FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
+			break;
 		}
-		break;
 
-		/*//FIXME: Re-enable
-		case EVENT_WEAPON_AR2_GRENADE:
-		{
-		CAI_BaseNPC *npc = pOperator->MyNPCPointer();
+	case EVENT_WEAPON_AR2_ALTFIRE:
+	{
+		if (!sv_portalbase_elite_combine_s_can_fire_smg1_grenade.GetBool())
+			break;
+
+		CAI_BaseNPC* npc = pOperator->MyNPCPointer();
 
 		Vector vecShootOrigin, vecShootDir;
 		vecShootOrigin = pOperator->Weapon_ShootPosition();
-		vecShootDir = npc->GetShootEnemyDir( vecShootOrigin );
+		//vecShootDir = npc->GetShootEnemyDir( vecShootOrigin );
+
+		//Checks if it can fire the grenade
+		WeaponRangeAttack2Condition();
 
 		Vector vecThrow = m_vecTossVelocity;
 
-		CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecShootOrigin, vec3_angle, npc );
-		pGrenade->SetAbsVelocity( vecThrow );
-		pGrenade->SetLocalAngularVelocity( QAngle( 0, 400, 0 ) );
-		pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY ); 
-		pGrenade->m_hOwner			= npc;
-		pGrenade->m_pMyWeaponAR2	= this;
-		pGrenade->SetDamage(sk_npc_dmg_ar2_grenade.GetFloat());
+		//If on the rare case the vector is 0 0 0, cancel for avoid launching the grenade without speed
+		//This should be on WeaponRangeAttack2Condition(), but for some unknown reason return CASE_NONE
+		//doesn't stop the launch
+		if (vecThrow == Vector(0, 0, 0)) {
+			break;
+		}
 
-		// FIXME: arrgg ,this is hard coded into the weapon???
-		m_flNextGrenadeCheck = gpGlobals->curtime + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+		CGrenadeAR2* pGrenade = (CGrenadeAR2*)Create("grenade_ar2", vecShootOrigin, vec3_angle, npc);
+
+		if (pGrenade)
+		{
+			pGrenade->SetAbsVelocity(vecThrow);
+			pGrenade->SetLocalAngularVelocity(RandomAngle(-400, 400)); //tumble in air
+			pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+
+			pGrenade->SetThrower(GetOwner());
+
+			pGrenade->SetGravity(0.5); // lower gravity since grenade is aerodynamic and engine doesn't know it.
+
+			pGrenade->SetDamage(sk_plr_dmg_smg1_grenade.GetFloat());
+
+			pGrenade->SetOwnerEntity(GetOwner());
+		}
+
+		if (g_pGameRules->IsSkillLevel(SKILL_HARD))
+		{
+			m_flNextGrenadeCheck = gpGlobals->curtime + RandomFloat(2, 3);
+		}
+		else {
+			m_flNextGrenadeCheck = gpGlobals->curtime + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+		}
 
 		m_iClip2--;
-		}
+
 		break;
-		*/
+	}
 
 	default:
 		BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
@@ -326,15 +365,17 @@ void CWeaponSMG1::AddViewKick( void )
 	DoMachineGunKick( pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, m_fFireDuration, SLIDE_LIMIT );
 }
 
+extern ConVar sv_portalbase_edge_glitch;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CWeaponSMG1::SecondaryAttack( void )
 {
 	// Only the player fires this way so we can cast
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	
-	if ( pPlayer == NULL )
+	CPortal_Player* pPlayer = ToPortalPlayer(GetOwner());
+
+	if (pPlayer == NULL)
 		return;
 
 	//Must have ammo
@@ -358,18 +399,50 @@ void CWeaponSMG1::SecondaryAttack( void )
 	Vector	vecThrow;
 	// Don't autoaim on grenade tosses
 	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
+
+	//mygamepedia: this transforms shoot pos in case if the player is in the middle of the portal
+	CProp_Portal* pPlayerPortal = pPlayer->m_hPortalEnvironment;
+
+	if (pPlayerPortal)
+	{
+		Vector ptPortalCenter = pPlayerPortal->GetAbsOrigin();
+		Vector vPortalForward;
+		pPlayerPortal->GetVectors(&vPortalForward, NULL, NULL);
+
+		Vector vEyeToPortalCenter = ptPortalCenter - vecSrc;
+		float fPortalDist = vPortalForward.Dot(vEyeToPortalCenter);
+
+		//let the edge glitch be only for portalgun by option
+		if (fPortalDist)
+		{
+			//MyGamepedia: if edge glitch is off - also check if eye is ACTUALLY behind the portal, else do the code no matter what
+			if (fPortalDist > 0.0f && (sv_portalbase_edge_glitch.GetBool() || pPlayerPortal->m_PortalSimulator.EntityIsInPortalHole(pPlayer)))
+			{
+				VMatrix matThisToLinked = pPlayerPortal->MatrixThisToLinked();
+				UTIL_Portal_PointTransform(matThisToLinked, vecSrc, vecSrc);
+				UTIL_Portal_VectorTransform(matThisToLinked, vecThrow, vecThrow);
+			}
+		}
+	}
+
 	VectorScale( vecThrow, 1000.0f, vecThrow );
 	
 	//Create the grenade
 	QAngle angles;
 	VectorAngles( vecThrow, angles );
 	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecSrc, angles, pPlayer );
-	pGrenade->SetAbsVelocity( vecThrow );
 
-	pGrenade->SetLocalAngularVelocity( RandomAngle( -400, 400 ) );
-	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE ); 
-	pGrenade->SetThrower( GetOwner() );
-	pGrenade->SetDamage( sk_plr_dmg_smg1_grenade.GetFloat() );
+	if (pGrenade)
+	{
+		pGrenade->SetAbsVelocity(vecThrow);
+
+		pGrenade->SetLocalAngularVelocity(RandomAngle(-400, 400));
+		pGrenade->SetMoveType(MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE);
+		pGrenade->SetThrower(GetOwner());
+		pGrenade->SetDamage(sk_plr_dmg_smg1_grenade.GetFloat());
+
+		pGrenade->SetOwnerEntity(GetOwner());
+	}
 
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 
@@ -402,19 +475,15 @@ void CWeaponSMG1::SecondaryAttack( void )
 //			flDist - 
 // Output : int
 //-----------------------------------------------------------------------------
-int CWeaponSMG1::WeaponRangeAttack2Condition( float flDot, float flDist )
+int CWeaponSMG1::WeaponRangeAttack2Condition()
 {
 	CAI_BaseNPC *npcOwner = GetOwner()->MyNPCPointer();
 
-	return COND_NONE;
-
-/*
 	// --------------------------------------------------------
 	// Assume things haven't changed too much since last time
 	// --------------------------------------------------------
 	if (gpGlobals->curtime < m_flNextGrenadeCheck )
-		return m_lastGrenadeCondition;
-*/
+		return COND_NONE;
 
 	// -----------------------
 	// If moving, don't check.

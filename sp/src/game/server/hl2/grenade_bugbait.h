@@ -39,6 +39,8 @@ public:
 	CBugBaitSensor( void );
 	~CBugBaitSensor( void );
 
+	virtual bool	IsSpecialProjectile() { return true; } //mygamepedia: helps to resolve the case when it touches the player owner smh
+
 	bool Baited( CBaseEntity *pOther )
 	{
 		if ( !m_bEnabled )

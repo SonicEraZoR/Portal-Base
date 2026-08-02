@@ -541,7 +541,7 @@ void C_Prop_Portal::OnPreDataChanged( DataUpdateType_t updateType )
 }
 
 //MyGamepedia: i think we better to have prt lights, this is a test feature
-ConVar cl_portal_emit_light_teleport("cl_portal_emit_light_teleport", "0", FCVAR_CLIENTDLL);
+ConVar cl_portalbase_emit_light_teleport("cl_portalbase_emit_light_teleport", "0", FCVAR_CLIENTDLL);
 ConVar r_portal_light_innerangle( "r_portal_light_innerangle", "90.0", FCVAR_CLIENTDLL );
 ConVar r_portal_light_outerangle( "r_portal_light_outerangle", "90.0", FCVAR_CLIENTDLL );
 ConVar r_portal_light_forward( "r_portal_light_forward", "0.0", FCVAR_CLIENTDLL );
@@ -633,9 +633,7 @@ void C_Prop_Portal::OnDataChanged( DataUpdateType_t updateType )
 				render->TouchLight( pFakeLight );
 			}
 
-			//todo: add proper logic when convar is off after portals with fake light spawned
-			//
-			if(pRemote && cl_portal_emit_light_teleport.GetBool()) //now, see if we need to fake light coming through a portal
+			if (pRemote && cl_portalbase_emit_light_teleport.GetBool()) //now, see if we need to fake light coming through a portal
 			{
 				Vector vLightAtRemotePortal( vec3_origin ), vLightAtLocalPortal( vec3_origin );
 
@@ -815,8 +813,7 @@ void C_Prop_Portal::OnDataChanged( DataUpdateType_t updateType )
 	}
 
 	if( (PreDataChanged.m_hLinkedTo.Get() != m_hLinkedPortal.Get()) && m_hLinkedPortal.Get() )
-		m_PortalSimulator.AttachTo( &m_hLinkedPortal.Get()->m_PortalSimulator );
-	
+		m_PortalSimulator.AttachTo( &m_hLinkedPortal.Get()->m_PortalSimulator );	
 
 	BaseClass::OnDataChanged( updateType );
 	
@@ -835,6 +832,39 @@ void C_Prop_Portal::OnDataChanged( DataUpdateType_t updateType )
 		UpdateGhostRenderables();
 		if( pRemote )
 			pRemote->UpdateGhostRenderables();
+	}
+
+	//not allowed to cast lights anymore ? check if I have lights to remove
+	if (!cl_portalbase_emit_light_teleport.GetBool())
+	{
+		//remove my light
+		if (TransformedLighting.m_pEntityLight)
+		{
+			TransformedLighting.m_pEntityLight->die = gpGlobals->curtime;
+			TransformedLighting.m_pEntityLight = NULL;
+		}
+
+		if (TransformedLighting.m_LightShadowHandle != CLIENTSHADOW_INVALID_HANDLE)
+		{
+			g_pClientShadowMgr->DestroyFlashlight(TransformedLighting.m_LightShadowHandle);
+			TransformedLighting.m_LightShadowHandle = CLIENTSHADOW_INVALID_HANDLE;
+		}
+
+		//remove other light from linked portal
+		if (pRemote)
+		{
+			if (pRemote->TransformedLighting.m_pEntityLight)
+			{
+				pRemote->TransformedLighting.m_pEntityLight->die = gpGlobals->curtime;
+				pRemote->TransformedLighting.m_pEntityLight = NULL;
+			}
+
+			if (pRemote->TransformedLighting.m_LightShadowHandle != CLIENTSHADOW_INVALID_HANDLE)
+			{
+				g_pClientShadowMgr->DestroyFlashlight(pRemote->TransformedLighting.m_LightShadowHandle);
+				pRemote->TransformedLighting.m_LightShadowHandle = CLIENTSHADOW_INVALID_HANDLE;
+			}
+		}
 	}
 }
 

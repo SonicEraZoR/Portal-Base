@@ -19,9 +19,12 @@
 #include "engine/IEngineSound.h"
 #include "te_effect_dispatch.h"
 #include "gamestats.h"
+#include "props.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar sv_portalbase_weapon_shells_vphysics;
 
 //-----------------------------------------------------------------------------
 // CWeapon357
@@ -75,6 +78,8 @@ CWeapon357::CWeapon357( void )
 {
 	m_bReloadsSingly	= false;
 	m_bFiresUnderwater	= false;
+
+	PrecacheModel("models/weapons/shell.mdl");
 }
 
 //-----------------------------------------------------------------------------
@@ -93,11 +98,51 @@ void CWeapon357::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChara
 				// Emit six spent shells
 				for ( int i = 0; i < 6; i++ )
 				{
-					data.m_vOrigin = pOwner->WorldSpaceCenter() + RandomVector( -4, 4 );
-					data.m_vAngles = QAngle( 90, random->RandomInt( 0, 360 ), 0 );
-					data.m_nEntIndex = entindex();
+					if (!sv_portalbase_weapon_shells_vphysics.GetBool())
+					{
+						data.m_vOrigin = pOwner->WorldSpaceCenter() + RandomVector(-4, 4);
+						data.m_vAngles = QAngle(90, random->RandomInt(0, 360), 0);
+						data.m_nEntIndex = entindex();
+						DispatchEffect("ShellEject", data);
+					}
+					else //mygamepedia: orig 357 uses dif way to create shells comparing to other wpns, so we are doing everything here
+					{
+						Vector vPos = pOwner->WorldSpaceCenter() + RandomVector(-4, 4);
+						QAngle qaAngles = QAngle(90, random->RandomInt(0, 360), 0);
 
-					DispatchEffect( "ShellEject", data );
+						CPhysicsProp* pShell = (CPhysicsProp*)CreateEntityByName("prop_physics_override");
+						if (!pShell)
+							return;
+
+						pShell->SetAbsOrigin(vPos);
+						pShell->SetAbsAngles(qaAngles);
+						pShell->SetModel("models/weapons/shell.mdl");
+						pShell->Precache();
+
+						if (DispatchSpawn(pShell) == -1)
+							return;
+
+						pShell->Activate();
+						pShell->SetMoveType(MOVETYPE_VPHYSICS);
+						pShell->SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+						pShell->m_bAllowToFadeInView = true;
+
+						IPhysicsObject* pPhys = pShell->VPhysicsGetObject();
+						if (pPhys)
+						{
+							Vector dir;
+							AngleVectors(qaAngles, &dir);
+							dir *= random->RandomFloat(150.0f, 200.0f);
+							Vector velocity(dir.x + random->RandomFloat(-64, 64),
+								dir.y + random->RandomFloat(-64, 64),
+								dir.z + random->RandomFloat(0, 64));
+							AngularImpulse angImpulse = RandomAngularImpulse(-512, 512);
+							pPhys->AddVelocity(&velocity, &angImpulse);
+						}
+
+						pShell->SetNextThink(gpGlobals->curtime + 2.0f);
+						pShell->SetThink(&CBaseEntity::SUB_FadeOut);
+					}
 				}
 
 				break;

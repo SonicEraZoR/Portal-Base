@@ -11,6 +11,7 @@
 #include "portal_shareddefs.h"
 #include "ivieweffects.h"		// for screenshake
 #include "prop_portal_shared.h"
+#include "view.h"
 
 // NVNT for fov updates
 #include "haptics/ihaptics.h"
@@ -55,6 +56,10 @@ C_Portal_Player::C_Portal_Player()
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
 	m_EntClientFlags |= ENTCLIENTFLAG_DONTUSEIK;
+
+	//mygamepedia: fix projected texture cuts 
+	static ConVarRef scissor("r_flashlightscissor");
+	scissor.SetValue("0");
 }
 
 C_Portal_Player::~C_Portal_Player( void )
@@ -590,6 +595,7 @@ void C_Portal_Player::CalcPortalView( Vector &eyeOrigin, QAngle &eyeAngles )
 
 	//Re-apply the screenshake (we just stomped it)
 	vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
+	VectorAdd(eyeAngles, m_Local.m_vecPunchAngle, eyeAngles); //mygamepedia: this fixes not working wpn view push
 
 	C_Prop_Portal *pPortal = m_hPortalEnvironment.Get();
 	assert( pPortal );
@@ -687,9 +693,19 @@ void C_Portal_Player::CalcPortalView( Vector &eyeOrigin, QAngle &eyeAngles )
 	}
 }
 
+//mygamepedia: i recommend to keep it always disabled, fixes viewmodel clipping with hl2 wpns + the vm freezer doesn't seem to be important
+//this may look a little bit unnatural due to vm shifts when teleported from floor to wall portal, but generally this looks fine
+//in fact they didn't fixed it even in p2, only removed the freezer
+//the workaround doesn't really work anyway
+ConVar cl_portalbase_use_portal_player_calcviewmodelview("cl_portalbase_use_portal_player_calcviewmodelview", "0", 
+	FCVAR_NONE, 
+	"The client will use Portal's version of viewmodel view calculation. Keep it disabled to have less issues as possible.");
+
 extern float g_fMaxViewModelLag;
 void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles)
 {
+	if (!cl_portalbase_use_portal_player_calcviewmodelview.GetBool())
+		return BaseClass::CalcViewModelView(eyeOrigin,eyeAngles);
 	// HACK: Manually adjusting the eye position that view model looking up and down are similar
 	// (solves view model "pop" on floor to floor transitions)
 	Vector vInterpEyeOrigin = eyeOrigin;
@@ -699,7 +715,8 @@ void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& 
 	Vector vUp;
 	AngleVectors( eyeAngles, &vForward, &vRight, &vUp );
 
-	if ( vForward.z < 0.0f )
+	//mygamepedia: this if is why vm doesn't shift to left/right 
+	if (vForward.z < 0.0f)
 	{
 		float fT = vForward.z * vForward.z;
 		vInterpEyeOrigin += vRight * ( fT * 4.7f ) + vForward * ( fT * 5.0f ) + vUp * ( fT * 4.0f );
@@ -718,6 +735,72 @@ void C_Portal_Player::CalcViewModelView( const Vector& eyeOrigin, const QAngle& 
 
 		vm->CalcViewModelView( this, vInterpEyeOrigin, eyeAngles );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Write vm pos data for shells - MyGamepedia
+//-----------------------------------------------------------------------------
+bool C_Portal_Player::CreateMove(float flInputSampleTime, CUserCmd* pCmd)
+{
+	//not sure if i can do it before main class version
+	bool bReturn = BaseClass::CreateMove(flInputSampleTime, pCmd);
+
+	if (!(MainViewOrigin().DistToSqr(GetAbsOrigin()) < (256 * 256)))
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	C_BaseViewModel* vm = GetViewModel(0);
+	if (!vm)
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	CStudioHdr* hdr = vm->GetModelPtr();
+
+	if (!hdr || !(hdr->GetNumAttachments() > 0))
+	{
+		pCmd->iViewModelHasValidParams = 0;
+		return bReturn;
+	}
+
+	Vector attachOrigin;
+	QAngle attachAngles;
+
+	bool bHasValidAttach = false;
+
+	//for physcannon, we want muzzle, shell attach for the rest
+	if (GetActiveWeapon() && GetActiveWeapon()->IsPhyscannon())
+	{
+		bHasValidAttach = vm->GetAttachment(1, attachOrigin, attachAngles);
+	}
+	else
+		bHasValidAttach = vm->GetAttachment(2, attachOrigin, attachAngles);
+
+	if (bHasValidAttach)
+	{
+		QAngle vmAng = vm->GetAbsAngles();
+
+		pCmd->fViewModelCalcAnglesX = vmAng.x;
+		pCmd->fViewModelCalcAnglesY = vmAng.y;
+		pCmd->fViewModelCalcAnglesZ = vmAng.z;
+
+		pCmd->fViewModelAttachOriginX = attachOrigin.x;
+		pCmd->fViewModelAttachOriginY = attachOrigin.y;
+		pCmd->fViewModelAttachOriginZ = attachOrigin.z;
+
+		pCmd->fViewModelAttachAnglesX = attachAngles.x;
+		pCmd->fViewModelAttachAnglesY = attachAngles.y;
+		pCmd->fViewModelAttachAnglesZ = attachAngles.z;
+
+		pCmd->iViewModelHasValidParams = 1;
+	}
+	else
+		pCmd->iViewModelHasValidParams = 0;
+
+	return bReturn;
 }
 
 bool LocalPlayerIsCloseToPortal( void )

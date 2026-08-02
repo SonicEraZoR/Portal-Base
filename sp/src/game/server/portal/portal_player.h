@@ -86,6 +86,10 @@ public:
 	bool m_bSilentDropAndPickup;
 
 	void SuppressCrosshair( bool bState ) { m_bSuppressingCrosshair = bState; }
+
+	Vector	PortalWeapon_ShootPosition(void);
+	Vector	PortalEyePosition(void);
+	bool	GetPortalShootTransform(VMatrix& matOut);
 	
 private:
 	CSoundPatch		*m_pWooshSound;
@@ -111,7 +115,8 @@ private:
 
 	mutable Vector m_vWorldSpaceCenterHolder; //WorldSpaceCenter() returns a reference, need an actual value somewhere
 
-
+	//mygamepedia: taked from hl2dm
+	float m_flSlamProtectTime;
 
 public:
 
@@ -122,11 +127,9 @@ public:
 	friend class CProp_Portal;
 
 
-#ifdef PORTAL_MP
 public:
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
 	void PickTeam( void );
-#endif
 };
 
 inline CPortal_Player *ToPortalPlayer( CBaseEntity *pEntity )

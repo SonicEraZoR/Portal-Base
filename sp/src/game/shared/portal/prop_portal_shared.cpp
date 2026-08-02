@@ -35,6 +35,7 @@ void CProp_Portal_Shared::UpdatePortalTransformationMatrix( const matrix3x4_t &l
 	*pMatrix = matPortal2ToWorld * matRotation * matPortal1ToWorldInv;
 }
 
+/*
 static char *g_pszPortalNonTeleportable[] = 
 { 
 	"func_door", 
@@ -44,7 +45,12 @@ static char *g_pszPortalNonTeleportable[] =
 	//"env_ghostanimating",
 	"physicsshadowclone"
 };
+*/
 
+//-----------------------------------------------------------------------------
+// Purpose: Filtrers non teleportable ents
+// - MyGamepedia
+//-----------------------------------------------------------------------------
 bool CProp_Portal_Shared::IsEntityTeleportable( CBaseEntity *pEntity )
 {
 
@@ -53,18 +59,13 @@ bool CProp_Portal_Shared::IsEntityTeleportable( CBaseEntity *pEntity )
 
 #ifdef CLIENT_DLL
 		//client
-	
-		if( dynamic_cast<C_BaseDoor *>(pEntity) != NULL )
+		if(pEntity->IsBaseDoor())
 			return false;
 
 #else
 		//server
-		
-		for( int i = 0; i != ARRAYSIZE(g_pszPortalNonTeleportable); ++i )
-		{
-			if( FClassnameIs( pEntity, g_pszPortalNonTeleportable[i] ) )
-				return false;
-		}
+		if( pEntity->IsPortalNonTeleportable())
+			return false;
 
 #endif
 
@@ -74,7 +75,3 @@ bool CProp_Portal_Shared::IsEntityTeleportable( CBaseEntity *pEntity )
 
 	return true;
 }
-
-
-
-

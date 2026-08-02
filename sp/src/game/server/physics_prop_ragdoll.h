@@ -62,7 +62,7 @@ public:
 
 	// locals
 	void InitRagdollAnimation( void );
-	void InitRagdoll( const Vector &forceVector, int forceBone, const Vector &forcePos, matrix3x4_t *pPrevBones, matrix3x4_t *pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll = true );
+	void InitRagdoll(const Vector& forceVector, int forceBone, const Vector& forcePos, matrix3x4_t* pPrevBones, matrix3x4_t* pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll = true, bool bDeathPose = false);
 	
 	void RecheckCollisionFilter( void );
 	void SetDebrisThink();
@@ -94,6 +94,7 @@ public:
 	CBaseEntity*	GetKiller() { return m_hKiller; }
 	void			SetKiller( CBaseEntity *pKiller ) { m_hKiller = pKiller; }
 	void			GetAngleOverrideFromCurrentState( char *pOut, int size );
+	void			SetModelScale(float scale, float change_duration /*= 0.0f*/);
 
 	void			DisableMotion( void );
 

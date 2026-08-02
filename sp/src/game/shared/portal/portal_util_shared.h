@@ -26,15 +26,25 @@ extern bool g_bBulletPortalTrace;
 	class CBeam;
 #endif
 
-Color UTIL_Portal_Color( int iPortal );
+//mygamepedia: used by CBaseEntity::FireBullets() for bullet visuals
+struct PortalBulletCrossing_t
+{
+	const CProp_Portal* pPortal;       // the portal that was crossed  
+	Vector				vWorldEntry;   // world-space point where the ray entered the portal  
+	Vector				vWorldExit;    // world-space point on the other side (after transform)  
+};
 
 void UTIL_Portal_Trace_Filter( class CTraceFilterSimpleClassnameList *traceFilterPortalShot );
 
+void UTIL_Porta_LoadPortalTraceFilterList(const char* szFile);
+
+void PortalbaseUpdatePortalTraceListChanged(IConVar* pConVar, const char* pOldString, float flOldValue);
+
+Color UTIL_Portal_Color(int iPortal);
+
 CProp_Portal* UTIL_Portal_FirstAlongRay( const Ray_t &ray, float &fMustBeCloserThan );
 
-bool UTIL_Portal_TraceRay_Bullets( const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, trace_t *pTrace, bool bTraceHolyWall = true );
-//added this overload to use in void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
-bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, const IHandleEntity *ignore, int collisionGroup, trace_t *pTrace, bool bTraceHolyWall = true);
+bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal *pPortal, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, trace_t *pTrace, bool bTraceHolyWall = true, CUtlVector<PortalBulletCrossing_t>* pCrossingsOut = NULL);
 CProp_Portal* UTIL_Portal_TraceRay_Beam( const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, float *pfFraction );
 bool UTIL_Portal_Trace_Beam( const CBeam *pBeam, Vector &vecStart, Vector &vecEnd, Vector &vecIntersectionStart, Vector &vecIntersectionEnd, ITraceFilter *pTraceFilter );
 
@@ -100,6 +110,12 @@ void UTIL_TransformInterpolatedPosition( CInterpolatedVar< Vector > &vInterped, 
 #endif
 
 bool UTIL_Portal_EntityIsInPortalHole( const CProp_Portal *pPortal, CBaseEntity *pEntity );
+
+//MyGamepedia: put our custom utils here
+bool UTIL_IntersectEntityExtentsWithGivenPortal(const CProp_Portal* pPortal, const CBaseEntity* pEntity);
+CProp_Portal* UTIL_IntersectEntityExtentsWithPortalOBB(const CBaseEntity* pEntity);
+void UTIL_SetPotentialPortalOwnEntity(CBaseEntity* pEntity);
+bool UTIL_Portal_TraceRay_Bullets(const CProp_Portal* pPortal, const Ray_t& ray, unsigned int fMask, const IHandleEntity* ignore, int collisionGroup, trace_t* pTrace, bool bTraceHolyWall = true, CUtlVector<PortalBulletCrossing_t>* pCrossingsOut = NULL);
 
 #endif //#ifndef PORTAL_UTIL_SHARED_H
 

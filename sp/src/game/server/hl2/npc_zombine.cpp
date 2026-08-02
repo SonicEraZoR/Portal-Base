@@ -614,7 +614,7 @@ bool CNPC_Zombine::AllowedToSprint( void )
 
 	if ( pPlayer )
 	{
-		if ( HL2GameRules()->IsAlyxInDarknessMode() && pPlayer->FlashlightIsOn() == false )
+		if ( g_pGameRules->IsAlyxInDarknessMode() && pPlayer->FlashlightIsOn() == false )
 		{
 			iChance = SPRINT_CHANCE_VALUE_DARKNESS;
 		}

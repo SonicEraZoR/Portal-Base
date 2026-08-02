@@ -205,7 +205,7 @@ protected:
 	COutputEvent m_OnFoundTarget;
 	COutputEvent m_OnLostTarget;
 
-	CTraceFilterSkipTwoEntities		m_filterBeams;
+	CTraceFilterSimpleClassnameList		m_filterBeams;
 
 	EHANDLE m_hCurRocket;
 
@@ -315,7 +315,7 @@ LINK_ENTITY_TO_CLASS( rocket_turret_projectile, CRocket_Turret_Projectile );
 // Constructor
 //-----------------------------------------------------------------------------
 CNPC_RocketTurret::CNPC_RocketTurret( void )
-	: m_filterBeams( NULL, NULL, COLLISION_GROUP_DEBRIS )
+	: m_filterBeams( NULL, COLLISION_GROUP_DEBRIS )
 {
 	m_bEnabled			= false;
 	m_bHasSightOfEnemy	= false;
@@ -424,7 +424,7 @@ bool CNPC_RocketTurret::CreateVPhysics( void )
 void CNPC_RocketTurret::Activate( void )
 {
 	m_filterBeams.SetPassEntity( this );
-	m_filterBeams.SetPassEntity2( UTIL_GetLocalPlayer() );
+	m_filterBeams.AddClassnameToIgnore("player");
 	BaseClass::Activate();
 }
 

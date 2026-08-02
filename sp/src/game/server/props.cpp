@@ -47,6 +47,8 @@
 
 #define DOOR_HARDWARE_GROUP 1
 
+#define PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+
 // Any barrel farther away than this is ignited rather than exploded.
 #define PROP_EXPLOSION_IGNITE_RADIUS	32.0f
 
@@ -642,7 +644,7 @@ void CPhysicsProp::HandleAnyCollisionInteractions( int index, gamevcollisioneven
 
 void CBreakableProp::StickAtPosition( const Vector &stickPosition, const Vector &savePosition, const QAngle &saveAngles )
 {
-	if ( !VPhysicsGetObject()->IsMotionEnabled() )
+	if (!VPhysicsGetObject()->IsMotionEnabled())
 		return;
 
 	EmitSound("Metal.SawbladeStick");
@@ -651,7 +653,14 @@ void CBreakableProp::StickAtPosition( const Vector &stickPosition, const Vector 
 
 	VPhysicsGetObject()->EnableMotion( false );
 	AddSpawnFlags( SF_PHYSPROP_ENABLE_ON_PHYSCANNON );
-	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
+
+#ifndef	PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+	SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+#else
+	SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS);
+#endif
+
+	SetStickied(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -694,9 +703,10 @@ void CBreakableProp::HandleInteractionStick( int index, gamevcollisionevent_t *p
 				Vector vecEmbed = pEvent->preVelocity[ index ];
 				VectorNormalize( vecEmbed );
 				vecEmbed *= 8;
-
 				position += vecEmbed;
-				g_PostSimulationQueue.QueueCall( this, &CBreakableProp::StickAtPosition, position, savePosition, angles );
+
+				//mygamepedia: this was very inconsistent with delayed call now we call it here and now
+				StickAtPosition(position, savePosition, angles); 
 			}
 		}
 	}
@@ -2499,7 +2509,11 @@ void CPhysicsProp::Spawn( )
 
 	if ( HasSpawnFlags( SF_PHYSPROP_DEBRIS ) || HasInteraction( PROPINTER_PHYSGUN_CREATE_FLARE ) )
 	{
-		SetCollisionGroup( HasSpawnFlags( SF_PHYSPROP_FORCE_TOUCH_TRIGGERS ) ? COLLISION_GROUP_DEBRIS_TRIGGER : COLLISION_GROUP_DEBRIS );
+#ifndef PORTALBASE_USE_COLLISION_GROUP_INTERACTIVE_DEBRIS
+		SetCollisionGroup(HasSpawnFlags(SF_PHYSPROP_FORCE_TOUCH_TRIGGERS) ? COLLISION_GROUP_DEBRIS_TRIGGER : COLLISION_GROUP_DEBRIS);
+#else
+		SetCollisionGroup(HasSpawnFlags(SF_PHYSPROP_FORCE_TOUCH_TRIGGERS) ? COLLISION_GROUP_DEBRIS_TRIGGER : COLLISION_GROUP_INTERACTIVE_DEBRIS);
+#endif
 	}
 
 	if ( HasSpawnFlags( SF_PHYSPROP_NO_ROTORWASH_PUSH ) )
@@ -2742,6 +2756,7 @@ void CPhysicsProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 		if( HasInteraction( PROPINTER_PHYSGUN_WORLD_STICK ) )
 		{
 			SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS );
+			SetStickied(false);
 		}
 	}
 
@@ -3241,9 +3256,20 @@ int CPhysicsProp::DrawDebugTextOverlays(void)
 }
 
 
-static CBreakableProp *BreakModelCreate_Prop( CBaseEntity *pOwner, breakmodel_t *pModel, const Vector &position, const QAngle &angles, const breakablepropparams_t &params )
+static CBreakableProp *BreakModelCreate_Prop( CBaseEntity *pOwner, breakmodel_t *pModel, 
+	const Vector &position, const QAngle &angles, const breakablepropparams_t &params, bool bUsePropPhysicsOverride = false)
 {
-	CBreakableProp *pEntity = (CBreakableProp *)CBaseEntity::CreateNoSpawn( "prop_physics", position, angles, pOwner );
+	//mygamepedia: this maybe be used by something else, so I added optional prop_physics_override use
+	//needed for new gibs in CBreakable
+	CBreakableProp* pEntity = NULL;
+
+	if (bUsePropPhysicsOverride)
+	{
+		pEntity = (CBreakableProp*)CBaseEntity::CreateNoSpawn("prop_physics_override", position, angles, pOwner);
+	}
+	else
+		pEntity = (CBreakableProp *)CBaseEntity::CreateNoSpawn( "prop_physics", position, angles, pOwner );
+
 	if ( pEntity )
 	{
 		// UNDONE: Allow .qc to override spawnflags for child pieces
@@ -3311,7 +3337,8 @@ static CBaseAnimating *BreakModelCreate_Ragdoll( CBaseEntity *pOwner, breakmodel
 }
 
 CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, const Vector &position, 
-	const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, int nSkin, const breakablepropparams_t &params )
+	const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, int nSkin, const breakablepropparams_t &params, 
+	bool bUsePropPhysicsOverride = false)
 {
 	CBaseAnimating *pEntity = NULL;
 	// stop creating gibs if too many
@@ -3323,7 +3350,7 @@ CBaseEntity *BreakModelCreateSingle( CBaseEntity *pOwner, breakmodel_t *pModel, 
 
 	if ( !pModel->isRagdoll )
 	{
-		pEntity = BreakModelCreate_Prop( pOwner, pModel, position, angles, params );
+		pEntity = BreakModelCreate_Prop( pOwner, pModel, position, angles, params, bUsePropPhysicsOverride);
 	}
 	else
 	{
@@ -4705,6 +4732,8 @@ public:
 	float	GetOpenInterval();
 
 	bool	OverridePropdata() { return true; }
+
+	virtual bool IsPortalNonTeleportable() { return true; }
 
 	void	InputSetSpeed(inputdata_t &inputdata);
 

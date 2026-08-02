@@ -79,7 +79,7 @@ public:
 
 	void	SetYawRate( float flYawRate ) { m_yawRate = flYawRate; }
 	void	SetPitchRate( float flPitchRate ) { m_pitchRate = flPitchRate; }
-	
+
 	virtual	bool	IsBaseTank() const { return true; }
 
 	int	ObjectCaps( void ) 

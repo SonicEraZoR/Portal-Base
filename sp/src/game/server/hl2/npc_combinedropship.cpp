@@ -344,6 +344,10 @@ private:
 	int			m_iAttachmentTroopDeploy;
 	int			m_iAttachmentDeployStart;
 
+	// Cached container weapon pose parameters
+	int			m_poseWeapon_Pitch;
+	int			m_poseWeapon_Yaw;
+
 	// Sounds
 	CSoundPatch		*m_pCannonSound;
 	CSoundPatch		*m_pRotorOnGroundSound;
@@ -363,8 +367,7 @@ protected:
 	// Should the dropship end up having inheritors, their activate may
 	// stomp these numbers, in which case you should make these ordinary members
 	// again.
-	static int m_poseBody_Accel, m_poseBody_Sway, m_poseCargo_Body_Accel, m_poseCargo_Body_Sway, 
-		m_poseWeapon_Pitch, m_poseWeapon_Yaw;
+	static int m_poseBody_Accel, m_poseBody_Sway, m_poseCargo_Body_Accel, m_poseCargo_Body_Sway;
 	static bool m_sbStaticPoseParamsLoaded;
 	virtual void	PopulatePoseParameters( void );
 };
@@ -375,8 +378,8 @@ int CNPC_CombineDropship::m_poseBody_Accel = 0;
 int CNPC_CombineDropship::m_poseBody_Sway = 0;
 int CNPC_CombineDropship::m_poseCargo_Body_Accel = 0;
 int CNPC_CombineDropship::m_poseCargo_Body_Sway = 0;
-int CNPC_CombineDropship::m_poseWeapon_Pitch = 0;
-int CNPC_CombineDropship::m_poseWeapon_Yaw = 0;
+//int CNPC_CombineDropship::m_poseWeapon_Pitch = 0;
+//int CNPC_CombineDropship::m_poseWeapon_Yaw = 0;
 
 //-----------------------------------------------------------------------------
 // Purpose: Cache whatever pose parameters we intend to use
@@ -389,10 +392,18 @@ void	CNPC_CombineDropship::PopulatePoseParameters( void )
 		m_poseBody_Sway			= LookupPoseParameter( "body_sway" );
 		m_poseCargo_Body_Accel  = LookupPoseParameter( "cargo_body_accel" );
 		m_poseCargo_Body_Sway   = LookupPoseParameter( "cargo_body_sway" );
-		m_poseWeapon_Pitch		= LookupPoseParameter( "weapon_pitch" );
-		m_poseWeapon_Yaw		= LookupPoseParameter( "weapon_yaw" );
+		//m_poseWeapon_Pitch		= LookupPoseParameter( "weapon_pitch" );
+		//m_poseWeapon_Yaw		= LookupPoseParameter( "weapon_yaw" );
 
 		m_sbStaticPoseParamsLoaded = true;
+	}
+
+	// Dropship has any kind of container
+	if (m_hContainer)
+	{
+		// Restore container weapon pose parameters on load if any found
+		m_poseWeapon_Pitch = m_hContainer->LookupPoseParameter("weapon_pitch");
+		m_poseWeapon_Yaw = m_hContainer->LookupPoseParameter("weapon_yaw");
 	}
 
 	BaseClass::PopulatePoseParameters();
@@ -861,6 +872,8 @@ void CNPC_CombineDropship::Spawn( void )
 	m_iMachineGunRefAttachment = -1;
 	m_iAttachmentTroopDeploy = -1;
 	m_iAttachmentDeployStart = -1;
+	m_poseWeapon_Pitch = -1;
+	m_poseWeapon_Yaw = -1;
 
 	// create the correct bin for the ship to carry
 	switch ( m_iCrateType )
@@ -896,6 +909,9 @@ void CNPC_CombineDropship::Spawn( void )
 			m_iMachineGunBaseAttachment = m_hContainer->LookupAttachment( "gun_base" );
 			// NOTE: gun_ref must have the same position as gun_base, but rotates with the gun
 			m_iMachineGunRefAttachment = m_hContainer->LookupAttachment( "gun_ref" );
+			// Store spawned container weapon pitch and yaw pose parameters to allow weapon point to the player
+			m_poseWeapon_Pitch = m_hContainer->LookupPoseParameter("weapon_pitch");
+			m_poseWeapon_Yaw = m_hContainer->LookupPoseParameter("weapon_yaw");
 		}
 		break;
 

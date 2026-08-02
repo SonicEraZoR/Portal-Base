@@ -35,14 +35,7 @@ public:
 
 	CBasePortalCombatWeapon();
 
-	virtual bool	WeaponShouldBeLowered( void );
-
-			bool	CanLower( void );
-	virtual bool	Ready( void );
-	virtual bool	Lower( void );
-	virtual bool	Deploy( void );
-	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
-	virtual void	WeaponIdle( void );
+	virtual bool Deploy(void);
 
 	//all of those are exactly the same as in basehlcombatweapon_shared.h so i have no idea what's the point of redefining them here
 	//I'm just gonna use methods from basehlcombatweapon_shared.h
@@ -54,8 +47,6 @@ public:
 
 	//virtual const	WeaponProficiencyInfo_t *GetProficiencyValues();
 	//static const	WeaponProficiencyInfo_t *GetDefaultProficiencyValues();
-
-	virtual void	ItemHolsterFrame( void );
 
 	int				m_iPrimaryAttacks;		// # of primary attacks performed with this weapon
 	int				m_iSecondaryAttacks;	// # of secondary attacks performed with this weapon

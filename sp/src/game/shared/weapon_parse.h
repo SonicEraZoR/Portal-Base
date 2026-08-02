@@ -130,6 +130,8 @@ public:
 
 // SERVER DLL
 
+	int m_iPlayerDamage; //mygamepedia: taked from hl2dm
+
 };
 
 // The weapon parse function

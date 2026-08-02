@@ -17,6 +17,8 @@
 #include "haptics/haptic_utils.h"
 #ifdef CLIENT_DLL
 	#include "prediction.h"
+#else
+	#include "items.h"
 #endif
 // NVNT end extra includes
 
@@ -59,6 +61,10 @@ ConVar tf_weapon_criticals_bucket_cap( "tf_weapon_criticals_bucket_cap", "1000.0
 ConVar tf_weapon_criticals_bucket_bottom( "tf_weapon_criticals_bucket_bottom", "-250.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar tf_weapon_criticals_bucket_default( "tf_weapon_criticals_bucket_default", "300.0", FCVAR_REPLICATED | FCVAR_CHEAT );
 #endif // TF
+
+ConVar sv_portalbase_item_touch_area("sv_portalbase_item_touch_area", "1",
+	FCVAR_REPLICATED,
+	"Makes pickup item touch area separate from the item, this allows items to work with other triggers and pass portals.");
 
 CBaseCombatWeapon::CBaseCombatWeapon()
 {
@@ -168,7 +174,13 @@ void CBaseCombatWeapon::Spawn( void )
 
 	BaseClass::Spawn();
 
-	SetSolid( SOLID_BBOX );
+	if (sv_portalbase_item_touch_area.GetBool())
+	{
+		SetSolid(SOLID_VPHYSICS);
+	}
+	else
+		SetSolid(SOLID_BBOX);
+
 	m_flNextEmptySoundTime = 0.0f;
 
 	// Weapons won't show up in trace calls if they are being carried...
@@ -202,10 +214,34 @@ void CBaseCombatWeapon::Spawn( void )
 	// been hand-placed by level designers. We only want to remove
 	// weapons that have been dropped by NPC's.
 	SetRemoveable( false );
-#endif
 
 	// Bloat the box for player pickup
-	CollisionProp()->UseTriggerBounds( true, 36 );
+
+	//mygamepedia: we are using env_touch_area for items so the items are not triggers and pass portals, but also have
+	//the large player pickup area
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		CollisionProp()->UseTriggerBounds(true, 36);
+	}
+	else if (!GetOwner() && !IsMarkedForDeletion()) //don't appear if i have owner or should be removed
+	{
+		CBaseEntity* pEntity = CBaseEntity::Create("env_touch_area", GetLocalOrigin(), GetLocalAngles());
+		if (pEntity)
+		{
+			CEnvTouchArea* pArea = static_cast<CEnvTouchArea*>(pEntity);
+
+			pArea->SetModel(GetModelName().ToCStr());
+			pArea->CreateItemVPhysicsObject();
+			pArea->CollisionProp()->UseTriggerBounds(true, 36);
+			pArea->FollowEntity(this, false);
+			pArea->SetPickupWeapon(this);
+			pArea->SetPickupType(PUT_Weapon);
+			pArea->SetTouch(&CEnvTouchArea::ItemTouch);
+			pArea->EnableTouchArea();
+			m_hTouchArea = pArea;
+		}
+	}
+#endif
 
 	// Use more efficient bbox culling on the client. Otherwise, it'll setup bones for most
 	// characters even when they're not in the frustum.
@@ -676,6 +712,27 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 	RemoveEffects( EF_NODRAW );
 	FallInit();
 	SetGroundEntity( NULL );
+
+	if (sv_portalbase_item_touch_area.GetBool())
+	{
+		RemoveSolidFlags(FSOLID_TRIGGER);
+		CBaseEntity* pEntity = CBaseEntity::Create("env_touch_area", GetLocalOrigin(), GetLocalAngles());
+		if (pEntity)
+		{
+			CEnvTouchArea* pArea = static_cast<CEnvTouchArea*>(pEntity);
+
+			pArea->SetModel(GetModelName().ToCStr());
+			pArea->CreateItemVPhysicsObject();
+			pArea->CollisionProp()->UseTriggerBounds(true, 36);
+			pArea->FollowEntity(this, false);
+			pArea->SetPickupWeapon(this);
+			pArea->SetPickupType(PUT_Weapon);
+			pArea->SetTouch(&CEnvTouchArea::ItemTouch);
+			pArea->EnableTouchArea();
+			m_hTouchArea = pArea;
+		}
+	}
+
 	SetThink( &CBaseCombatWeapon::SetPickupTouch );
 	SetTouch(NULL);
 
@@ -723,6 +780,9 @@ void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 {
 #if !defined( CLIENT_DLL )
 	RemoveEffects( EF_ITEM_BLINK );
+
+	if (m_hTouchArea.Get())
+		UTIL_Remove(m_hTouchArea.Get());
 
 	if( pNewOwner->IsPlayer() )
 	{
@@ -815,9 +875,13 @@ void CBaseCombatWeapon::GiveTo( CBaseEntity *pOther )
 void CBaseCombatWeapon::DefaultTouch( CBaseEntity *pOther )
 {
 #if !defined( CLIENT_DLL )
-	// Can't pick up dissolving weapons
-	if ( IsDissolving() )
-		return;
+
+	if (!sv_portalbase_item_touch_area.GetBool())
+	{
+		// Can't pick up dissolving weapons
+		if (IsDissolving())
+			return;
+	}
 
 	// if it's not a player, ignore
 	CBasePlayer *pPlayer = ToBasePlayer(pOther);
@@ -942,7 +1006,10 @@ void CBaseCombatWeapon::RescindReloadHudHint()
 void CBaseCombatWeapon::SetPickupTouch( void )
 {
 #if !defined( CLIENT_DLL )
-	SetTouch(&CBaseCombatWeapon::DefaultTouch);
+	//mygamepedia: with env_touch_area, wpn pick up always handled by it, no need for DefaultTouch
+	//don't remove as it could cause double pick up
+	if (!sv_portalbase_item_touch_area.GetBool())
+		SetTouch(&CBaseCombatWeapon::DefaultTouch);
 
 	if ( gpGlobals->maxClients > 1 )
 	{
@@ -1003,6 +1070,14 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 		m_flNextSecondaryAttack = gpGlobals->curtime;
 		SetModel( GetWorldModel() );
 	}
+
+#if !defined( CLIENT_DLL )
+	//mygamepedia: remove my touch area as i have owner now
+	if (m_hTouchArea.Get())
+	{
+		UTIL_Remove(m_hTouchArea.Get());
+	}
+#endif
 }
 
 void CBaseCombatWeapon::SetActivity( Activity act, float duration ) 
@@ -2441,6 +2516,19 @@ Activity CBaseCombatWeapon::ActivityOverride( Activity baseAct, bool *pRequired 
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Removes touch area so the player can't pick up this weapon when cleansed. 
+//-----------------------------------------------------------------------------
+void CBaseCombatWeapon::UpdateOnRemove()
+{
+#ifndef CLIENT_DLL
+	if (m_hTouchArea.Get())
+		UTIL_Remove(m_hTouchArea.Get());
+
+	BaseClass::UpdateOnRemove();
+#endif // !CLIENT_DLL
+}
+
+//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 CDmgAccumulator::CDmgAccumulator( void )
@@ -2620,6 +2708,7 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 
 	DEFINE_FIELD( m_flUnlockTime,		FIELD_TIME ),
 	DEFINE_FIELD( m_hLocker,			FIELD_EHANDLE ),
+	DEFINE_FIELD(m_hTouchArea,			FIELD_EHANDLE),
 
 	//	DEFINE_FIELD( m_iViewModelIndex, FIELD_INTEGER ),
 	//	DEFINE_FIELD( m_iWorldModelIndex, FIELD_INTEGER ),

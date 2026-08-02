@@ -3015,13 +3015,15 @@ void C_BaseAnimating::PushAllowBoneAccess( bool bAllowForNormalModels, bool bAll
 void C_BaseAnimating::PopBoneAccess( char const *tagPop )
 {
 	// Validate that pop matches the push
-	Assert( ( g_BoneAcessBase.tag == tagPop ) || ( g_BoneAcessBase.tag && g_BoneAcessBase.tag != ( char const * ) 1 && tagPop && tagPop != ( char const * ) 1 && !strcmp( g_BoneAcessBase.tag, tagPop ) ) );
 	int lastIndex = g_BoneAccessStack.Count() - 1;
 	if ( lastIndex < 0 )
 	{
 		Assert( !"C_BaseAnimating::PopBoneAccess:  Stack is empty!!!" );
 		return;
 	}
+	else
+		Assert((g_BoneAcessBase.tag == tagPop) || (g_BoneAcessBase.tag && g_BoneAcessBase.tag != (char const*)1 && tagPop && tagPop != (char const*)1 && !strcmp(g_BoneAcessBase.tag, tagPop)));
+
 	g_BoneAcessBase = g_BoneAccessStack[lastIndex ];
 	g_BoneAccessStack.Remove( lastIndex );
 }

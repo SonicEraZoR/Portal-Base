@@ -8490,7 +8490,18 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 			else if ( pEvent->event == AE_NPC_RAGDOLL )
 			{
 				// Convert to ragdoll immediately
-				BecomeRagdollOnClient( vec3_origin );
+				//mygamepedia: added server ragdolls to pass portals
+				if (m_bForceServerRagdoll)
+				{
+					CTakeDamageInfo dmg;
+					CBaseEntity* pRagdoll = CreateServerRagdoll(this, -1, dmg, COLLISION_GROUP_INTERACTIVE_DEBRIS);
+					
+					if (pRagdoll)
+						pRagdoll->ApplyAbsVelocityImpulse(vec3_origin);
+				}
+				else
+					BecomeRagdollOnClient( vec3_origin );
+
 				return;
 			}
 			else if ( pEvent->event == AE_NPC_ADDGESTURE )

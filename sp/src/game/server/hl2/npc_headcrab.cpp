@@ -1305,7 +1305,7 @@ void CBaseHeadcrab::JumpFromCanister()
 void CBaseHeadcrab::DropFromCeiling( void )
 {
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( g_pGameRules->IsAlyxInDarknessMode() )
 	{
 		if ( IsHangingFromCeiling() )
 		{
@@ -1883,7 +1883,7 @@ int CBaseHeadcrab::SelectSchedule( void )
 	{
 		bool bIsAlyxInDarknessMode = false;
 #ifdef HL2_EPISODIC
-		bIsAlyxInDarknessMode = HL2GameRules()->IsAlyxInDarknessMode();
+		bIsAlyxInDarknessMode = g_pGameRules->IsAlyxInDarknessMode();
 #endif // HL2_EPISODIC
 
 		if ( bIsAlyxInDarknessMode == false && ( HasCondition( COND_CAN_RANGE_ATTACK1 ) || HasCondition( COND_NEW_ENEMY ) ) )
@@ -2065,7 +2065,7 @@ void CBaseHeadcrab::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, 
 	if( !bWasOnFire )
 	{
 #ifdef HL2_EPISODIC
-		if ( HL2GameRules()->IsAlyxInDarknessMode() == true )
+		if ( g_pGameRules->IsAlyxInDarknessMode() == true )
 		{
 			GetEffectEntity()->AddEffects( EF_DIMLIGHT );
 		}
