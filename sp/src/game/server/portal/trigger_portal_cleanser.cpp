@@ -80,7 +80,7 @@ void CTriggerPortalCleanser::Spawn( void )
 // Used to avoid higher level functions on a disolving entity, which should be inert
 // and not react the way it used to (touches, etc).
 // Uses simple physics entities declared in physobj.cpp
-inline CBaseEntity* ConvertToSimpleProp ( CBaseEntity* pEnt )
+CBaseEntity* ConvertToSimpleProp ( CBaseEntity* pEnt )
 {
 	CBaseEntity *pRetVal = NULL;
 	int modelindex = pEnt->GetModelIndex();
@@ -249,8 +249,6 @@ void CTriggerPortalCleanser::Touch( CBaseEntity *pOther )
 				pAnimatingDisolving->m_nBody = pBaseAnimating->m_nBody;
 				pAnimatingDisolving->m_flModelScale = pBaseAnimating->m_flModelScale;
 				pAnimatingDisolving->m_nSkin = pBaseAnimating->m_nSkin;
-				pAnimatingDisolving->SetFadeDistance(pBaseAnimating->GetFadeDistanceMin(), pBaseAnimating->GetFadeDistanceMax());
-				pAnimatingDisolving->SetFadeDistanceScale(pBaseAnimating->GetFadeDistanceScale());
 			}
 
 			// Remove old prop, transfer name and children to the new simple prop
